@@ -57,15 +57,4 @@ module.exports = (data)->
 
     def = R.values R.mapObjIndexed asdf, counts
 
-
-    ghi = R.pluck 'count', def
-
-    ghiMin = Math.min.apply this, ghi
-    ghiMax = Math.max.apply this, ghi
-
-    countAverage = ghiMax * 0.5
-
-    belowCountAverage = (foo)->
-      foo.count < countAverage
-
     resolve R.reverse R.sortBy R.prop('count'), def
