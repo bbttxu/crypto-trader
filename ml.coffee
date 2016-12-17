@@ -12,9 +12,9 @@ module.exports = ( currencies ) ->
 
   quantizeData = require './lib/quantizeData'
 
-  # correlationCount = require './correlationCount'
+  correlationCount = require './lib/correlationCount'
 
-  INTERVAL = 6
+  INTERVAL = 1
 
   catchError = (foo)->
     console.log 'caught', foo
@@ -44,8 +44,8 @@ module.exports = ( currencies ) ->
       getResult = (result)->
         resolve result
 
-      quantizeData( correlation.currency, correlation.side, correlation.interval ).then( getResult ).catch( catchProblem )
-      # .then( correlationCount )
+      quantizeData( correlation.currency, correlation.side, correlation.interval ).then( correlationCount ).then( getResult ).catch( catchProblem )
+      #
 
 
 
@@ -65,11 +65,11 @@ module.exports = ( currencies ) ->
 
 
   getResult = ( results )->
-    console.log results
-    # showObjects = (a, b)->
-    #   console.log b, a.value
+    # console.log results
+    showObjects = (a, b)->
+      console.log b, a.value
 
-    # R.mapObjIndexed showObjects, results
+    R.mapObjIndexed showObjects, results
 
   # console.log keyed
   RSVP.hashSettled( keyed ).then( getResult ).catch( catchProblem )

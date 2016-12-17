@@ -58,3 +58,4 @@ module.exports = (data)->
     def = R.values R.mapObjIndexed asdf, counts
 
     resolve R.reverse R.sortBy R.prop('count'), def
+

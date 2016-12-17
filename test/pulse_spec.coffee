@@ -6,7 +6,7 @@ describe 'empty stream returns no pulse', ->
   it 'no signal', ->
     noPulse = pulse
       volume: 0.00
-      priceChange: 0.00
+      price: 0.00
 
     emptyArray = noPulse []
 
@@ -17,66 +17,43 @@ describe 'volume signal', ->
   it 'one weak pulse', ->
     weakPulse = pulse
       volume: 1.00
-      priceChange: 0.00
+      price: 0.00
 
-    weakSignal = weakPulse [
-      size: 0.9
-    ]
+    weakSignal = weakPulse
+      volume: 0.9
 
     weakSignal.should.be.eql false
 
   it 'several weak volume signal returns no pulse', ->
     weakPulse = pulse
       volume: 1.00
-      priceChange: 0.00
+      price: 0.00
 
-    weakSignal = weakPulse [
-      size: 0.1
-    ,
-      size: 0.1
-    ,
-      size: 0.1
-    ]
+    weakSignal = weakPulse
+      volume: 0.9
+      price: 0.0
 
     weakSignal.should.be.eql false
 
 describe 'price signal', ->
-  it 'only one returns no pulse', ->
-    strongPulse = pulse
-      volume: 0.00
-      priceChange: 0.01
-
-    positivePulse = strongPulse [
-      price: 8.56
-    ]
-
-    positivePulse.should.be.eql false
-
   it 'several non-existant price change signal returns no pulse', ->
     weakPulse = pulse
       volume: 1.00
-      priceChange: 0.00
+      price: 0.00
 
-    weakSignal = weakPulse [
+    weakSignal = weakPulse
       price: 8.56
-    ,
-      price: 8.56
-    ,
-      price: 8.56
-    ]
 
     weakSignal.should.be.eql false
 
   it 'insignificant positive price signal returns no pulse', ->
     strongPulse = pulse
       volume: 0.00
-      price: 0.1
-
-    weakSignal = strongPulse [
-      price: 8.56
-    ,
       price: 8.58
-    ]
+
+    weakSignal = strongPulse
+      price: 0.01
+      volume: 0.01
 
     weakSignal.should.be.eql false
 
@@ -85,24 +62,21 @@ describe 'price signal', ->
       volume: 0.00
       price: 0.01
 
-    strongSignal = strongPulse [
+    strongSignal = strongPulse
       price: 8.56
-    ,
-      price: 8.58
-    ]
+      volume: 0.01
 
     strongSignal.should.be.eql true
+
 
   it 'insignificant negative price signal returns no pulse', ->
     strongPulse = pulse
       volume: 0.00
       price: -0.1
 
-    weakSignal = strongPulse [
+    weakSignal = strongPulse
       price: 8.56
-    ,
-      price: 8.54
-    ]
+      volume: 0.01
 
     weakSignal.should.be.eql false
 
@@ -112,10 +86,8 @@ describe 'price signal', ->
       volume: 0.00
       price: -0.01
 
-    strongSignal = strongPulse [
-      price: 8.56
-    ,
-      price: 8.54
-    ]
+    strongSignal = strongPulse
+      price: -8.54
+      volume: 0.01
 
     strongSignal.should.be.eql true
