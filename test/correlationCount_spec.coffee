@@ -13,15 +13,21 @@ testData = [
 ]
 
 describe 'correlation count', ->
+  it 'no data', ->
+
+    correlationCount([]).then (value)->
+      value.should.be.eql []
+
+
   it 'finds the frequency of spacing', ->
 
     expected = [
-      { count: 4, spacing: 10 },
-      { count: 4, spacing: 5 },
-      { count: 3, spacing: 15 },
-      { count: 2, spacing: 20 },
-      { count: 1, spacing: 30 },
-      { count: 1, spacing: 25 }
+      { count: 4, spacing: 10, percentage: 0.27 },
+      { count: 4, spacing: 5, percentage: 0.27  },
+      { count: 3, spacing: 15, percentage: 0.2  },
+      { count: 2, spacing: 20, percentage: 0.13  },
+      { count: 1, spacing: 30, percentage: 0.07  },
+      { count: 1, spacing: 25, percentage: 0.07  }
     ]
 
     correlationCount(testData).then (value)->

@@ -1,9 +1,11 @@
 RSVP = require 'rsvp'
 R = require 'ramda'
 
+pricing = require './pricing'
+
 module.exports = (data)->
   new RSVP.Promise (resolve, reject)->
-    return [] if data.length is 0
+    resolve [] if data.length is 0
 
     length = data.length
 
@@ -45,8 +47,11 @@ module.exports = (data)->
 
     counts = R.countBy R.identity, spacings
 
+    totals = R.sum R.values counts
+
     asdf = (a, b)->
       obj =
+        percentage: parseFloat pricing.usd a / totals
         count: a
         spacing: parseInt b
 
@@ -59,7 +64,6 @@ module.exports = (data)->
     ghiMax = Math.max.apply this, ghi
 
     countAverage = ghiMax * 0.5
-
 
     belowCountAverage = (foo)->
       foo.count < countAverage
