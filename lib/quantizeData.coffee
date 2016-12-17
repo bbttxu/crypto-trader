@@ -5,12 +5,11 @@ R = require 'ramda'
 RSVP = require 'rsvp'
 moment = require 'moment'
 
-pricing = require './lib/pricing'
-pulse = require './lib/pulse'
+pricing = require './pricing'
+pulse = require './pulse'
 
 smallPotatoes = (doc)->
   doc.volume is 0 or doc.delta is 0
-
 
 module.exports = ( product, side, interval = 60 )->
   ago = moment().subtract( 7, 'day' )
@@ -41,9 +40,11 @@ module.exports = ( product, side, interval = 60 )->
         db.close()
 
         threshold = pulse
-          volume: 10
-          priceChange: 1.0
+          volume: 1
+          priceChange: 0.01
 
         grouped = R.mapObjIndexed threshold, R.groupBy timeSeries, docs
-        console.log docs.length, R.keys( grouped ).length
+
+        console.log grouped
+
         resolve grouped
