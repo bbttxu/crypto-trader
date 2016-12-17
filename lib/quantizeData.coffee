@@ -45,6 +45,16 @@ module.exports = ( product, side, interval = 60 )->
 
         grouped = R.mapObjIndexed threshold, R.groupBy timeSeries, docs
 
-        console.log grouped
+        removeNoPulses = (doc, value)->
+          return false if doc
+          # console.log doc
+          parseInt value
 
-        resolve grouped
+        isFalse = (data)->
+          data is false
+
+
+        values = R.values R.mapObjIndexed removeNoPulses, grouped
+        # console.log R.reject isFalse, values
+
+        resolve R.reject isFalse, values
