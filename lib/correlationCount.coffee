@@ -2,53 +2,27 @@ RSVP = require 'rsvp'
 R = require 'ramda'
 
 module.exports = (data)->
-  # console.log data
-
   new RSVP.Promise (resolve, reject)->
+    return [] if data.length is 0
 
-    values = R.values data
+    length = data.length
 
-
-    return [] if values.length is 0
-
-    length = values.length
-
-    volume = R.sum( R.pluck 'volume', values ) / length
-    delta = R.sum( R.pluck 'delta', values ) / length
-
-
-    bottomFifty = ( foo )->
-      foo.volume < volume and foo.delta < delta
-
-    data = R.reject bottomFifty, data
-
-
-    timeseries = R.keys R.reject bottomFifty, data
-
-    start = parseInt R.head timeseries
-    end = parseInt R.last timeseries
-
-
-    asdf = (foo)->
-      quantizeLine = ( tick )->
-        if data[tick] isnt undefined then 1 else 0
-
-      R.map quantizeLine, timeseries
+    start = parseInt R.head data
+    end = parseInt R.last data
 
     i = 0
     j = 0
 
-    value = timeseries[0]
 
     out = []
 
-    for i in [0...timeseries.length]
-      prev = timeseries[i-1]
-      current = timeseries[i]
+    for i in [0...data.length]
+      prev = data[i-1]
+      current = data[i]
       diff = current - prev
 
       unless diff is 1
-        out.push timeseries.slice j, i
+        out.push data.slice j, i
         j = i
 
 
@@ -69,11 +43,7 @@ module.exports = (data)->
       for y in [x...pairs.length]
         spacings.push pairs[y][0] - pairs[x-1][1]
 
-
     counts = R.countBy R.identity, spacings
-
-
-
 
     asdf = (a, b)->
       obj =
@@ -94,4 +64,4 @@ module.exports = (data)->
     belowCountAverage = (foo)->
       foo.count < countAverage
 
-    resolve R.reverse R.sortBy R.prop('count'), R.take 5, R.reject belowCountAverage, def
+    resolve R.reverse R.sortBy R.prop('count'), def
