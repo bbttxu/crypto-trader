@@ -8,24 +8,18 @@ moment = require 'moment'
 pricing = require './pricing'
 aggregate = require './aggregate'
 pulse = require './pulse'
+groupByIntervalTime = require './groupByIntervalTime'
 
 module.exports = ( product, side, interval = 60 )->
   ago = moment().subtract( 1, 'hour' )
+
+  groupByInterval = groupByIntervalTime interval
 
   search =
     product_id: product
     side: side
     time:
       $gte: ago.toISOString()
-
-  # console.log search
-
-  timeSeries = (doc)->
-    interval = interval
-    time = moment( doc.time ).unix()
-    # console.log time, doc.time, interval, Math.ceil( time / interval )
-
-    Math.ceil( time / interval )
 
 
   new RSVP.Promise (resolve, reject)->
@@ -37,7 +31,7 @@ module.exports = ( product, side, interval = 60 )->
       foo = collection.find( search ).toArray (err, docs)->
         db.close()
 
-        grouped = R.groupBy timeSeries, docs
+        grouped = groupByInterval docs
 
         aggregated = R.mapObjIndexed aggregate, grouped
 
