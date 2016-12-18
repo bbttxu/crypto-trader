@@ -16,10 +16,14 @@
     "coffee-coverage": "^1.0.1",
     "coffee-script": "^1.12.1",
     "coveralls": "^2.11.15",
+    "dotenv": "^2.0.0",
     "istanbul": "^0.4.5",
     "mocha": "^3.2.0",
     "mocha-lcov-reporter": "^1.2.0",
+    "moment": "^2.17.1",
+    "mongodb": "^2.2.16",
     "ramda": "^0.22.1",
+    "rsvp": "^3.3.3",
     "should": "^11.1.2"
   }
 }
