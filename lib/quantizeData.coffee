@@ -9,11 +9,8 @@ pricing = require './pricing'
 aggregate = require './aggregate'
 pulse = require './pulse'
 
-smallPotatoes = (doc)->
-  doc.volume is 0 or doc.delta is 0
-
 module.exports = ( product, side, interval = 60 )->
-  ago = moment().subtract( 1, 'day' )
+  ago = moment().subtract( 1, 'hour' )
 
   search =
     product_id: product
@@ -40,14 +37,9 @@ module.exports = ( product, side, interval = 60 )->
       foo = collection.find( search ).toArray (err, docs)->
         db.close()
 
-
         grouped = R.groupBy timeSeries, docs
 
-        # console.log grouped/
-
         aggregated = R.mapObjIndexed aggregate, grouped
-
-        # console.log aggregated
 
         volumes = ( R.pluck 'volume', R.values aggregated ).sort()
         prices = ( R.pluck 'price', R.values aggregated ).sort()

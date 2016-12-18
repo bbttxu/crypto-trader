@@ -5,7 +5,7 @@ pricing = require './pricing'
 
 module.exports = (data)->
   new RSVP.Promise (resolve, reject)->
-    resolve [] if data.length is 0
+    resolve [] if data.length is 0 or data.length is 1
 
     length = data.length
 

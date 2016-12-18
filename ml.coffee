@@ -14,7 +14,7 @@ module.exports = ( currencies ) ->
 
   correlationCount = require './lib/correlationCount'
 
-  INTERVAL = 1
+  INTERVAL = 7
 
   catchError = (foo)->
     console.log 'caught', foo
@@ -33,7 +33,6 @@ module.exports = ( currencies ) ->
     R.map addSide, sides
 
   lookups = R.flatten R.map letsDoCurrencies, currencies
-
 
   asdf = (correlation)->
     new RSVP.Promise (resolve, reject)->
@@ -57,7 +56,6 @@ module.exports = ( currencies ) ->
 
   keyed = R.mergeAll R.map make, lookups
 
-  # console.log keyed
 
   catchProblem = (problem)->
     console.log 'problem'
@@ -65,11 +63,10 @@ module.exports = ( currencies ) ->
 
 
   getResult = ( results )->
-    # console.log results
     showObjects = (a, b)->
       console.log b, a.value
 
     R.mapObjIndexed showObjects, results
 
-  # console.log keyed
+
   RSVP.hashSettled( keyed ).then( getResult ).catch( catchProblem )
