@@ -6,8 +6,23 @@ module.exports =
     mimumum: 0.1
 
   currencies:
-    'BTC-USD': {}
-    'LTC-USD': {}
-    'ETH-USD': {}
-    'ETH-BTC': {}
-    'LTC-BTC': {}
+    'BTC-USD':
+      sell: {}
+      buy: {}
+
+    # 'LTC-USD':
+    #   sell: {}
+    #   buy: {}
+
+    'ETH-USD':
+      sell: {}
+      buy: {}
+
+    'ETH-BTC':
+      sell: {}
+      buy: {}
+
+    # 'LTC-BTC':
+    #   sell: {}
+    #   buy: {}
+

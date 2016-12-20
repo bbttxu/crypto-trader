@@ -4,7 +4,7 @@ RSVP = require 'rsvp'
 R = require 'ramda'
 moment = require 'moment'
 
-regression = require './lib/regressions'
+
 currencySideRecent = require './lib/currencySideRecent'
 predictions = require './lib/predictions'
 quantizeData = require './lib/quantizeData'
