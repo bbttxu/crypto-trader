@@ -3,14 +3,35 @@
 USD_PLACES = 2
 BTC_PLACES = 8
 
-fix = (places, value)->
-  ( parseFloat value ).toFixed places
+fix = (places, value, side )->
+  power = Math.pow( 10, places )
 
-usd = (usd)->
-  fix USD_PLACES, usd
+  # console.log places, value, side, power
 
-btc = (btc, places = BTC_PLACES)->
-  fix places, btc
+  rootValue = value * power
+
+  roundedPower = Math.round( rootValue ) / power
+
+  # console.log 'rootValue', rootValue
+
+  if ( 'sell' is side )
+    roundedPower = Math.ceil( rootValue ) / power
+    # console.log 'side sell', roundedPower
+
+  if ( 'buy' is side )
+    roundedPower = Math.floor( rootValue ) / power
+    # console.log 'side buy', roundedPower
+
+  # console.log roundedPower
+
+  roundedPower.toFixed places
+
+
+usd = (usd, side)->
+  fix USD_PLACES, usd, side
+
+btc = (btc, side)->
+  fix BTC_PLACES, btc, side
 
 module.exports =
   usd: usd
