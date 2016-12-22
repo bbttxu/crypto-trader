@@ -17,7 +17,7 @@ reduceToFirstPriceOccurence = (accumulator = [], value)->
     last = value
     accumulator.push last
 
-  if last[1] isnt value[1]
+  if last[1] isnt value[1] and last[0] isnt value[0]
     accumulator.push value
 
   accumulator
@@ -32,7 +32,7 @@ reduceToLastPriceOccurence = (accumulator = [], value)->
 
     return accumulator
 
-  if last[1] is value[1]
+  if last[1] is value[1] or last[0] is value[0]
     accumulator = R.dropLast 1, accumulator
 
   accumulator.push value
