@@ -3,7 +3,7 @@ should = require 'should'
 cleanUpTrade = require '../lib/cleanUpTrades'
 
 describe 'cleanUpTrades', ->
-  it 'calculates spread on increase', ->
+  it 'calculates spread on increase, BTC-USD', ->
     input =
       size: 0.902938432
       side: 'sell'
@@ -20,7 +20,7 @@ describe 'cleanUpTrades', ->
     result.should.be.eql output
 
 
-  it 'calculates spread on decrease', ->
+  it 'calculates spread on decrease, BTC-USD', ->
     input =
       size: 0.902938432
       side: 'buy'
@@ -36,3 +36,35 @@ describe 'cleanUpTrades', ->
     result = cleanUpTrade input
     result.should.be.eql output
 
+  it 'calculates spread on increase, ETH-BTC', ->
+    input =
+      size: 0.902938432
+      side: 'sell'
+      price:  0.902938432
+      product_id: 'ETH-BTC'
+
+    output =
+      size: '0.90293843'
+      side: 'sell'
+      price:  '0.90293844'
+      product_id: 'ETH-BTC'
+
+    result = cleanUpTrade input
+    result.should.be.eql output
+
+
+  it 'calculates spread on decrease, ETH-BTC', ->
+    input =
+      size: 0.902938432
+      side: 'buy'
+      price:  0.902938432
+      product_id: 'ETH-BTC'
+
+    output =
+      size: '0.90293843'
+      side: 'buy'
+      price:  '0.90293843'
+      product_id: 'ETH-BTC'
+
+    result = cleanUpTrade input
+    result.should.be.eql output
