@@ -1,28 +1,33 @@
 regression = require 'regression'
 R = require 'ramda'
+moment = require 'moment'
 
 matchesToCartesian = require './matchesToCartesian'
 pricing = require './pricing'
 
-linearFirst = ( docs, future )->
-  last = R.last docs
+# linearFirst = ( docs, future )->
+#   last = R.last docs
 
-  unless last
-    return {}
+#   unless last
+#     return {}
 
-  coords = matchesToCartesian( docs )
+#   coords = matchesToCartesian( docs )
 
-  equation = regression( 'linear', coords ).equation
+#   equation = regression( 'linear', coords ).equation
 
-  m = equation[0]
-  b = equation[1]
+#   m = equation[0]
+#   b = equation[1]
 
-  y = ( m * future ) + b
+#   console.log future
 
-  return pricing.btc y
+#   y = ( m * future ) + b
+
+#   return pricing.btc y
 
 
-linearLast = ( docs, future )->
+linearLast = ( docs, future, base )->
+
+
   last = R.last docs
 
   unless last
@@ -37,40 +42,40 @@ linearLast = ( docs, future )->
 
   y = ( m * future ) + b
 
-  return pricing.btc y
+  return pricing[base] y
 
 
-
-module.exports = ( side, future )->
-
+module.exports = ( side, future, key )->
+  base = key.split( '-' )[1].toLowerCase()
 
   ( results )->
+
     last = R.last results
 
     isMyGoodSide = (value)->
-      # console.log 'angle', value
-      # console.log last.price
-      # console.log side
 
       if 'sell' is side
         return ( value > last.price )
-
 
       if 'buy' is side
         return ( value < last.price )
 
 
-
     equations = {}
 
-    equations.current = pricing.btc last.price
+    equations.n = results.length
 
-    linearFirstResults = linearFirst( results, future )
-    if linearFirstResults and isMyGoodSide linearFirstResults
-      equations["linear-first"] = linearFirstResults
+    return equations if results.length < 2
 
-    linearLastResults = linearLast( results, future )
-    if linearLastResults and isMyGoodSide linearLastResults
-      equations["linear-last"] = linearLast( results, future )
+    equations.current = pricing[base] last.price
+
+    # linearFirstResults = linearFirst( results, future )
+    # if linearFirstResults and isMyGoodSide linearFirstResults
+    #   equations["linear-first"] = linearFirstResults
+
+    linearLastResults = linearLast( results, future, base )
+    if linearLastResults and isMyGoodSide(linearLastResults) and not isNaN( linearLastResults )
+      equations.linear = linearLastResults
+
 
     equations

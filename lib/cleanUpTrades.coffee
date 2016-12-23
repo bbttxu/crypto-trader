@@ -1,3 +1,5 @@
+uuid = require 'uuid'
+
 pricing = require './pricing'
 
 cleanUpTrades = ( trade )->
@@ -8,6 +10,9 @@ cleanUpTrades = ( trade )->
 
   if 'BTC' is priceFormat
     trade.price = pricing.btc trade.price, trade.side
+
+  unless trade.client_oid
+    trade.client_oid = uuid.v4()
 
   trade.size = pricing.btc trade.size
   trade

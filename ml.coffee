@@ -10,7 +10,7 @@ predictions = require './lib/predictions'
 quantizeData = require './lib/quantizeData'
 correlationCount = require './lib/correlationCount'
 
-module.exports = ( currencies ) ->
+module.exports = ( currencies, store ) ->
 
   sides = [
     'sell',
@@ -51,8 +51,8 @@ module.exports = ( currencies ) ->
 
       intervals = [
         60,
-        60 * 60,
-        60 * 60 * 24,
+        # 60 * 60,
+        # 60 * 60 * 24,
       ]
 
       getPredictions = ( results )->
@@ -69,9 +69,13 @@ module.exports = ( currencies ) ->
 
         console.log [ data.currency, data.side ].join('-').toUpperCase()
         console.log R.mergeAll R.map intervalPredictions, intervals
+        return R.mergeAll R.map intervalPredictions, intervals
+
+
+        return R.mergeAll R.map intervalPredictions, intervals
 
       showOff = (results)->
-        console.log results
+        console.log 'results', results
 
       currencySideRecent( data.currency, data.side ).then( getPredictions ).then( showOff )
 
