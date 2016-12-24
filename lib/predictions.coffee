@@ -5,28 +5,7 @@ moment = require 'moment'
 matchesToCartesian = require './matchesToCartesian'
 pricing = require './pricing'
 
-# linearFirst = ( docs, future )->
-#   last = R.last docs
-
-#   unless last
-#     return {}
-
-#   coords = matchesToCartesian( docs )
-
-#   equation = regression( 'linear', coords ).equation
-
-#   m = equation[0]
-#   b = equation[1]
-
-#   console.log future
-
-#   y = ( m * future ) + b
-
-#   return pricing.btc y
-
-
 linearLast = ( docs, future, base )->
-
 
   last = R.last docs
 
@@ -42,7 +21,7 @@ linearLast = ( docs, future, base )->
 
   y = ( m * future ) + b
 
-  return pricing[base] y
+  return y
 
 
 module.exports = ( side, future, key )->
@@ -65,13 +44,9 @@ module.exports = ( side, future, key )->
 
     equations.n = results.length
 
-    return equations if results.length < 2
+    return equations if results.length <= 3
 
     equations.current = pricing[base] last.price
-
-    # linearFirstResults = linearFirst( results, future )
-    # if linearFirstResults and isMyGoodSide linearFirstResults
-    #   equations["linear-first"] = linearFirstResults
 
     linearLastResults = linearLast( results, future, base )
     if linearLastResults and isMyGoodSide(linearLastResults) and not isNaN( linearLastResults )

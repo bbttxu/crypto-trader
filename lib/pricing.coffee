@@ -1,7 +1,8 @@
 # pricing.coffee
 
 USD_PLACES = 2
-BTC_PLACES = 8
+BTC_PLACES = 4
+SIZE_PLACES = 4
 
 fix = (places, value, side )->
   power = Math.pow( 10, places )
@@ -33,6 +34,10 @@ usd = (usd, side)->
 btc = (btc, side)->
   fix BTC_PLACES, btc, side
 
+size = (tradeSize)->
+  fix SIZE_PLACES, tradeSize
+
 module.exports =
   usd: usd
   btc: btc
+  size: size

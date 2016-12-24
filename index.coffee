@@ -14,6 +14,10 @@ currencySideRecent = require './lib/currencySideRecent'
 config = require './config'
 ml = require './ml'
 
+projectionMinutes = 5
+historicalMinutes = projectionMinutes * 3
+
+
 
 { createStore, applyMiddleware } = require 'redux'
 
@@ -23,6 +27,9 @@ initalState =
   predictions: {}
   matches: {}
 
+  sent: []
+  orders: []
+
 reducers = (state, action) ->
 
   if typeof state == 'undefined'
@@ -30,6 +37,31 @@ reducers = (state, action) ->
 
   if action.type is 'UPDATE_ACCOUNT'
     state.currencies[action.currency.currency] = R.pick ['hold', 'balance'], action.currency
+
+  if action.type is 'ORDER_SENT'
+    # console.log 'ORDER_SENT', action.order
+    state.sent.push action.order
+
+  if action.type is 'ORDER_RECEIVED'
+    client_oid = action.order.client_oid
+    if client_oid
+      index = R.findIndex(R.propEq('client_oid', client_oid))( state.sent)
+      if index >= 0
+        state.orders.push action.order
+        state.sent = state.sent.splice( index, 1 )
+
+
+  if action.type is 'ORDER_FILLED'
+    client_oid = action.order.client_oid
+    if client_oid
+      index = R.findIndex(R.propEq('client_oid', client_oid))( state.orders )
+      if index >= 0
+
+        state.orders.push action.order
+        state.orders = state.sent.splice( index, 1 )
+
+  # if action.type is 'ORDER_CANCELLED'
+  #   console.log 'ORDER_CANCELLED'
 
   if action.type is 'ORDER_MATCHED'
     # console.log 'ORDER_MATCHED', action.match
@@ -45,9 +77,13 @@ reducers = (state, action) ->
     byTime = ( doc )->
       moment( doc.time ).valueOf()
 
-    state.matches[key] = R.sortBy byTime, state.matches[key]
+    tooOld = ( doc )->
+      cutoff = moment().subtract historicalMinutes, 'minute'
+      moment( doc.time ).isBefore cutoff
 
-    future = moment().add( 5 * 60, 'second' ).utc().unix()
+    state.matches[key] = R.reject tooOld, R.sortBy byTime, state.matches[key]
+
+    future = moment().add( projectionMinutes, 'minute' ).utc().unix()
     predictor = predictions action.match.side, future, key
 
     state.predictions[key] = predictor state.matches[key]
@@ -56,33 +92,97 @@ reducers = (state, action) ->
 
 store = createStore reducers, applyMiddleware(thunk.default)
 
-store.subscribe (foo)->
-  # keys = [ 'prices', 'predictions', 'matches' ]
-  # keys = [ 'prices', 'predictions' ]
-  keys = [ 'predictions' ]
-  # keys = [ 'predictions', 'matches' ]
-  keys = [ 'predictions', 'currencies' ]
+# store.subscribe (foo)->
+#   state = store.getState()
 
+#   console.log R.pick ['sent', 'orders'], state
+
+  # state = store.getState()
+
+  # console.log new Date()
+
+  # predictionResults = R.values R.pick [ 'predictions' ], state
+
+  # trades = proposals ( R.pick [ 'currencies' ], state ), predictionResults
+
+
+
+  # console.log new Date(), trades
+
+  # bySide = ( trade )->
+  #   trade.side
+
+  # sides = R.groupBy bySide, trades
+
+  # console.log sides
+
+
+foo = ->
   state = store.getState()
-
-  # console.log new Date(), R.keys store.getState()
-  console.log new Date()
 
   predictionResults = R.values R.pick [ 'predictions' ], state
 
-  proposals ( R.pick [ 'currencies' ], state ), predictionResults
-  # bySide = (foo)->
-  #   console.log 'a', R.keys( foo )
-  #   foo
+  trades = proposals ( R.pick [ 'currencies' ], state ), predictionResults
 
-  # console.log predictionResults
+  console.log new Date(), trades
+
+  bySide = ( trade )->
+    trade.side
+
+  sides = R.groupBy bySide, trades
+
+  # console.log sides
+
+  orderSuccess = ( response )->
+    body = JSON.parse response.body
+    if body.message
+      console.log 'orderSuccess', response.body
+
+  orderFailed = ( order )->
+    console.log 'orderFailed', order
+
+  sellOrder = ( order )->
+    store.dispatch
+      type: 'ORDER_SENT'
+      order: order
+
+    gdax.sell( order ).then( orderSuccess ).catch( orderFailed )
+
+  buyOrder = ( order )->
+    store.dispatch
+      type: 'ORDER_SENT'
+      order: order
+
+    gdax.buy( order ).then( orderSuccess ).catch( orderFailed )
 
 
-# foo = ->
-#   ml( R.keys config.currencies )
+  if sides.sell
+    R.map sellOrder, sides.sell
 
-# foo()
-# setInterval foo, 20 * 1000
+  if sides.buy
+    R.map buyOrder, sides.buy
+
+  # console.log R.pick [ 'orders', 'sent' ], state
+
+
+  cancelOrder = ( order )->
+
+    store.dispatch
+      type: 'ORDER_CANCELLED'
+      order: order
+
+    gdax.cancelOrder( order.order_id ).then( orderSuccess ).catch( orderFailed )
+
+  tooOld = ( order )->
+    # console.log order.time, moment( order.time ).isBefore moment().subtract( projectionMinutes, 'minutes' )
+    moment( order.time ).isBefore moment().subtract( projectionMinutes, 'minutes' )
+
+  expired = R.filter tooOld, state.orders
+
+  R.map cancelOrder, expired
+
+
+setInterval foo, 60000
 
 
 universalBad = ( err )->
@@ -124,6 +224,12 @@ setInterval updateAccounts, 59 * 60 * 1000
 
 
 
+dispatchMatch = ( match )->
+  store.dispatch
+    type: 'ORDER_MATCHED'
+    match: match
+
+
 
 # Update on matches
 Gdax = require 'gdax'
@@ -152,40 +258,49 @@ currencyStream = (product)->
     console.log foo
 
 
-  stream.on 'message', (foo)->
-    # console.log product, foo
-    if foo.type is 'match'
+  stream.on 'message', ( message )->
+    if message.type is 'match'
+      dispatchMatch message
+
+    if message.type is 'received'
       store.dispatch
-        type: 'ORDER_MATCHED'
-        match: foo
+        type: 'ORDER_RECEIVED'
+        order: message
+
+    if message.type is 'done' and message.reason is 'filled'
+      store.dispatch
+        type: 'ORDER_FILLED'
+        order: message
 
 
 R.map currencyStream, R.keys config.currencies
 
 
 
+INTERVAL = 100
 
+throttledDispatchMatch = (match, index)->
+  sendThrottledDispatchMatch = ->
+    console.log '*', moment( match.time ).fromNow( true )
+    dispatchMatch match
 
-
-
-
-
-dispatchMatch = ( match )->
-  store.dispatch
-    type: 'ORDER_MATCHED'
-    match: match
+  setTimeout sendThrottledDispatchMatch, ( ( index * INTERVAL ) + ( Math.random() * INTERVAL ) )
 
 
 hydrateRecentCurrency = ( product_id )->
   hydrateRecentCurrencySide = ( side )->
-    currencySideRecent( product_id, side, 15, 'minute' ).then ( matches )->
-      R.map dispatchMatch, matches
+    currencySideRecent( product_id, side, historicalMinutes, 'minute' ).then ( matches )->
+      mapIndexed = R.addIndex R.map
+      mapIndexed throttledDispatchMatch, R.reverse matches
 
 
   R.map hydrateRecentCurrencySide, [ 'sell', 'buy' ]
 
-R.map hydrateRecentCurrency, R.keys config.currencies
 
+waitAMoment = ->
+  R.map hydrateRecentCurrency, R.keys config.currencies
+
+setTimeout waitAMoment, 1000
 
 
 
