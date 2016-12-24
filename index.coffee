@@ -57,11 +57,18 @@ reducers = (state, action) ->
       index = R.findIndex(R.propEq('client_oid', client_oid))( state.orders )
       if index >= 0
 
-        state.orders.push action.order
-        state.orders = state.sent.splice( index, 1 )
+        state.orders = state.orders.splice( index, 1 )
 
-  # if action.type is 'ORDER_CANCELLED'
-  #   console.log 'ORDER_CANCELLED'
+        getFills()
+
+  if action.type is 'ORDER_CANCELLED'
+    console.log 'ORDER_CANCELLED', action.order
+    order_id = action.order.order_id
+    console.log order_id
+    if order_id
+      index = R.findIndex(R.propEq('order_id', order_id))( state.orders )
+      if index >= 0
+        state.orders.splice( index, 1 )
 
   if action.type is 'ORDER_MATCHED'
     # console.log 'ORDER_MATCHED', action.match
@@ -92,29 +99,15 @@ reducers = (state, action) ->
 
 store = createStore reducers, applyMiddleware(thunk.default)
 
-# store.subscribe (foo)->
-#   state = store.getState()
 
-#   console.log R.pick ['sent', 'orders'], state
-
-  # state = store.getState()
-
-  # console.log new Date()
-
-  # predictionResults = R.values R.pick [ 'predictions' ], state
-
-  # trades = proposals ( R.pick [ 'currencies' ], state ), predictionResults
+orderSuccess = ( response )->
+  body = JSON.parse response.body
+  if body.message
+    console.log 'orderSuccess', response.body
 
 
-
-  # console.log new Date(), trades
-
-  # bySide = ( trade )->
-  #   trade.side
-
-  # sides = R.groupBy bySide, trades
-
-  # console.log sides
+orderFailed = ( order )->
+  console.log 'orderFailed', order
 
 
 foo = ->
@@ -124,22 +117,12 @@ foo = ->
 
   trades = proposals ( R.pick [ 'currencies' ], state ), predictionResults
 
-  console.log new Date(), trades
+  # console.log new Date(), trades
 
   bySide = ( trade )->
     trade.side
 
   sides = R.groupBy bySide, trades
-
-  # console.log sides
-
-  orderSuccess = ( response )->
-    body = JSON.parse response.body
-    if body.message
-      console.log 'orderSuccess', response.body
-
-  orderFailed = ( order )->
-    console.log 'orderFailed', order
 
   sellOrder = ( order )->
     store.dispatch
@@ -162,27 +145,59 @@ foo = ->
   if sides.buy
     R.map buyOrder, sides.buy
 
-  # console.log R.pick [ 'orders', 'sent' ], state
 
+setInterval foo, 60000
+
+###
+_________                            .__
+\_   ___ \_____    ____   ____  ____ |  |
+/    \  \/\__  \  /    \_/ ___\/ __ \|  |
+\     \____/ __ \|   |  \  \__\  ___/|  |__
+ \______  (____  /___|  /\___  >___  >____/
+        \/     \/     \/     \/    \/
+________            .___
+\_____  \_______  __| _/___________  ______
+ /   |   \_  __ \/ __ |/ __ \_  __ \/  ___/
+/    |    \  | \/ /_/ \  ___/|  | \/\___ \
+\_______  /__|  \____ |\___  >__|  /____  >
+        \/           \/    \/           \/
+###
+
+cancelOrderFailed = ( order )->
+  console.log 'orderFailed', order
+
+clearOutOldOrders = ->
+  state = store.getState()
 
   cancelOrder = ( order )->
+    cancelOrderSuccess = ( response )->
+      console.log 'response', response.message
 
-    store.dispatch
-      type: 'ORDER_CANCELLED'
-      order: order
+      store.dispatch
+        type: 'ORDER_CANCELLED'
+        order: order
 
-    gdax.cancelOrder( order.order_id ).then( orderSuccess ).catch( orderFailed )
+      # if response.body
+      #   body = JSON.parse response.body
+      #   if body.message
+      #     console.log 'orderSuccess', response.body
+      # else
+      #   console.log response
+
+
+    gdax.cancelOrder( order.order_id ).then( cancelOrderSuccess ).catch( cancelOrderFailed )
 
   tooOld = ( order )->
     # console.log order.time, moment( order.time ).isBefore moment().subtract( projectionMinutes, 'minutes' )
     moment( order.time ).isBefore moment().subtract( projectionMinutes, 'minutes' )
 
   expired = R.filter tooOld, state.orders
+  if expired.length > 0
+    console.log 'cancel', R.pluck 'order_id', expired
+    R.map cancelOrder, expired
 
-  R.map cancelOrder, expired
 
-
-setInterval foo, 60000
+setInterval clearOutOldOrders, 6000
 
 
 universalBad = ( err )->
@@ -277,6 +292,15 @@ R.map currencyStream, R.keys config.currencies
 
 
 
+###
+  ___ ___            .___              __
+ /   |   \ ___.__. __| _/___________ _/  |_  ____
+/    ~    <   |  |/ __ |\_  __ \__  \\   __\/ __ \
+\    Y    /\___  / /_/ | |  | \// __ \|  | \  ___/
+ \___|_  / / ____\____ | |__|  (____  /__|  \___  >
+       \/  \/         \/            \/          \/
+###
+
 INTERVAL = 100
 
 throttledDispatchMatch = (match, index)->
@@ -303,4 +327,51 @@ waitAMoment = ->
 setTimeout waitAMoment, 1000
 
 
+
+###
+__________                             ___.
+\______   \ ____   _____   ____   _____\_ |__   ___________
+ |       _// __ \ /     \_/ __ \ /     \| __ \_/ __ \_  __ \
+ |    |   \  ___/|  Y Y  \  ___/|  Y Y  \ \_\ \  ___/|  | \/
+ |____|_  /\___  >__|_|  /\___  >__|_|  /___  /\___  >__|
+        \/     \/      \/     \/      \/    \/     \/
+###
+
+saveFill = require './lib/saveFill'
+
+throttledDispatchFill = (match, index = 0)->
+  wereGood = (result)->
+
+    since = moment( match.created_at ).fromNow( true )
+    if result is true
+      console.log '$', since
+    else
+      console.log '+', since
+
+  orNot = (result)->
+    console.log 'orNot', result
+
+
+  sendThrottledDispatchFill = ->
+    saveFill( match ).then( wereGood ).catch(orNot)
+
+  setTimeout sendThrottledDispatchFill, ( ( index * INTERVAL ) + ( Math.random() * INTERVAL ) )
+
+
+saveFills = ( fills )->
+  mapIndexed = R.addIndex R.map
+  mapIndexed throttledDispatchFill, R.reverse fills
+
+cantSaveFills = ( fills )->
+  console.log 'cantSaveFills', fills
+
+
+getCurrencyFills = ( product_id )->
+  gdax.getFills( product_id ).then( saveFills ).catch( cantSaveFills )
+
+
+getFills = ->
+  R.map getCurrencyFills, R.keys config.currencies
+
+setTimeout getFills, 2000
 

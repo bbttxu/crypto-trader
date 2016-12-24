@@ -67,13 +67,30 @@ getAccounts = ( currency )->
 
     authedClient.getAccounts callback
 
-cancelOrder = ( orderID )->
-  new RSVP.Promise ( resolve, reject )->
-    callback = ( err, result )->
-      reject err if err
-      resolve result
+cancelOrder = ( order )->
+  new RSVP.Promise (resolve, reject)->
+    callback = (err, data)->
+      if err
+        # data = JSON.parse err.body
+        console.log 'err', err, order
 
-    authedClient.cancelOrder orderID, callback
+      unless data
+        console.log 'failed cancel, data:', data
+        reject failed: cancelOrder: order
+
+      obj = {}
+
+      payload = JSON.parse data.body
+      payload = (JSON.parse data.body).message unless payload is 'OK'
+      # payload = 'Found' if order is data.body[0]
+      # console.log 'check', order, data.body[0]
+
+      obj.id = order
+      obj.message = payload
+
+      resolve obj
+
+    authedClient.cancelOrder order, callback
 
 buy = ( order )->
   new RSVP.Promise ( resolve, reject )->
@@ -92,6 +109,16 @@ sell = ( order )->
     authedClient.sell order, callback
 
 
+
+getFills = (product = product_id)->
+  new RSVP.Promise (resolve, reject)->
+    authedClient.getFills {product_id: product}, (err, data)->
+      if err
+        data = JSON.parse err.body
+        console.log 'err', data, order
+
+      resolve JSON.parse data.body
+
 module.exports =
   cancelAllOrders: cancelAllOrders
   getProduct24HrStats: getProduct24HrStats
@@ -102,3 +129,4 @@ module.exports =
   buy: buy
   sell: sell
 
+  getFills: getFills
