@@ -1,4 +1,5 @@
 should = require 'should'
+R = require 'ramda'
 
 cleanUpTrade = require '../lib/cleanUpTrades'
 
@@ -11,12 +12,12 @@ describe 'cleanUpTrades', ->
       product_id: 'BTC-USD'
 
     output =
-      size: '0.90293843'
+      size: '0.9029'
       side: 'sell'
       price:  '875.35'
       product_id: 'BTC-USD'
 
-    result = cleanUpTrade input
+    result = R.pick ['size', 'side', 'price', 'product_id'], cleanUpTrade input
     result.should.be.eql output
 
 
@@ -28,12 +29,12 @@ describe 'cleanUpTrades', ->
       product_id: 'BTC-USD'
 
     output =
-      size: '0.90293843'
+      size: '0.9029'
       side: 'buy'
       price:  '875.34'
       product_id: 'BTC-USD'
 
-    result = cleanUpTrade input
+    result = R.pick ['size', 'side', 'price', 'product_id'], cleanUpTrade input
     result.should.be.eql output
 
   it 'calculates spread on increase, ETH-BTC', ->
@@ -44,12 +45,12 @@ describe 'cleanUpTrades', ->
       product_id: 'ETH-BTC'
 
     output =
-      size: '0.90293843'
+      size: '0.9029'
       side: 'sell'
-      price:  '0.90293844'
+      price:  '0.9030'
       product_id: 'ETH-BTC'
 
-    result = cleanUpTrade input
+    result = R.pick ['size', 'side', 'price', 'product_id'], cleanUpTrade input
     result.should.be.eql output
 
 
@@ -61,10 +62,10 @@ describe 'cleanUpTrades', ->
       product_id: 'ETH-BTC'
 
     output =
-      size: '0.90293843'
+      size: '0.9029'
       side: 'buy'
-      price:  '0.90293843'
+      price:  '0.9029'
       product_id: 'ETH-BTC'
 
-    result = cleanUpTrade input
+    result = R.pick ['size', 'side', 'price', 'product_id'], cleanUpTrade input
     result.should.be.eql output
