@@ -1,4 +1,4 @@
-require('dotenv').config( silent: true )
+require('dotenv').config { silent: true }
 
 R = require 'ramda'
 moment = require 'moment'

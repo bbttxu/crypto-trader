@@ -8,6 +8,7 @@
     "node": "6.9.x"
   },
   "scripts": {
+    "start": "coffee index.coffee",
     "test": "mocha && istanbul report text-summary lcov",
     "dev": "mocha -w",
     "logs": "modulus project logs tail -p 'crypto-trader'"
