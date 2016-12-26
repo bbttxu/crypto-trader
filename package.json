@@ -1,7 +1,7 @@
 {
   "name": "crypto-trader",
   "mod-project-name": "crypto-trader",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "automated crypto currency trading bot",
   "main": "index.coffee",
   "engines": {
