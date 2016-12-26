@@ -119,6 +119,17 @@ getFills = (product = product_id)->
 
       resolve JSON.parse data.body
 
+
+getOrders = (product_id)->
+  new RSVP.Promise (resolve, reject)->
+    callback = ( result )->
+      console.log 'result', result
+      resolve result
+
+
+    authedClient.getOrders( product_id, callback )
+
+
 module.exports =
   cancelAllOrders: cancelAllOrders
   getProduct24HrStats: getProduct24HrStats
@@ -130,3 +141,4 @@ module.exports =
   sell: sell
 
   getFills: getFills
+  getOrders: getOrders

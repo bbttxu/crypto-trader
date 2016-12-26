@@ -10,11 +10,12 @@ gdax = require './lib/gdax-client'
 predictions = require './lib/predictions'
 proposals = require './lib/proposals'
 currencySideRecent = require './lib/currencySideRecent'
+saveFill = require './lib/saveFill'
 
 config = require './config'
 ml = require './ml'
 
-projectionMinutes = 5
+projectionMinutes = 10
 historicalMinutes = projectionMinutes * 3
 
 
@@ -48,10 +49,11 @@ reducers = (state, action) ->
       index = R.findIndex(R.propEq('client_oid', client_oid))( state.sent)
       if index >= 0
         state.orders.push action.order
-        state.sent = state.sent.splice( index, 1 )
+        state.sent.splice( index, 1 )
 
 
   if action.type is 'ORDER_FILLED'
+    # console.log action.order
     client_oid = action.order.client_oid
     if client_oid
       index = R.findIndex(R.propEq('client_oid', client_oid))( state.orders )
@@ -62,16 +64,24 @@ reducers = (state, action) ->
         getFills()
 
   if action.type is 'ORDER_CANCELLED'
-    console.log 'ORDER_CANCELLED', action.order
     order_id = action.order.order_id
-    console.log order_id
+    console.log 'ORDER_CANCELLED', order_id
     if order_id
       index = R.findIndex(R.propEq('order_id', order_id))( state.orders )
       if index >= 0
         state.orders.splice( index, 1 )
 
   if action.type is 'ORDER_MATCHED'
-    # console.log 'ORDER_MATCHED', action.match
+    saveFillSuccess = ( result )->
+      since = moment( result.created_at ).fromNow( true )
+      if result is true
+        console.log '$', since
+      else
+        console.log '+', since
+
+
+    saveFill( action.match ).then( saveFillSuccess ).catch( universalBad )
+
     key = [ action.match.product_id, action.match.side ].join( '-' ).toUpperCase()
 
     state.prices[key] = R.pick [ 'time', 'price'], action.match
@@ -171,7 +181,7 @@ clearOutOldOrders = ->
 
   cancelOrder = ( order )->
     cancelOrderSuccess = ( response )->
-      console.log 'response', response.message
+      # console.log 'response', response.message
 
       store.dispatch
         type: 'ORDER_CANCELLED'
@@ -197,7 +207,7 @@ clearOutOldOrders = ->
     R.map cancelOrder, expired
 
 
-setInterval clearOutOldOrders, 6000
+setInterval clearOutOldOrders, 1000
 
 
 universalBad = ( err )->
@@ -337,23 +347,23 @@ __________                             ___.
         \/     \/      \/     \/      \/    \/     \/
 ###
 
-saveFill = require './lib/saveFill'
-
 throttledDispatchFill = (match, index = 0)->
-  wereGood = (result)->
+  # wereGood = (result)->
 
-    since = moment( match.created_at ).fromNow( true )
-    if result is true
-      console.log '$', since
-    else
-      console.log '+', since
+  #   since = moment( match.created_at ).fromNow( true )
+  #   if result is true
+  #     console.log '$', since
+  #   else
+  #     console.log '+', since
 
-  orNot = (result)->
-    console.log 'orNot', result
+  # orNot = (result)->
+  #   console.log 'orNot', result
 
 
   sendThrottledDispatchFill = ->
-    saveFill( match ).then( wereGood ).catch(orNot)
+    dispatchMatch match
+
+    # saveFill( match ).then( wereGood ).catch(orNot)
 
   setTimeout sendThrottledDispatchFill, ( ( index * INTERVAL ) + ( Math.random() * INTERVAL ) )
 
@@ -375,3 +385,6 @@ getFills = ->
 
 setTimeout getFills, 2000
 
+# Cancel All Orders, start with a clean slate
+gdax.cancelAllOrders( R.keys config.currencies ).then (result)->
+  console.log result
