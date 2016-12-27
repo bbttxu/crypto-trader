@@ -2,19 +2,23 @@ require('dotenv').config( silent: true )
 
 RSVP = require 'rsvp'
 R = require 'ramda'
+moment = require 'moment'
 
-module.exports = ( currencies ) ->
+
+currencySideRecent = require './lib/currencySideRecent'
+predictions = require './lib/predictions'
+quantizeData = require './lib/quantizeData'
+correlationCount = require './lib/correlationCount'
+
+module.exports = ( currencies, store ) ->
 
   sides = [
     'sell',
     'buy',
   ]
 
-  quantizeData = require './lib/quantizeData'
 
-  correlationCount = require './lib/correlationCount'
-
-  INTERVAL = 1
+  INTERVAL = 7
 
   catchError = (foo)->
     console.log 'caught', foo
@@ -35,29 +39,54 @@ module.exports = ( currencies ) ->
   lookups = R.flatten R.map letsDoCurrencies, currencies
 
 
-  asdf = (correlation)->
+  asdf = (data)->
     new RSVP.Promise (resolve, reject)->
 
       catchProblem = (problem)->
         reject problem
 
-      getResult = (result)->
-        resolve result
+      getRegressionResult = (results)->
+        line = regression results
+        resolve line
 
-      quantizeData( correlation.currency, correlation.side, correlation.interval ).then( correlationCount ).then( getResult ).catch( catchProblem )
-      #
+      intervals = [
+        60,
+        # 60 * 60,
+        # 60 * 60 * 24,
+      ]
 
+      getPredictions = ( results )->
+        intervalPredictions = ( interval = 60 )->
+
+          obj = {}
+          future = moment().add( interval, 'second' ).unix()
+
+          past = moment().subtract( interval, 'second' ).unix()
+
+          pricePredictions = predictions( data.side, future )
+          obj["#{interval}"] = pricePredictions results
+          obj
+
+        console.log [ data.currency, data.side ].join('-').toUpperCase()
+        console.log R.mergeAll R.map intervalPredictions, intervals
+        return R.mergeAll R.map intervalPredictions, intervals
+
+
+        return R.mergeAll R.map intervalPredictions, intervals
+
+      showOff = (results)->
+        console.log 'results', results
+
+      currencySideRecent( data.currency, data.side ).then( getPredictions ).then( showOff )
 
 
   make = ( correlation )->
     obj = {}
     key = [ correlation.currency, correlation.side, correlation.interval ].join( '-' ).toUpperCase()
-    obj[key] = asdf correlation
+    obj[key] = asdf(correlation)
     obj
 
   keyed = R.mergeAll R.map make, lookups
-
-  # console.log keyed
 
   catchProblem = (problem)->
     console.log 'problem'
@@ -65,11 +94,10 @@ module.exports = ( currencies ) ->
 
 
   getResult = ( results )->
-    # console.log results
     showObjects = (a, b)->
       console.log b, a.value
 
     R.mapObjIndexed showObjects, results
 
-  # console.log keyed
+
   RSVP.hashSettled( keyed ).then( getResult ).catch( catchProblem )

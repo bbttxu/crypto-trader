@@ -1,0 +1,1 @@
+proposals = require '../lib/proposals'

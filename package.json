@@ -1,29 +1,38 @@
 {
   "name": "crypto-trader",
-  "version": "0.0.1",
+  "mod-project-name": "crypto-trader",
+  "version": "0.0.2",
   "description": "automated crypto currency trading bot",
   "main": "index.coffee",
   "engines": {
     "node": "6.9.x"
   },
   "scripts": {
+    "start": "coffee index.coffee",
     "test": "mocha && istanbul report text-summary lcov",
-    "dev": "mocha -w"
+    "dev": "mocha -w",
+    "logs": "modulus project logs tail -p 'crypto-trader'"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "coffee-coverage": "^1.0.1",
-    "coffee-script": "^1.12.1",
+    "coffee-script": "1.12.2",
     "coveralls": "^2.11.15",
     "dotenv": "^2.0.0",
+    "gdax": "^0.3.0",
     "istanbul": "^0.4.5",
     "mocha": "^3.2.0",
     "mocha-lcov-reporter": "^1.2.0",
     "moment": "^2.17.1",
     "mongodb": "^2.2.16",
     "ramda": "^0.22.1",
+    "redux": "^3.6.0",
+    "redux-thunk": "^2.1.0",
+    "regression": "^1.2.1",
     "rsvp": "^3.3.3",
-    "should": "^11.1.2"
+    "should": "^11.1.2",
+    "thunk": "^0.0.1",
+    "uuid": "3.0.1"
   }
 }
