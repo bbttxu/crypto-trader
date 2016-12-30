@@ -2,7 +2,6 @@ R = require 'ramda'
 redux = require 'redux'
 moment = require 'moment'
 
-saveFill = require '../lib/saveFill'
 predictions = require '../lib/predictions'
 
 config = require '../config'
@@ -65,15 +64,6 @@ reducers = (state, action) ->
         state.orders.splice( index, 1 )
 
   if action.type is 'ORDER_MATCHED'
-    saveFillSuccess = ( result )->
-      since = moment( result.created_at ).fromNow( true )
-      if result is true
-        console.log '$', since
-      else
-        console.log '+', since
-
-
-    saveFill( action.match ).then( saveFillSuccess ).catch( universalBad )
 
     key = [ action.match.product_id, action.match.side ].join( '-' ).toUpperCase()
 

@@ -161,11 +161,24 @@ updateAccounts()
 setInterval updateAccounts, 59 * 60 * 1000
 
 
+universalBad = ( err )->
+  console.log 'bad', err
+  throw err if err
 
-dispatchMatch = ( match )->
+dispatchMatch = ( match, save = false )->
   store.dispatch
     type: 'ORDER_MATCHED'
     match: match
+
+  if save
+    saveFillSuccess = ( result )->
+      since = moment( result.created_at ).fromNow( true )
+      if result is true
+        console.log '$', since
+      else
+        console.log '+', since
+
+    saveFill( match ).then( saveFillSuccess ).catch( universalBad )
 
 
 
