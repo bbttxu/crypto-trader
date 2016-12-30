@@ -41,19 +41,15 @@ reducers = (state, action) ->
 
 
   if action.type is 'ORDER_FILLED'
-    # console.log action.order
-    client_oid = action.order.client_oid
-    if client_oid
-      index = R.findIndex(R.propEq('client_oid', client_oid))( state.orders )
+    order_id = action.order.order_id
+    if order_id
+      index = R.findIndex(R.propEq('order_id', order_id))( state.orders )
       if index >= 0
+        state.orders.splice( index, 1 )
 
-        state.orders = state.orders.splice( index, 1 )
-
-        getFills()
 
   if action.type is 'ORDER_CANCELLED'
     order_id = action.order.order_id
-    console.log 'ORDER_CANCELLED', order_id
     if order_id
       index = R.findIndex(R.propEq('order_id', order_id))( state.orders )
       if index >= 0

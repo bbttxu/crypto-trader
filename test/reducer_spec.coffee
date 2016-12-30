@@ -67,7 +67,7 @@ describe 'reducer', ->
     state.matches.should.be.eql expectedMatches
 
 
- it 'order sent', ->
+  it 'order sent', ->
 
     initialState =
       sent: []
@@ -88,7 +88,7 @@ describe 'reducer', ->
     state.sent.should.be.eql expectedSent
 
 
- it 'order received', ->
+  it 'order received', ->
 
     order =
       client_oid: 'abcdefgh'
@@ -109,3 +109,41 @@ describe 'reducer', ->
 
     state.sent.length.should.be.eql 0
     state.orders.should.be.eql expectedOrders
+
+
+  it 'order canceled', ->
+
+    order =
+      order_id: 'bcdefghi'
+
+    initialState =
+      orders: [ order ]
+
+    store = createStore reducer, initialState
+
+    store.dispatch
+      type: 'ORDER_CANCELLED'
+      order: order
+
+    state = store.getState()
+
+    state.orders.length.should.be.eql 0
+
+
+  it 'order filled', ->
+
+    order =
+      order_id: 'cdefghij'
+
+    initialState =
+      orders: [ order ]
+
+    store = createStore reducer, initialState
+
+    store.dispatch
+      type: 'ORDER_FILLED'
+      order: order
+
+    state = store.getState()
+
+    state.orders.length.should.be.eql 0
