@@ -2,6 +2,7 @@ R = require 'ramda'
 redux = require 'redux'
 moment = require 'moment'
 
+pricing = require '../lib/pricing'
 predictions = require '../lib/predictions'
 
 config = require '../config'
@@ -28,7 +29,12 @@ reducers = (state, action) ->
     state.currencies[action.currency.currency] = R.pick ['hold', 'balance'], action.currency
 
   if action.type is 'ORDER_SENT'
-    # console.log 'ORDER_SENT', action.order
+    currency = action.order.product_id.split('-')[1]
+    side = action.order.side
+
+    state.currencies[currency].hold = pricing.size( parseFloat( state.currencies[currency].hold ) + parseFloat( action.order.size ) )
+    state.currencies[currency].balance = pricing.size( parseFloat( state.currencies[currency].balance ) - parseFloat( action.order.size ) )
+
     state.sent.push action.order
 
   if action.type is 'ORDER_RECEIVED'
