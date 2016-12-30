@@ -5,10 +5,10 @@ moment = require 'moment'
 saveFill = require '../lib/saveFill'
 predictions = require '../lib/predictions'
 
-projectionMinutes = 10
+config = require '../config'
+
+projectionMinutes = config.default.interval.value
 historicalMinutes = projectionMinutes * 3
-
-
 
 universalBad = ( err )->
   console.log 'bad', err
@@ -88,12 +88,12 @@ reducers = (state, action) ->
       moment( doc.time ).valueOf()
 
     tooOld = ( doc )->
-      cutoff = moment().subtract historicalMinutes, 'minute'
+      cutoff = moment().subtract historicalMinutes, config.default.interval.units
       moment( doc.time ).isBefore cutoff
 
     state.matches[key] = R.reject tooOld, R.sortBy byTime, state.matches[key]
 
-    future = moment().add( projectionMinutes, 'minute' ).utc().unix()
+    future = moment().add( projectionMinutes, config.default.interval.units ).utc().unix()
     predictor = predictions action.match.side, future, key
 
     state.predictions[key] = predictor state.matches[key]

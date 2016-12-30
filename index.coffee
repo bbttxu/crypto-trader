@@ -13,7 +13,7 @@ saveFill = require './lib/saveFill'
 config = require './config'
 ml = require './ml'
 
-projectionMinutes = 10
+projectionMinutes = config.default.interval.value
 historicalMinutes = projectionMinutes * 3
 
 reducers = require './reducers/reducer'
@@ -112,7 +112,7 @@ clearOutOldOrders = ->
 
   tooOld = ( order )->
     # console.log order.time, moment( order.time ).isBefore moment().subtract( projectionMinutes, 'minutes' )
-    moment( order.time ).isBefore moment().subtract( projectionMinutes, 'minutes' )
+    moment( order.time ).isBefore moment().subtract( projectionMinutes, config.default.interval.units )
 
   expired = R.filter tooOld, state.orders
   if expired.length > 0
@@ -200,15 +200,15 @@ currencyStream = (product)->
     if message.type is 'match'
       dispatchMatch message
 
-    if message.type is 'received'
-      store.dispatch
-        type: 'ORDER_RECEIVED'
-        order: message
+    # if message.type is 'received'
+    #   store.dispatch
+    #     type: 'ORDER_RECEIVED'
+    #     order: message
 
-    if message.type is 'done' and message.reason is 'filled'
-      store.dispatch
-        type: 'ORDER_FILLED'
-        order: message
+    # if message.type is 'done' and message.reason is 'filled'
+    #   store.dispatch
+    #     type: 'ORDER_FILLED'
+    #     order: message
 
 
 R.map currencyStream, R.keys config.currencies
@@ -236,7 +236,7 @@ throttledDispatchMatch = (match, index)->
 
 hydrateRecentCurrency = ( product_id )->
   hydrateRecentCurrencySide = ( side )->
-    currencySideRecent( product_id, side, historicalMinutes, 'minute' ).then ( matches )->
+    currencySideRecent( product_id, side, historicalMinutes, config.default.interval.units ).then ( matches )->
       mapIndexed = R.addIndex R.map
       mapIndexed throttledDispatchMatch, R.reverse matches
 
@@ -274,7 +274,9 @@ throttledDispatchFill = (match, index = 0)->
 
 
   sendThrottledDispatchFill = ->
-    dispatchMatch match
+    store.dispatch
+      type: 'HISTORICAL_MATCH'
+      match: match
 
     # saveFill( match ).then( wereGood ).catch(orNot)
 
@@ -301,3 +303,6 @@ setTimeout getFills, 2000
 # Cancel All Orders, start with a clean slate
 gdax.cancelAllOrders( R.keys config.currencies ).then (result)->
   console.log result
+
+process.on 'uncaughtException', (err) ->
+  console.log 'Caught exception: ' + err
