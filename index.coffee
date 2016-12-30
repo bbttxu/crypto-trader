@@ -2,12 +2,10 @@ require('dotenv').config { silent: true }
 
 R = require 'ramda'
 moment = require 'moment'
-redux = require 'redux'
 thunk = require 'redux-thunk'
 
 gdax = require './lib/gdax-client'
 
-predictions = require './lib/predictions'
 proposals = require './lib/proposals'
 currencySideRecent = require './lib/currencySideRecent'
 saveFill = require './lib/saveFill'
@@ -15,97 +13,12 @@ saveFill = require './lib/saveFill'
 config = require './config'
 ml = require './ml'
 
-projectionMinutes = 10
+projectionMinutes = config.default.interval.value
 historicalMinutes = projectionMinutes * 3
 
-
+reducers = require './reducers/reducer'
 
 { createStore, applyMiddleware } = require 'redux'
-
-initalState =
-  currencies: {}
-  prices: {}
-  predictions: {}
-  matches: {}
-
-  sent: []
-  orders: []
-
-reducers = (state, action) ->
-
-  if typeof state == 'undefined'
-    return initalState
-
-  if action.type is 'UPDATE_ACCOUNT'
-    state.currencies[action.currency.currency] = R.pick ['hold', 'balance'], action.currency
-
-  if action.type is 'ORDER_SENT'
-    # console.log 'ORDER_SENT', action.order
-    state.sent.push action.order
-
-  if action.type is 'ORDER_RECEIVED'
-    client_oid = action.order.client_oid
-    if client_oid
-      index = R.findIndex(R.propEq('client_oid', client_oid))( state.sent)
-      if index >= 0
-        state.orders.push action.order
-        state.sent.splice( index, 1 )
-
-
-  if action.type is 'ORDER_FILLED'
-    # console.log action.order
-    client_oid = action.order.client_oid
-    if client_oid
-      index = R.findIndex(R.propEq('client_oid', client_oid))( state.orders )
-      if index >= 0
-
-        state.orders = state.orders.splice( index, 1 )
-
-        getFills()
-
-  if action.type is 'ORDER_CANCELLED'
-    order_id = action.order.order_id
-    console.log 'ORDER_CANCELLED', order_id
-    if order_id
-      index = R.findIndex(R.propEq('order_id', order_id))( state.orders )
-      if index >= 0
-        state.orders.splice( index, 1 )
-
-  if action.type is 'ORDER_MATCHED'
-    saveFillSuccess = ( result )->
-      since = moment( result.created_at ).fromNow( true )
-      if result is true
-        console.log '$', since
-      else
-        console.log '+', since
-
-
-    saveFill( action.match ).then( saveFillSuccess ).catch( universalBad )
-
-    key = [ action.match.product_id, action.match.side ].join( '-' ).toUpperCase()
-
-    state.prices[key] = R.pick [ 'time', 'price'], action.match
-
-    unless state.matches[key]
-      state.matches[key] = []
-
-    state.matches[key].push action.match
-
-    byTime = ( doc )->
-      moment( doc.time ).valueOf()
-
-    tooOld = ( doc )->
-      cutoff = moment().subtract historicalMinutes, 'minute'
-      moment( doc.time ).isBefore cutoff
-
-    state.matches[key] = R.reject tooOld, R.sortBy byTime, state.matches[key]
-
-    future = moment().add( projectionMinutes, 'minute' ).utc().unix()
-    predictor = predictions action.match.side, future, key
-
-    state.predictions[key] = predictor state.matches[key]
-
-  state
 
 store = createStore reducers, applyMiddleware(thunk.default)
 
@@ -199,7 +112,7 @@ clearOutOldOrders = ->
 
   tooOld = ( order )->
     # console.log order.time, moment( order.time ).isBefore moment().subtract( projectionMinutes, 'minutes' )
-    moment( order.time ).isBefore moment().subtract( projectionMinutes, 'minutes' )
+    moment( order.time ).isBefore moment().subtract( projectionMinutes, config.default.interval.units )
 
   expired = R.filter tooOld, state.orders
   if expired.length > 0
@@ -248,11 +161,24 @@ updateAccounts()
 setInterval updateAccounts, 59 * 60 * 1000
 
 
+universalBad = ( err )->
+  console.log 'bad', err
+  throw err if err
 
-dispatchMatch = ( match )->
+dispatchMatch = ( match, save = false )->
   store.dispatch
     type: 'ORDER_MATCHED'
     match: match
+
+  if save
+    saveFillSuccess = ( result )->
+      since = moment( result.created_at ).fromNow( true )
+      if result is true
+        console.log '$', since
+      else
+        console.log '+', since
+
+    saveFill( match ).then( saveFillSuccess ).catch( universalBad )
 
 
 
@@ -287,15 +213,15 @@ currencyStream = (product)->
     if message.type is 'match'
       dispatchMatch message
 
-    if message.type is 'received'
-      store.dispatch
-        type: 'ORDER_RECEIVED'
-        order: message
+    # if message.type is 'received'
+    #   store.dispatch
+    #     type: 'ORDER_RECEIVED'
+    #     order: message
 
-    if message.type is 'done' and message.reason is 'filled'
-      store.dispatch
-        type: 'ORDER_FILLED'
-        order: message
+    # if message.type is 'done' and message.reason is 'filled'
+    #   store.dispatch
+    #     type: 'ORDER_FILLED'
+    #     order: message
 
 
 R.map currencyStream, R.keys config.currencies
@@ -323,7 +249,7 @@ throttledDispatchMatch = (match, index)->
 
 hydrateRecentCurrency = ( product_id )->
   hydrateRecentCurrencySide = ( side )->
-    currencySideRecent( product_id, side, historicalMinutes, 'minute' ).then ( matches )->
+    currencySideRecent( product_id, side, historicalMinutes, config.default.interval.units ).then ( matches )->
       mapIndexed = R.addIndex R.map
       mapIndexed throttledDispatchMatch, R.reverse matches
 
@@ -361,7 +287,9 @@ throttledDispatchFill = (match, index = 0)->
 
 
   sendThrottledDispatchFill = ->
-    dispatchMatch match
+    store.dispatch
+      type: 'HISTORICAL_MATCH'
+      match: match
 
     # saveFill( match ).then( wereGood ).catch(orNot)
 
@@ -388,3 +316,6 @@ setTimeout getFills, 2000
 # Cancel All Orders, start with a clean slate
 gdax.cancelAllOrders( R.keys config.currencies ).then (result)->
   console.log result
+
+process.on 'uncaughtException', (err) ->
+  console.log 'Caught exception: ' + err

@@ -1,7 +1,8 @@
 module.exports =
   default:
-    timeUnit: 'hour'
-    timeValue: 1
+    interval:
+      units: 'seconds'
+      value: '60'
 
     size: 0.01
     offset: 0.22
@@ -9,23 +10,23 @@ module.exports =
     mimumum: 0.1
 
   currencies:
-    # 'BTC-USD':
-    #   sell: {}
-    #   buy: {}
+    'BTC-USD':
+      sell: {}
+      buy: {}
 
-    # 'LTC-USD':
-    #   sell: {}
-    #   buy: {}
+    'LTC-USD':
+      sell: {}
+      buy: {}
 
     'ETH-USD':
       sell: {}
       buy: {}
 
-    # 'ETH-BTC':
-    #   sell: {}
-    #   buy: {}
+    'ETH-BTC':
+      sell: {}
+      buy: {}
 
-    # 'LTC-BTC':
-    #   sell: {}
-    #   buy: {}
+    'LTC-BTC':
+      sell: {}
+      buy: {}
 
