@@ -7,7 +7,23 @@ reducer = require '../reducers/reducer'
 describe 'reducer', ->
   it 'order matched, price updated', ->
 
-    store = createStore reducer
+    initialState =
+      currencies:
+        BTC:
+          available: 1.0
+          hold: 1.0
+      orders: [
+        side: 'buy'
+        product_id: 'ETH-BTC'
+        trade_id: 1
+        price: '0.0008'
+        time: moment().subtract(1, 'hour').format()
+      ]
+      matches: {}
+      prices: {}
+      predictions: {}
+
+    store = createStore reducer, initialState
 
     order =
       side: 'sell'
@@ -164,9 +180,16 @@ describe 'reducer', ->
 
     order =
       order_id: 'bcdefghi'
+      size: '0.1234'
+      product_id: 'ETH-BTC'
+      side: 'sell'
 
     initialState =
       orders: [ order ]
+      currencies:
+        BTC:
+          balance: 1.0
+          hold: 1.0
 
     store = createStore reducer, initialState
 
@@ -177,6 +200,10 @@ describe 'reducer', ->
     state = store.getState()
 
     state.orders.length.should.be.eql 0
+
+    state.currencies.BTC.balance.should.be.eql '1.1234'
+
+    state.currencies.BTC.hold.should.be.eql '0.8766'
 
 
   it 'order filled', ->
