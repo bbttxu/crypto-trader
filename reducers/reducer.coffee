@@ -9,10 +9,6 @@ config = require '../config'
 projectionMinutes = config.default.interval.value
 historicalMinutes = projectionMinutes * 3
 
-universalBad = ( err )->
-  console.log 'bad', err
-  throw err if err
-
 
 initalState =
   currencies: {}
