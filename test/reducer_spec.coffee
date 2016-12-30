@@ -7,7 +7,23 @@ reducer = require '../reducers/reducer'
 describe 'reducer', ->
   it 'order matched, price updated', ->
 
-    store = createStore reducer
+    initialState =
+      currencies:
+        BTC:
+          available: 1.0
+          hold: 1.0
+      orders: [
+        side: 'buy'
+        product_id: 'ETH-BTC'
+        trade_id: 1
+        price: '0.0008'
+        time: moment().subtract(1, 'hour').format()
+      ]
+      matches: {}
+      prices: {}
+      predictions: {}
+
+    store = createStore reducer, initialState
 
     order =
       side: 'sell'
@@ -36,6 +52,10 @@ describe 'reducer', ->
   it 'order matched, old order removed', ->
 
     initialState =
+      currencies:
+        BTC:
+          available: 1.0
+          hold: 1.0
       orders: [
         side: 'buy'
         product_id: 'ETH-BTC'
@@ -67,15 +87,22 @@ describe 'reducer', ->
     state.matches.should.be.eql expectedMatches
 
 
-  it 'order sent', ->
+  it 'order sent, buy LTC decreases USD balance', ->
 
     initialState =
       sent: []
+      currencies:
+        USD:
+          balance: 1.0
+          hold: 1.0
 
     store = createStore reducer, initialState
 
     order =
       client_oid: 'abcdefgh'
+      size: '0.10000'
+      side: 'buy'
+      product_id: 'LTC-USD'
 
     store.dispatch
       type: 'ORDER_SENT'
@@ -86,6 +113,44 @@ describe 'reducer', ->
     expectedSent = [ order ]
 
     state.sent.should.be.eql expectedSent
+
+    state.currencies.USD.balance.should.be.eql '0.9000'
+
+    state.currencies.USD.hold.should.be.eql '1.1000'
+
+
+
+  it 'order sent, sell BTC decreases ETH balance', ->
+
+    initialState =
+      sent: []
+      currencies:
+        BTC:
+          balance: 1.0
+          hold: 1.0
+
+    store = createStore reducer, initialState
+
+    order =
+      client_oid: 'abcdefgh'
+      size: '0.50000'
+      side: 'buy'
+      product_id: 'ETH-BTC'
+
+    store.dispatch
+      type: 'ORDER_SENT'
+      order: order
+
+    state = store.getState()
+
+    expectedSent = [ order ]
+
+    state.sent.should.be.eql expectedSent
+
+    state.currencies.BTC.balance.should.be.eql '0.5000'
+
+    state.currencies.BTC.hold.should.be.eql '1.5000'
+
 
 
   it 'order received', ->
@@ -115,9 +180,16 @@ describe 'reducer', ->
 
     order =
       order_id: 'bcdefghi'
+      size: '0.1234'
+      product_id: 'ETH-BTC'
+      side: 'sell'
 
     initialState =
       orders: [ order ]
+      currencies:
+        BTC:
+          balance: 1.0
+          hold: 1.0
 
     store = createStore reducer, initialState
 
@@ -128,6 +200,10 @@ describe 'reducer', ->
     state = store.getState()
 
     state.orders.length.should.be.eql 0
+
+    state.currencies.BTC.balance.should.be.eql '1.1234'
+
+    state.currencies.BTC.hold.should.be.eql '0.8766'
 
 
   it 'order filled', ->
