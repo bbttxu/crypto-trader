@@ -6,7 +6,6 @@ cleanUpTrades = require './cleanUpTrades'
 module.exports = ( currencies, predictions )->
 
   proposeTrade = ( doc )->
-    console.log doc.top
     amount = halfsies doc.current, doc.linear, currencies.currencies[doc.top].balance
 
     obj =
