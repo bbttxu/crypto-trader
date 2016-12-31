@@ -9,6 +9,7 @@ gdax = require './lib/gdax-client'
 proposals = require './lib/proposals'
 currencySideRecent = require './lib/currencySideRecent'
 saveFill = require './lib/saveFill'
+saveMatches = require './lib/saveMatches'
 
 config = require './config'
 ml = require './ml'
@@ -40,7 +41,7 @@ foo = ->
 
   trades = proposals ( R.pick [ 'currencies' ], state ), predictionResults
 
-  # console.log new Date(), trades
+  # console.log new Date(), state
 
   bySide = ( trade )->
     trade.side
@@ -173,12 +174,15 @@ dispatchMatch = ( match, save = false )->
   if save
     saveFillSuccess = ( result )->
       since = moment( result.created_at ).fromNow( true )
-      if result is true
-        console.log '$', since
-      else
-        console.log '+', since
 
-    saveFill( match ).then( saveFillSuccess ).catch( universalBad )
+      info = JSON.stringify R.pick ['time','product_id','side','price','size', 'trade_id'], match
+
+      if result is true
+        console.log '$', info
+      else
+        console.log '+', info
+
+  saveMatches( match ).then( saveFillSuccess ).catch( universalBad )
 
 
 
@@ -213,15 +217,15 @@ currencyStream = (product)->
     if message.type is 'match'
       dispatchMatch message
 
-    # if message.type is 'received'
-    #   store.dispatch
-    #     type: 'ORDER_RECEIVED'
-    #     order: message
+    if message.type is 'received'
+      store.dispatch
+        type: 'ORDER_RECEIVED'
+        order: message
 
-    # if message.type is 'done' and message.reason is 'filled'
-    #   store.dispatch
-    #     type: 'ORDER_FILLED'
-    #     order: message
+    if message.type is 'done' and message.reason is 'filled'
+      store.dispatch
+        type: 'ORDER_FILLED'
+        order: message
 
 
 R.map currencyStream, R.keys config.currencies
@@ -250,6 +254,7 @@ throttledDispatchMatch = (match, index)->
 hydrateRecentCurrency = ( product_id )->
   hydrateRecentCurrencySide = ( side )->
     currencySideRecent( product_id, side, historicalMinutes, config.default.interval.units ).then ( matches )->
+      console.log matches
       mapIndexed = R.addIndex R.map
       mapIndexed throttledDispatchMatch, R.reverse matches
 
@@ -287,6 +292,8 @@ throttledDispatchFill = (match, index = 0)->
 
 
   sendThrottledDispatchFill = ->
+
+    # console.log match
     store.dispatch
       type: 'HISTORICAL_MATCH'
       match: match

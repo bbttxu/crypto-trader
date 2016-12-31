@@ -17,6 +17,12 @@ saveFill = (fill)->
 
         # TODO This should probably be a new function/RSVP.Promise
         if gee is null
+          console.log fill
+          # Convert date from API to something we'll match against
+          # fill.time = moment( fill.time ).toDate()
+          # console.log fill
+
+
           collection.insertOne fill, (err, whiz)->
             reject err if err
             db.close()
