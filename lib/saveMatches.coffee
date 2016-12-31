@@ -5,6 +5,9 @@ mongo = require('mongodb').MongoClient
 RSVP = require 'rsvp'
 moment = require 'moment'
 
+necessaryFields = ['side', 'size', 'price', 'product_id', 'time', 'trade_id']
+
+
 saveMatches = (match)->
   new RSVP.Promise (resolve, reject)->
     mongo.connect process.env.MONGO_URL, (err, db)->
@@ -16,8 +19,7 @@ saveMatches = (match)->
         reject err if err
 
         if gee is null
-          details = R.pick ['side', 'size', 'price', 'product_id', 'time', 'trade_id'], match
-          console.log 'saveMatches', details
+          details = R.pick necessaryFields, match
 
           collection.insertOne details, (err, whiz)->
             reject err if err
