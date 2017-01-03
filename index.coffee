@@ -5,7 +5,6 @@ moment = require 'moment'
 thunk = require 'redux-thunk'
 
 gdax = require './lib/gdax-client'
-
 proposals = require './lib/proposals'
 currencySideRecent = require './lib/currencySideRecent'
 saveFill = require './lib/saveFill'
@@ -34,14 +33,24 @@ orderFailed = ( order )->
   console.log 'orderFailed', order
 
 
+current = {}
+store.subscribe (foo)->
+  state = store.getState()
+
+  # keys = [ 'prices', 'rates' ]
+  # keys = [ 'rates', 'bids' ]
+  # keys = [ 'bids' ]
+  keys = [ 'sent', 'orders'ob, 'proposals' ]
+  important = R.pick keys, state
+  console.log moment().format(), important
+
+
 foo = ->
   state = store.getState()
 
   predictionResults = R.values R.pick [ 'predictions' ], state
 
   trades = proposals ( R.pick [ 'currencies' ], state ), predictionResults
-
-  # console.log new Date(), state
 
   bySide = ( trade )->
     trade.side
@@ -69,8 +78,8 @@ foo = ->
   if sides.buy
     R.map buyOrder, sides.buy
 
-
-setInterval foo, 60000
+# console.log ( moment().valueOf() - moment().subtract( config.default.interval.value, config.default.interval.units ).valueOf() )
+setInterval foo, ( ( moment().valueOf() - moment().subtract( config.default.interval.value, config.default.interval.units ).valueOf() ) / 5 )
 
 ###
 _________                            .__
@@ -175,7 +184,7 @@ dispatchMatch = ( match, save = false )->
     saveFillSuccess = ( result )->
       since = moment( result.created_at ).fromNow( true )
 
-      info = JSON.stringify R.pick ['time','product_id','side','price','size', 'trade_id'], match
+      info = JSON.stringify R.pick ['time','product_id','side','price','size', 'trade_id'], result
 
       if result is true
         console.log '$', info
@@ -245,7 +254,10 @@ INTERVAL = 100
 
 throttledDispatchMatch = (match, index)->
   sendThrottledDispatchMatch = ->
-    console.log '*', moment( match.time ).fromNow( true )
+
+    info = JSON.stringify R.pick ['time','product_id','side','price','size', 'trade_id'], match
+
+    console.log '*', moment( match.time ).fromNow( true ), info
     dispatchMatch match
 
   setTimeout sendThrottledDispatchMatch, ( ( index * INTERVAL ) + ( Math.random() * INTERVAL ) )
@@ -254,7 +266,6 @@ throttledDispatchMatch = (match, index)->
 hydrateRecentCurrency = ( product_id )->
   hydrateRecentCurrencySide = ( side )->
     currencySideRecent( product_id, side, historicalMinutes, config.default.interval.units ).then ( matches )->
-      console.log matches
       mapIndexed = R.addIndex R.map
       mapIndexed throttledDispatchMatch, R.reverse matches
 

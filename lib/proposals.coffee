@@ -15,12 +15,14 @@ module.exports = ( currencies, predictions )->
       product_id: [ doc.top, doc.bottom ].join '-'
 
 
+
   predictionSides = ( value, key )->
     parts = key.split( '-' )
 
     value.side = parts[2].toLowerCase()
     value.top = parts[0]
     value.bottom = parts[1]
+    value.product = [ parts[0], parts[1]].join '-'
     value
 
   notActionable = ( doc )->
@@ -31,8 +33,13 @@ module.exports = ( currencies, predictions )->
 
   sided = R.groupBy bySide, R.reject notActionable, R.values R.mapObjIndexed predictionSides, R.mergeAll predictions
 
+  # console.log 'sided', sided
+
   notTradeable = ( doc )->
     doc.size < 0.01
 
 
-  R.map cleanUpTrades, R.reject notTradeable, R.map proposeTrade, R.flatten R.values sided
+  orders = R.map cleanUpTrades, R.reject notTradeable, R.map proposeTrade, R.flatten R.values sided
+
+  # console.log 'orders', orders
+  orders

@@ -4,6 +4,7 @@ moment = require 'moment'
 
 pricing = require '../lib/pricing'
 predictions = require '../lib/predictions'
+proposals = require '../lib/proposals'
 
 config = require '../config'
 
@@ -15,6 +16,7 @@ initalState =
   currencies: {}
   prices: {}
   predictions: {}
+  proposals: []
   matches: {}
 
   sent: []
@@ -103,6 +105,12 @@ reducers = (state, action) ->
     predictor = predictions action.match.side, future, key
 
     state.predictions[key] = predictor state.matches[key]
+
+    predictionResults = R.values R.pick [ 'predictions' ], state
+    # console.log predictionResults
+    state.proposals = proposals ( R.pick [ 'currencies' ], state ), predictionResults
+
+
 
   state
 
