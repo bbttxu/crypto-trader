@@ -19,6 +19,7 @@
     "coffee-coverage": "^1.0.1",
     "coffee-script": "1.12.2",
     "coveralls": "^2.11.15",
+    "deep-equal": "^1.0.1",
     "dotenv": "^2.0.0",
     "gdax": "^0.3.0",
     "istanbul": "^0.4.5",

@@ -3,6 +3,7 @@ require('dotenv').config { silent: true }
 R = require 'ramda'
 moment = require 'moment'
 thunk = require 'redux-thunk'
+deepEqual = require 'deep-equal'
 
 gdax = require './lib/gdax-client'
 proposals = require './lib/proposals'
@@ -33,20 +34,33 @@ orderFailed = ( order )->
   console.log 'orderFailed', order
 
 
-current = {}
-store.subscribe (foo)->
+# current = {}
+
+updatedStore = ->
   state = store.getState()
+
+  # console.log moment().format(), deepEqual( current, state, strict: true ), state, current
+
+  # unless R.equals current, state
+  # current = state
 
   # keys = [ 'prices', 'rates' ]
   # keys = [ 'rates', 'bids' ]
   # keys = [ 'bids' ]
-  keys = [ 'sent', 'orders'ob, 'proposals' ]
+
+  keys = [ 'sent', 'orders', 'proposals', 'matches', 'predictions' ]
   important = R.pick keys, state
-  console.log moment().format(), important
+  # console.log moment().format(), important
+
+store.subscribe updatedStore
 
 
 foo = ->
   state = store.getState()
+
+  keys = [ 'sent', 'orders', 'proposals', 'matches', 'predictions' ]
+  important = R.pick keys, state
+  console.log moment().format(), important
 
   predictionResults = R.values R.pick [ 'predictions' ], state
 
@@ -79,7 +93,7 @@ foo = ->
     R.map buyOrder, sides.buy
 
 # console.log ( moment().valueOf() - moment().subtract( config.default.interval.value, config.default.interval.units ).valueOf() )
-setInterval foo, ( ( moment().valueOf() - moment().subtract( config.default.interval.value, config.default.interval.units ).valueOf() ) / 5 )
+setInterval foo, 60000
 
 ###
 _________                            .__
@@ -223,6 +237,7 @@ currencyStream = (product)->
 
 
   stream.on 'message', ( message )->
+    # console.log message
     if message.type is 'match'
       dispatchMatch message
 
