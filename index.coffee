@@ -3,9 +3,9 @@ require('dotenv').config { silent: true }
 R = require 'ramda'
 moment = require 'moment'
 thunk = require 'redux-thunk'
+deepEqual = require 'deep-equal'
 
 gdax = require './lib/gdax-client'
-proposals = require './lib/proposals'
 currencySideRecent = require './lib/currencySideRecent'
 saveFill = require './lib/saveFill'
 saveMatches = require './lib/saveMatches'
@@ -33,29 +33,40 @@ orderFailed = ( order )->
   console.log 'orderFailed', order
 
 
-current = {}
-store.subscribe (foo)->
+# current = {}
+
+updatedStore = ->
   state = store.getState()
+
+  # console.log moment().format(), deepEqual( current, state, strict: true ), state, current
+
+  # unless R.equals current, state
+  # current = state
 
   # keys = [ 'prices', 'rates' ]
   # keys = [ 'rates', 'bids' ]
   # keys = [ 'bids' ]
-  keys = [ 'sent', 'orders'ob, 'proposals' ]
+
+  keys = [ 'sent', 'orders', 'proposals', 'predictions' ]
   important = R.pick keys, state
   console.log moment().format(), important
 
+# store.subscribe updatedStore
 
-foo = ->
+
+makeNewTrades = ->
   state = store.getState()
 
-  predictionResults = R.values R.pick [ 'predictions' ], state
+  keys = [ 'orders', 'proposals' ]
+  important = R.pick keys, state
+  # console.log moment().format(), JSON.stringify important
 
-  trades = proposals ( R.pick [ 'currencies' ], state ), predictionResults
+  predictionResults = R.values R.pick [ 'predictions' ], state
 
   bySide = ( trade )->
     trade.side
 
-  sides = R.groupBy bySide, trades
+  sides = R.groupBy bySide, state.proposals
 
   sellOrder = ( order )->
     store.dispatch
@@ -78,8 +89,7 @@ foo = ->
   if sides.buy
     R.map buyOrder, sides.buy
 
-# console.log ( moment().valueOf() - moment().subtract( config.default.interval.value, config.default.interval.units ).valueOf() )
-setInterval foo, ( ( moment().valueOf() - moment().subtract( config.default.interval.value, config.default.interval.units ).valueOf() ) / 5 )
+setInterval makeNewTrades, 60000
 
 ###
 _________                            .__
@@ -223,6 +233,7 @@ currencyStream = (product)->
 
 
   stream.on 'message', ( message )->
+    # console.log message
     if message.type is 'match'
       dispatchMatch message
 
@@ -289,47 +300,10 @@ __________                             ___.
         \/     \/      \/     \/      \/    \/     \/
 ###
 
-throttledDispatchFill = (match, index = 0)->
-  # wereGood = (result)->
+saveFills = require './save'
+setTimeout saveFills, 2000
+setInterval saveFills, (1000 * 60 * 30)
 
-  #   since = moment( match.created_at ).fromNow( true )
-  #   if result is true
-  #     console.log '$', since
-  #   else
-  #     console.log '+', since
-
-  # orNot = (result)->
-  #   console.log 'orNot', result
-
-
-  sendThrottledDispatchFill = ->
-
-    # console.log match
-    store.dispatch
-      type: 'HISTORICAL_MATCH'
-      match: match
-
-    # saveFill( match ).then( wereGood ).catch(orNot)
-
-  setTimeout sendThrottledDispatchFill, ( ( index * INTERVAL ) + ( Math.random() * INTERVAL ) )
-
-
-saveFills = ( fills )->
-  mapIndexed = R.addIndex R.map
-  mapIndexed throttledDispatchFill, R.reverse fills
-
-cantSaveFills = ( fills )->
-  console.log 'cantSaveFills', fills
-
-
-getCurrencyFills = ( product_id )->
-  gdax.getFills( product_id ).then( saveFills ).catch( cantSaveFills )
-
-
-getFills = ->
-  R.map getCurrencyFills, R.keys config.currencies
-
-setTimeout getFills, 2000
 
 # Cancel All Orders, start with a clean slate
 gdax.cancelAllOrders( R.keys config.currencies ).then (result)->

@@ -107,10 +107,8 @@ reducers = (state, action) ->
     state.predictions[key] = predictor state.matches[key]
 
     predictionResults = R.values R.pick [ 'predictions' ], state
-    # console.log predictionResults
+
     state.proposals = proposals ( R.pick [ 'currencies' ], state ), predictionResults
-
-
 
   state
 
