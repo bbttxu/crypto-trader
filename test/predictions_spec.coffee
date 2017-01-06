@@ -57,3 +57,15 @@ describe 'predictions', ->
     }
 
     expected.should.be.eql result
+
+  it 'should return empty on no fills', ->
+
+    predictor = predictions 'buy', 1482086050, 'BTC-USD'
+
+    result = predictor []
+
+    expected = {
+      n: 0
+    }
+
+    expected.should.be.eql result
