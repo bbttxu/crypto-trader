@@ -6,7 +6,6 @@ thunk = require 'redux-thunk'
 deepEqual = require 'deep-equal'
 
 gdax = require './lib/gdax-client'
-proposals = require './lib/proposals'
 currencySideRecent = require './lib/currencySideRecent'
 saveFill = require './lib/saveFill'
 saveMatches = require './lib/saveMatches'
@@ -64,12 +63,10 @@ makeNewTrades = ->
 
   predictionResults = R.values R.pick [ 'predictions' ], state
 
-  trades = proposals ( R.pick [ 'currencies' ], state ), predictionResults
-
   bySide = ( trade )->
     trade.side
 
-  sides = R.groupBy bySide, trades
+  sides = R.groupBy bySide, state.proposals
 
   sellOrder = ( order )->
     store.dispatch
@@ -92,7 +89,6 @@ makeNewTrades = ->
   if sides.buy
     R.map buyOrder, sides.buy
 
-# console.log ( moment().valueOf() - moment().subtract( config.default.interval.value, config.default.interval.units ).valueOf() )
 setInterval makeNewTrades, 60000
 
 ###
