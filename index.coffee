@@ -68,6 +68,8 @@ makeNewTrades = ->
 
   sides = R.groupBy bySide, state.proposals
 
+  console.log sides
+
   sellOrder = ( order )->
     store.dispatch
       type: 'ORDER_SENT'
