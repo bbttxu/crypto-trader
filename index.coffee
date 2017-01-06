@@ -48,19 +48,19 @@ updatedStore = ->
   # keys = [ 'rates', 'bids' ]
   # keys = [ 'bids' ]
 
-  keys = [ 'sent', 'orders', 'proposals', 'matches', 'predictions' ]
-  important = R.pick keys, state
-  # console.log moment().format(), important
-
-store.subscribe updatedStore
-
-
-foo = ->
-  state = store.getState()
-
-  keys = [ 'sent', 'orders', 'proposals', 'matches', 'predictions' ]
+  keys = [ 'sent', 'orders', 'proposals', 'predictions' ]
   important = R.pick keys, state
   console.log moment().format(), important
+
+# store.subscribe updatedStore
+
+
+makeNewTrades = ->
+  state = store.getState()
+
+  keys = [ 'orders', 'proposals' ]
+  important = R.pick keys, state
+  # console.log moment().format(), JSON.stringify important
 
   predictionResults = R.values R.pick [ 'predictions' ], state
 
@@ -93,7 +93,7 @@ foo = ->
     R.map buyOrder, sides.buy
 
 # console.log ( moment().valueOf() - moment().subtract( config.default.interval.value, config.default.interval.units ).valueOf() )
-setInterval foo, 60000
+setInterval makeNewTrades, 60000
 
 ###
 _________                            .__
@@ -304,47 +304,10 @@ __________                             ___.
         \/     \/      \/     \/      \/    \/     \/
 ###
 
-throttledDispatchFill = (match, index = 0)->
-  # wereGood = (result)->
+saveFills = require './save'
+setTimeout saveFills, 2000
+setInterval saveFills, (1000 * 60 * 30)
 
-  #   since = moment( match.created_at ).fromNow( true )
-  #   if result is true
-  #     console.log '$', since
-  #   else
-  #     console.log '+', since
-
-  # orNot = (result)->
-  #   console.log 'orNot', result
-
-
-  sendThrottledDispatchFill = ->
-
-    # console.log match
-    store.dispatch
-      type: 'HISTORICAL_MATCH'
-      match: match
-
-    # saveFill( match ).then( wereGood ).catch(orNot)
-
-  setTimeout sendThrottledDispatchFill, ( ( index * INTERVAL ) + ( Math.random() * INTERVAL ) )
-
-
-saveFills = ( fills )->
-  mapIndexed = R.addIndex R.map
-  mapIndexed throttledDispatchFill, R.reverse fills
-
-cantSaveFills = ( fills )->
-  console.log 'cantSaveFills', fills
-
-
-getCurrencyFills = ( product_id )->
-  gdax.getFills( product_id ).then( saveFills ).catch( cantSaveFills )
-
-
-getFills = ->
-  R.map getCurrencyFills, R.keys config.currencies
-
-setTimeout getFills, 2000
 
 # Cancel All Orders, start with a clean slate
 gdax.cancelAllOrders( R.keys config.currencies ).then (result)->

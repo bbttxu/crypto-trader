@@ -2,7 +2,7 @@ module.exports =
   default:
     interval:
       units: 'seconds'
-      value: '60'
+      value: '300'
 
 
   currencies:
@@ -10,9 +10,9 @@ module.exports =
       sell: {}
       buy: {}
 
-    'LTC-USD':
-      sell: {}
-      buy: {}
+    # 'LTC-USD':
+    #   sell: {}
+    #   buy: {}
 
     'ETH-USD':
       sell: {}
@@ -22,7 +22,7 @@ module.exports =
       sell: {}
       buy: {}
 
-    'LTC-BTC':
-      sell: {}
-      buy: {}
+    # 'LTC-BTC':
+    #   sell: {}
+    #   buy: {}
 
