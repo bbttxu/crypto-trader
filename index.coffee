@@ -1,5 +1,7 @@
 require('dotenv').config { silent: true }
 
+require 'newrelic'
+
 R = require 'ramda'
 moment = require 'moment'
 thunk = require 'redux-thunk'
