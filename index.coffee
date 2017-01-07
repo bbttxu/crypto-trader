@@ -33,19 +33,8 @@ orderFailed = ( order )->
   console.log 'orderFailed', order
 
 
-# current = {}
-
 updatedStore = ->
   state = store.getState()
-
-  # console.log moment().format(), deepEqual( current, state, strict: true ), state, current
-
-  # unless R.equals current, state
-  # current = state
-
-  # keys = [ 'prices', 'rates' ]
-  # keys = [ 'rates', 'bids' ]
-  # keys = [ 'bids' ]
 
   keys = [ 'sent', 'orders', 'proposals', 'predictions' ]
   important = R.pick keys, state
