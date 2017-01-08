@@ -2,6 +2,8 @@ require('dotenv').config { silent: true }
 
 Gdax = require('gdax')
 
+restart = require './restartProcess'
+
 authentication =
   secret: process.env.API_SECRET
   key: process.env.API_KEY
@@ -15,6 +17,6 @@ module.exports = (product = 'BTC-USD')->
 
     # Just punt at this point, start from scratch
     # Modulus/Xervio will restart process
-    process.exit(42)
+    restart(42)
 
   websocket
