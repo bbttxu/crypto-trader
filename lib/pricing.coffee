@@ -1,7 +1,7 @@
 # pricing.coffee
 
 USD_PLACES = 2
-BTC_PLACES = 4
+BTC_PLACES = 5
 SIZE_PLACES = 4
 
 fix = (places, value, side )->
