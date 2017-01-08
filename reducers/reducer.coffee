@@ -13,6 +13,7 @@ historicalMinutes = projectionMinutes * 3
 
 
 initalState =
+  heartbeat: 0
   currencies: {}
   prices: {}
   predictions: {}
@@ -26,6 +27,10 @@ reducers = (state, action) ->
 
   if typeof state == 'undefined'
     return initalState
+
+  # heartbeat ensures that proposed orders, and active orders don't stagnate
+  state.heartbeat = action.message if action.type is 'HEARTBEAT'
+
 
   if action.type is 'UPDATE_ACCOUNT'
     state.currencies[action.currency.currency] = R.pick ['hold', 'balance'], action.currency
