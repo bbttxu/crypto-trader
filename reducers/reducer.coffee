@@ -87,6 +87,8 @@ reducers = (state, action) ->
 
     state.prices[key] = R.pick [ 'time', 'price'], action.match
 
+    console.log moment().format(), ( R.values R.pick ['product_id', 'price', 'side', 'size'], action.match ).join ' '
+
     unless state.matches[key]
       state.matches[key] = []
 
@@ -99,6 +101,7 @@ reducers = (state, action) ->
       cutoff = moment().subtract historicalMinutes, config.default.interval.units
       moment( doc.time ).isBefore cutoff
 
+    # TODO this should be run each time the state is updated, not only for matches
     state.matches[key] = R.reject tooOld, R.sortBy byTime, state.matches[key]
 
     future = moment().add( projectionMinutes, config.default.interval.units ).utc().unix()
@@ -106,9 +109,9 @@ reducers = (state, action) ->
 
     state.predictions[key] = predictor state.matches[key]
 
-    predictionResults = R.values R.pick [ 'predictions' ], state
+  predictionResults = R.values R.pick [ 'predictions' ], state
 
-    state.proposals = proposals ( R.pick [ 'currencies' ], state ), predictionResults
+  state.proposals = proposals ( R.pick [ 'currencies' ], state ), predictionResults
 
   state
 
