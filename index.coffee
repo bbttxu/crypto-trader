@@ -80,7 +80,7 @@ makeNewTrades = ->
   if sides.buy
     R.map buyOrder, sides.buy
 
-setInterval makeNewTrades, 60000
+setInterval makeNewTrades, 30000
 
 ###
 _________                            .__
@@ -293,7 +293,7 @@ __________                             ___.
 
 saveFills = require './save'
 setTimeout saveFills, 2000
-setInterval saveFills, (1000 * 60 * 30)
+setInterval saveFills, (1000 * 60 * 15)
 
 
 # Cancel All Orders, start with a clean slate
