@@ -10,9 +10,9 @@ module.exports =
       sell: {}
       buy: {}
 
-    # 'LTC-USD':
-    #   sell: {}
-    #   buy: {}
+    'LTC-USD':
+      sell: {}
+      buy: {}
 
     'ETH-USD':
       sell: {}
@@ -22,7 +22,17 @@ module.exports =
       sell: {}
       buy: {}
 
-    # 'LTC-BTC':
-    #   sell: {}
-    #   buy: {}
+    'LTC-BTC':
+      sell: {}
+      buy: {}
+
+
+  # for reporting purposes
+  reporting:
+    frequency: '23 hours'
+    timescales: [
+      '24 hours'
+      '7 days'
+      '4 weeks'
+    ]
 

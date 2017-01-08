@@ -14,13 +14,6 @@ bySide = ( fill )->
   fill.side
 
 
-timescales = [
-  '24 hours'
-  '7 days'
-  '4 weeks'
-]
-
-
 getFillWorth = ( fill )->
   multiplier = 1.0
 
@@ -84,7 +77,7 @@ getCurrencyFills = ( product_id )->
 
 
       values = {}
-      values = R.mergeAll R.map notWithinLast, timescales
+      values = R.mergeAll R.map notWithinLast, config.reporting.timescales
       # values.all = R.sum R.map getFillWorth, fills
 
 
@@ -128,7 +121,11 @@ RSVP.all(promises).then (results)->
   highestValue = (doc)->
     R.values(R.values(doc)[0])[0].sum
 
-  console.log ( R.values R.mapObjIndexed condenseInfo, R.mergeAll R.reverse R.sortBy highestValue, results ).join ' — '
+
+  prices = ( R.values R.mapObjIndexed condenseInfo, R.mergeAll R.reverse R.sortBy highestValue, results )
+  prices.push config.reporting.timescales.join '/'
+
+  console.log prices.join "\n"
 
 
 process.on 'uncaughtException', (err) ->
