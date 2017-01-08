@@ -9,6 +9,7 @@ gdax = require './lib/gdax-client'
 currencySideRecent = require './lib/currencySideRecent'
 saveFill = require './lib/saveFill'
 saveMatches = require './lib/saveMatches'
+Stream = require './lib/stream'
 
 config = require './config'
 ml = require './ml'
@@ -80,7 +81,7 @@ makeNewTrades = ->
   if sides.buy
     R.map buyOrder, sides.buy
 
-setInterval makeNewTrades, 60000
+setInterval makeNewTrades, 30000
 
 ###
 _________                            .__
@@ -196,26 +197,22 @@ dispatchMatch = ( match, save = false )->
 
 
 
-# Update on matches
-Gdax = require 'gdax'
-# websocket = new Gdax.WebsocketClient()
-# websocket.on 'message', (data)->
-#   console.log data
+sendHeartbeat = ->
+  store.dispatch
+    type: 'HEARTBEAT'
+    message: moment().valueOf()
 
-
-Gdax = require('gdax')
-authentication =
-  secret: process.env.API_SECRET
-  key: process.env.API_KEY
-  passphrase: process.env.API_PASSPHRASE
-
-# websocket = new (Gdax.WebsocketClient)(null, null, authentication)
-# websocket.on 'message', (data) ->
-#   console.log data
+setInterval sendHeartbeat, 30 * 1000
 
 currencyStream = (product)->
   # console.log 'stream', product
-  stream = new (Gdax.WebsocketClient)(product, null, authentication)
+  stream = Stream product
+
+  stream.on 'open', ->
+    console.log 'open stream', product
+
+  stream.on 'close', (foo)->
+    console.log 'close stream', product, foo
 
   stream.on 'error', (foo)->
 
@@ -223,8 +220,12 @@ currencyStream = (product)->
     console.log foo
 
 
+
   stream.on 'message', ( message )->
     # console.log message
+    if message.type is 'heartbeat'
+      sendHeartbeat()
+
     if message.type is 'match'
       dispatchMatch message
 
@@ -293,7 +294,7 @@ __________                             ___.
 
 saveFills = require './save'
 setTimeout saveFills, 2000
-setInterval saveFills, (1000 * 60 * 30)
+setInterval saveFills, (1000 * 60 * 15)
 
 
 # Cancel All Orders, start with a clean slate
