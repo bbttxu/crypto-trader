@@ -47,7 +47,7 @@ describe 'cleanUpTrades', ->
     output =
       size: '0.9029'
       side: 'sell'
-      price:  '0.9030'
+      price:  '0.90294'
       product_id: 'ETH-BTC'
 
     result = R.pick ['size', 'side', 'price', 'product_id'], cleanUpTrade input
@@ -64,7 +64,7 @@ describe 'cleanUpTrades', ->
     output =
       size: '0.9029'
       side: 'buy'
-      price:  '0.9029'
+      price:  '0.90293'
       product_id: 'ETH-BTC'
 
     result = R.pick ['size', 'side', 'price', 'product_id'], cleanUpTrade input

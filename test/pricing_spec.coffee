@@ -28,5 +28,5 @@ describe 'btc', ->
   it 'formats btc properly', ->
     value = 123.45678901234
     formatted = pricing.btc value
-    formatted.should.be.eql '123.4568'
+    formatted.should.be.eql '123.45679'
 
