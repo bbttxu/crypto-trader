@@ -13,4 +13,8 @@ module.exports = (product = 'BTC-USD')->
   websocket.on 'close', ->
     console.log "CLOSE #{product} WEBSOCKET!!!"
 
+    # Just punt at this point, start from scratch
+    # Modulus/Xervio will restart process
+    process.exit(42)
+
   websocket
