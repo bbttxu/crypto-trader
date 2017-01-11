@@ -6,13 +6,13 @@ module.exports =
 
 
   currencies:
-    'BTC-USD':
-      sell: {}
-      buy: {}
+    # 'BTC-USD':
+    #   sell: {}
+    #   buy: {}
 
-    'LTC-USD':
-      sell: {}
-      buy: {}
+    # 'LTC-USD':
+    #   sell: {}
+    #   buy: {}
 
     'ETH-USD':
       sell: {}
@@ -22,9 +22,9 @@ module.exports =
       sell: {}
       buy: {}
 
-    'LTC-BTC':
-      sell: {}
-      buy: {}
+    # 'LTC-BTC':
+    #   sell: {}
+    #   buy: {}
 
 
   # for reporting purposes
