@@ -197,6 +197,7 @@ dispatchMatch = ( match, save = false )->
 
 
 
+
 sendHeartbeat = ->
   store.dispatch
     type: 'HEARTBEAT'
@@ -204,24 +205,12 @@ sendHeartbeat = ->
 
 setInterval sendHeartbeat, 30 * 1000
 
+
+
 currencyStream = (product)->
-  # console.log 'stream', product
-  stream = Stream product
+  channel = Stream product
 
-  stream.on 'open', ->
-    console.log 'open stream', product
-
-  stream.on 'close', (foo)->
-    console.log 'close stream', product, foo
-
-  stream.on 'error', (foo)->
-
-    console.log 'error'
-    console.log foo
-
-
-
-  stream.on 'message', ( message )->
+  channel.subscribe 'message', ( message )->
     # console.log message
     if message.type is 'heartbeat'
       sendHeartbeat()
