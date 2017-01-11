@@ -12,7 +12,7 @@ describe 'currency formatter', ->
   it 'formats btc', ->
     btcFormatter = currencyFormatter 'ETH-BTC'
     result = btcFormatter 10.2345678
-    expected = 'Ƀ10.2346'
+    expected = 'Ƀ10.23457'
     result.should.be.eql expected
 
 
