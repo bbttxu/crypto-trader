@@ -2,7 +2,7 @@ module.exports =
   default:
     interval:
       units: 'seconds'
-      value: '300'
+      value: '150'
 
 
   currencies:

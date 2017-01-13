@@ -98,27 +98,20 @@ ________            .___
         \/           \/    \/           \/
 ###
 
-cancelOrderFailed = ( order )->
-  console.log 'orderFailed', order
 
 clearOutOldOrders = ->
   state = store.getState()
 
+
   cancelOrder = ( order )->
     cancelOrderSuccess = ( response )->
-      # console.log 'response', response.message
-
+      console.log 'cancelOrderSuccess', response, order.order_id
       store.dispatch
         type: 'ORDER_CANCELLED'
         order: order
 
-      # if response.body
-      #   body = JSON.parse response.body
-      #   if body.message
-      #     console.log 'orderSuccess', response.body
-      # else
-      #   console.log response
-
+    cancelOrderFailed = ( status )->
+      # console.log 'cancelOrderFailed', status, order
 
     gdax.cancelOrder( order.order_id ).then( cancelOrderSuccess ).catch( cancelOrderFailed )
 
@@ -197,6 +190,7 @@ dispatchMatch = ( match, save = false )->
 
 
 
+
 sendHeartbeat = ->
   store.dispatch
     type: 'HEARTBEAT'
@@ -204,24 +198,12 @@ sendHeartbeat = ->
 
 setInterval sendHeartbeat, 30 * 1000
 
+
+
 currencyStream = (product)->
-  # console.log 'stream', product
-  stream = Stream product
+  channel = Stream product
 
-  stream.on 'open', ->
-    console.log 'open stream', product
-
-  stream.on 'close', (foo)->
-    console.log 'close stream', product, foo
-
-  stream.on 'error', (foo)->
-
-    console.log 'error'
-    console.log foo
-
-
-
-  stream.on 'message', ( message )->
+  channel.subscribe 'message', ( message )->
     # console.log message
     if message.type is 'heartbeat'
       sendHeartbeat()

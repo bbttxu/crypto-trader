@@ -1,6 +1,8 @@
 require('dotenv').config { silent: true }
 
-Gdax = require('gdax')
+Postal = require 'postal'
+
+Gdax = require 'gdax'
 
 authentication =
   secret: process.env.API_SECRET
@@ -8,9 +10,29 @@ authentication =
   passphrase: process.env.API_PASSPHRASE
 
 module.exports = (product = 'BTC-USD')->
-  websocket = new (Gdax.WebsocketClient)(product, null, authentication)
 
-  websocket.on 'close', ->
-    console.log "CLOSE #{product} WEBSOCKET!!!"
+  # pub/sub channel for long-term communication
+  channel = Postal.channel 'websocket'
 
-  websocket
+  # Init a websocket to receive data for a particular product
+  start = ->
+    websocket = new (Gdax.WebsocketClient)(product, null, authentication)
+
+    websocket.on 'open', ->
+      console.log "OPEN #{product} WEBSOCKET!!!"
+
+    websocket.on 'close', ->
+      console.log "CLOSE #{product} WEBSOCKET!!!"
+
+      # if socket dies, restart after a short period of time
+      setTimeout start, 10000
+
+    websocket.on 'message', (message)->
+      # publish message to the channel
+      channel.publish 'message', message
+
+  # start the websocket
+  start()
+
+  # return the pub/sub channel
+  channel
