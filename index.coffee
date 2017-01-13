@@ -98,27 +98,20 @@ ________            .___
         \/           \/    \/           \/
 ###
 
-cancelOrderFailed = ( order )->
-  console.log 'orderFailed', order
 
 clearOutOldOrders = ->
   state = store.getState()
 
+
   cancelOrder = ( order )->
     cancelOrderSuccess = ( response )->
-      # console.log 'response', response.message
-
+      console.log 'cancelOrderSuccess', response, order.order_id
       store.dispatch
         type: 'ORDER_CANCELLED'
         order: order
 
-      # if response.body
-      #   body = JSON.parse response.body
-      #   if body.message
-      #     console.log 'orderSuccess', response.body
-      # else
-      #   console.log response
-
+    cancelOrderFailed = ( status )->
+      console.log 'cancelOrderFailed', status, order
 
     gdax.cancelOrder( order.order_id ).then( cancelOrderSuccess ).catch( cancelOrderFailed )
 
