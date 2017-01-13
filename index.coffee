@@ -111,7 +111,7 @@ clearOutOldOrders = ->
         order: order
 
     cancelOrderFailed = ( status )->
-      console.log 'cancelOrderFailed', status, order
+      # console.log 'cancelOrderFailed', status, order
 
     gdax.cancelOrder( order.order_id ).then( cancelOrderSuccess ).catch( cancelOrderFailed )
 
