@@ -14,7 +14,7 @@ createKeys = ( values, currency )->
     obj = {}
 
     obj[key] = R.mergeAll [ config.default.trade, config.currencies[currency][side] ]
-    # obj[key] = {}
+
     obj
 
   R.mergeAll R.values R.mergeAll R.mapObjIndexed addCurrency, values
