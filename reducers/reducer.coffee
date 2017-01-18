@@ -5,6 +5,7 @@ moment = require 'moment'
 pricing = require '../lib/pricing'
 predictions = require '../lib/predictions'
 proposals = require '../lib/proposals'
+defaults = require '../defaults'
 
 config = require '../config'
 
@@ -22,6 +23,8 @@ initalState =
 
   sent: []
   orders: []
+
+initalState.predictions = defaults config
 
 reducers = (state, action) ->
 
@@ -110,9 +113,12 @@ reducers = (state, action) ->
     state.matches[key] = R.reject tooOld, R.sortBy byTime, state.matches[key]
 
     future = moment().add( projectionMinutes, config.default.interval.units ).utc().unix()
-    predictor = predictions action.match.side, future, key
 
-    state.predictions[key] = predictor state.matches[key]
+    # only make a prediction if we're interested in the outcome
+    if undefined isnt state.predictions[key]
+      predictor = predictions action.match.side, future, key
+
+      state.predictions[key] = predictor state.matches[key]
 
   predictionResults = R.values R.pick [ 'predictions' ], state
 
