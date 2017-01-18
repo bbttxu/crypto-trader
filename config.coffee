@@ -2,7 +2,10 @@ module.exports =
   default:
     interval:
       units: 'seconds'
-      value: '150'
+      value: '300'
+      
+    trade:
+      minimumSize: 0.1
 
 
   currencies:
@@ -15,8 +18,9 @@ module.exports =
     #   buy: {}
 
     'ETH-USD':
-      sell: {}
+      # sell: {}
       buy: {}
+
 
     'ETH-BTC':
       sell: {}
