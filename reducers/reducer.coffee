@@ -134,7 +134,6 @@ reducers = (state, action) ->
 
   R.map keepFresh, R.keys state.predictions
 
-
   predictionResults = R.values R.pick [ 'predictions' ], state
 
   state.proposals = proposals ( R.pick [ 'currencies' ], state ), predictionResults
