@@ -3,22 +3,22 @@ module.exports =
     interval:
       units: 'seconds'
       value: '300'
-      
+
     trade:
       minimumSize: 0.1
 
 
   currencies:
-    # 'BTC-USD':
-    #   sell: {}
-    #   buy: {}
+    'BTC-USD':
+      sell: {}
+      buy: {}
 
     # 'LTC-USD':
     #   sell: {}
     #   buy: {}
 
     'ETH-USD':
-      # sell: {}
+      sell: {}
       buy: {}
 
 
