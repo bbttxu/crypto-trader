@@ -1,6 +1,8 @@
 require('dotenv').config { silent: true }
 
-Gdax = require('gdax')
+Postal = require 'postal'
+
+Gdax = require 'gdax'
 
 restart = require './restartProcess'
 
@@ -10,13 +12,29 @@ authentication =
   passphrase: process.env.API_PASSPHRASE
 
 module.exports = (product = 'BTC-USD')->
-  websocket = new (Gdax.WebsocketClient)(product, null, authentication)
 
-  websocket.on 'close', ->
-    console.log "CLOSE #{product} WEBSOCKET!!!"
+  # pub/sub channel for long-term communication
+  channel = Postal.channel 'websocket'
 
-    # Just punt at this point, start from scratch
-    # Modulus/Xervio will restart process
-    restart(42)
+  # Init a websocket to receive data for a particular product
+  start = ->
+    websocket = new (Gdax.WebsocketClient)(product, null, authentication)
 
-  websocket
+    websocket.on 'open', ->
+      console.log "OPEN #{product} WEBSOCKET!!!"
+
+    websocket.on 'close', ->
+      console.log "CLOSE #{product} WEBSOCKET!!!"
+
+      # if socket dies, restart after a short period of time
+      setTimeout start, 10000
+
+    websocket.on 'message', (message)->
+      # publish message to the channel
+      channel.publish "message:#{product}", message
+
+  # start the websocket
+  start()
+
+  # return the pub/sub channel
+  channel

@@ -71,24 +71,21 @@ cancelOrder = ( order )->
   new RSVP.Promise (resolve, reject)->
     callback = (err, data)->
       if err
-        # data = JSON.parse err.body
         console.log 'err', err, order
+        reject false
 
       unless data
-        console.log 'failed cancel, data:', data
-        reject failed: cancelOrder: order
-
-      obj = {}
+        reject false
 
       payload = JSON.parse data.body
-      payload = (JSON.parse data.body).message unless payload is 'OK'
-      # payload = 'Found' if order is data.body[0]
-      # console.log 'check', order, data.body[0]
 
-      obj.id = order
-      obj.message = payload
+      # we ensure the trade was deleted by checking that it was already removed from the orderbook
+      if 'NotFound' is payload.message
+        resolve true
 
-      resolve obj
+      else
+        reject false
+
 
     authedClient.cancelOrder order, callback
 

@@ -5,6 +5,7 @@ moment = require 'moment'
 pricing = require '../lib/pricing'
 predictions = require '../lib/predictions'
 proposals = require '../lib/proposals'
+defaults = require '../defaults'
 
 config = require '../config'
 
@@ -22,6 +23,19 @@ initalState =
 
   sent: []
   orders: []
+
+initalState.matches = defaults config, []
+initalState.predictions = defaults config, {}
+initalState.proposals = defaults config, []
+
+
+byTime = ( doc )->
+  moment( doc.time ).valueOf()
+
+tooOld = ( doc )->
+  cutoff = moment().subtract historicalMinutes, config.default.interval.units
+  moment( doc.time ).isBefore cutoff
+
 
 reducers = (state, action) ->
 
@@ -99,24 +113,33 @@ reducers = (state, action) ->
 
     state.matches[key].push action.match
 
-    byTime = ( doc )->
-      moment( doc.time ).valueOf()
 
-    tooOld = ( doc )->
-      cutoff = moment().subtract historicalMinutes, config.default.interval.units
-      moment( doc.time ).isBefore cutoff
+  # Ensure that for all currency pairs
+  # 1. remove out-of-window trades
+  # 2. new predictions
+  keepFresh = (pair)->
+    side = pair.split('-')[2].toLowerCase()
 
-    # TODO this should be run each time the state is updated, not only for matches
-    state.matches[key] = R.reject tooOld, R.sortBy byTime, state.matches[key]
+    state.matches[pair] = R.reject tooOld, R.sortBy byTime, state.matches[pair]
 
     future = moment().add( projectionMinutes, config.default.interval.units ).utc().unix()
-    predictor = predictions action.match.side, future, key
 
-    state.predictions[key] = predictor state.matches[key]
+    # only make a prediction if we're interested in the outcome
+
+    # if undefined isnt state.predictions[pair]
+    predictor = predictions side, future, pair
+
+    state.predictions[pair] = predictor state.matches[pair]
+
+
+  R.map keepFresh, R.keys state.predictions
 
   predictionResults = R.values R.pick [ 'predictions' ], state
 
   state.proposals = proposals ( R.pick [ 'currencies' ], state ), predictionResults
+
+  # console.log R.keys state
+  # console.log moment().format(), JSON.stringify R.pick ['proposals'], state
 
   state
 
