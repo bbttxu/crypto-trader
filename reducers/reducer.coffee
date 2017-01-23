@@ -38,10 +38,6 @@ tooOld = ( doc )->
 
 
 reducers = (state, action) ->
-  # console.log action.type, JSON.stringify action.order
-  if action.order and action.order.order_id
-    console.log action.order.order_id
-
 
   if typeof state == 'undefined'
     return initalState
@@ -143,7 +139,7 @@ reducers = (state, action) ->
   state.proposals = proposals ( R.pick [ 'currencies' ], state ), predictionResults
 
   # console.log R.keys state
-  # console.log moment().format(), JSON.stringify R.pick ['proposals'], state
+  console.log moment().format(), JSON.stringify R.pick ['proposals'], state
 
   state
 

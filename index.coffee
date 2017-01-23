@@ -199,30 +199,6 @@ setInterval sendHeartbeat, 30 * 1000
 
 
 
-currencyStream = (product)->
-  channel = Stream product
-
-  channel.subscribe 'message', ( message )->
-    # console.log message
-    if message.type is 'heartbeat'
-      sendHeartbeat()
-
-    if message.type is 'match'
-      dispatchMatch message
-
-    if message.type is 'received'
-      store.dispatch
-        type: 'ORDER_RECEIVED'
-        order: message
-
-    if message.type is 'done' and message.reason is 'filled'
-      store.dispatch
-        type: 'ORDER_FILLED'
-        order: message
-
-
-
-
 channel = Streams R.keys config.currencies
 
 channel.subscribe 'message', ( message )->
@@ -291,9 +267,9 @@ __________                             ___.
         \/     \/      \/     \/      \/    \/     \/
 ###
 
-# saveFills = require './save'
-# setTimeout saveFills, 2000
-# setInterval saveFills, (1000 * 60 * 15)
+saveFills = require './save'
+setTimeout saveFills, 2000
+setInterval saveFills, (1000 * 60 * 10)
 
 
 # Cancel All Orders, start with a clean slate
