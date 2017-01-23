@@ -21,9 +21,9 @@ module.exports =
       # sell: {}
       buy: {}
 
-    # 'ETH-BTC':
-    #   sell: {}
-    #   buy: {}
+    'ETH-BTC':
+      sell: {}
+      buy: {}
 
     # 'LTC-BTC':
     #   sell: {}
