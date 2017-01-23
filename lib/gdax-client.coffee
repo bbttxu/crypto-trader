@@ -2,8 +2,47 @@ require('dotenv').config({silent: true})
 Gdax = require 'gdax'
 RSVP = require 'rsvp'
 R = require 'ramda'
+moment = require 'moment'
 
-authedClient = new Gdax.AuthenticatedClient(process.env.API_KEY, process.env.API_SECRET, process.env.API_PASSPHRASE)
+
+###
+               __  .__               .____________ .__  .__               __
+_____   __ ___/  |_|  |__   ____   __| _/\_   ___ \|  | |__| ____   _____/  |_
+\__  \ |  |  \   __\  |  \_/ __ \ / __ | /    \  \/|  | |  |/ __ \ /    \   __\
+ / __ \|  |  /|  | |   Y  \  ___// /_/ | \     \___|  |_|  \  ___/|   |  \  |
+(____  /____/ |__| |___|  /\___  >____ |  \______  /____/__|\___  >___|  /__|
+     \/                 \/     \/     \/         \/             \/     \/
+
+local scoped client
+if we need to restart, we have a local scoped variable onto which we can re-attach a new instance
+###
+
+# 0 auth mechanism
+authedClient = undefined
+
+# 1 mechanism to create auth mechanism to gdax
+reinitAuthedClient = ->
+  authedClient = new Gdax.AuthenticatedClient(process.env.API_KEY, process.env.API_SECRET, process.env.API_PASSPHRASE)
+  console.log moment().format(), 'gdax authedClient', authedClient
+
+reinitAuthedClient() # 2 get things started
+
+
+clientReject = ( err )->
+  console.log 'gdax client by error', err
+
+  reinitAuthedClient()
+
+
+
+###
+                __  .__               .___
+  _____   _____/  |_|  |__   ____   __| _/______
+ /     \_/ __ \   __\  |  \ /  _ \ / __ |/  ___/
+|  Y Y  \  ___/|  | |   Y  (  <_> ) /_/ |\___ \
+|__|_|  /\___  >__| |___|  /\____/\____ /____  >
+      \/     \/          \/            \/    \/
+###
 
 cancelAllOrders = ( currencies = [] )->
   new RSVP.Promise (resolve, reject)->
@@ -92,7 +131,10 @@ cancelOrder = ( order )->
 buy = ( order )->
   new RSVP.Promise ( resolve, reject )->
     callback = ( err, result )->
-      reject err if err
+      if err
+        clientReject err
+        reject err
+
       resolve result
 
     authedClient.buy order, callback
@@ -126,6 +168,14 @@ getOrders = (product_id)->
 
     authedClient.getOrders( product_id, callback )
 
+
+
+###                                  __
+  ____ ___  _________   ____________/  |_  ______
+_/ __ \\  \/  /\____ \ /  _ \_  __ \   __\/  ___/
+\  ___/ >    < |  |_> >  <_> )  | \/|  |  \___ \
+ \___  >__/\_ \|   __/ \____/|__|   |__| /____  >
+     \/      \/|__|                           \/###
 
 module.exports =
   cancelAllOrders: cancelAllOrders
