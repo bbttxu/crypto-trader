@@ -8,8 +8,7 @@ deepEqual = require 'deep-equal'
 gdax = require './lib/gdax-client'
 currencySideRecent = require './lib/currencySideRecent'
 saveFill = require './lib/saveFill'
-# saveMatches = require './lib/saveMatches'
-Stream = require './lib/stream'
+Streams = require './lib/streams'
 
 config = require './config'
 ml = require './ml'
@@ -222,8 +221,26 @@ currencyStream = (product)->
         order: message
 
 
-R.map currencyStream, R.keys config.currencies
 
+
+channel = Streams R.keys config.currencies
+
+channel.subscribe 'message', ( message )->
+  if message.type is 'heartbeat'
+    sendHeartbeat()
+
+  if message.type is 'match'
+    dispatchMatch message
+
+  if message.type is 'received'
+    store.dispatch
+      type: 'ORDER_RECEIVED'
+      order: message
+
+  if message.type is 'done' and message.reason is 'filled'
+    store.dispatch
+      type: 'ORDER_FILLED'
+      order: message
 
 
 ###
