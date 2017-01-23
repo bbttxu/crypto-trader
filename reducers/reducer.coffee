@@ -139,7 +139,7 @@ reducers = (state, action) ->
   state.proposals = proposals ( R.pick [ 'currencies' ], state ), predictionResults
 
   # console.log R.keys state
-  console.log moment().format(), JSON.stringify R.pick ['proposals'], state
+  # console.log moment().format(), JSON.stringify R.pick ['proposals'], state
 
   state
 
