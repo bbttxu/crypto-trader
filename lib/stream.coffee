@@ -29,7 +29,7 @@ module.exports = (product = 'BTC-USD')->
 
     websocket.on 'message', (message)->
       # publish message to the channel
-      channel.publish 'message', message
+      channel.publish "message:#{product}", message
 
   # start the websocket
   start()

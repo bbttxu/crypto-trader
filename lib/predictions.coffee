@@ -19,9 +19,14 @@ linearLast = ( docs, future, base )->
   m = equation[0]
   b = equation[1]
 
-  y = ( m * future ) + b
+  # console.log coords
 
-  return y
+  y = ( m * future ) + b
+  # if coords.length > 2
+  #   console.log coords
+  #   console.log 'y', y
+
+  y
 
 
 module.exports = ( side, future, key )->

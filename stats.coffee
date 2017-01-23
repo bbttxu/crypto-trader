@@ -22,111 +22,115 @@ getFillWorth = ( fill )->
 
   parseFloat( fill.size ) * parseFloat ( fill.price ) * multiplier
 
-
-getCurrencyFills = ( product_id )->
-  new RSVP.Promise (resolve, reject)->
-    base = product_id.split('-')[1].toLowerCase()
-
-
-    tabulateFills = ( fills )->
-
-      notWithinLast = ( timeframe )->
-
-        parts = timeframe.split(' ')
-
-        ago = moment().subtract( parts[0], parts[1] )
-
-        tooOld = ( doc )->
-          moment( doc.created_at ).isBefore ago
+stats = ->
+  getCurrencyFills = ( product_id )->
+    new RSVP.Promise (resolve, reject)->
+      base = product_id.split('-')[1].toLowerCase()
 
 
-        inTimeFrame = R.reject tooOld, fills
+      tabulateFills = ( fills )->
 
-        sum = R.sum R.map getFillWorth, inTimeFrame
+        notWithinLast = ( timeframe )->
 
-        grouped = R.groupBy R.prop('side'), inTimeFrame
+          parts = timeframe.split(' ')
 
-        sells = grouped.sell or []
-        buys = grouped.buy or []
+          ago = moment().subtract( parts[0], parts[1] )
 
-        min = Math.min sells.length, buys.length
-        min = 10
-        # console.log min
-
-        sellsWorth = R.map getFillWorth, sells
-        buysWorth = R.map getFillWorth, buys
+          tooOld = ( doc )->
+            moment( doc.created_at ).isBefore ago
 
 
-        sellsSum = R.sum sellsWorth.sort()
-        buysSum = Math.abs R.sum buysWorth.sort()
+          inTimeFrame = R.reject tooOld, fills
 
-        # console.log sellsSum, buysWorth
+          sum = R.sum R.map getFillWorth, inTimeFrame
+
+          grouped = R.groupBy R.prop('side'), inTimeFrame
+
+          sells = grouped.sell or []
+          buys = grouped.buy or []
+
+          min = Math.min sells.length, buys.length
+          min = 10
+          # console.log min
+
+          sellsWorth = R.map getFillWorth, sells
+          buysWorth = R.map getFillWorth, buys
 
 
-        percentage = 0
-        if 0 isnt sellsSum and 0 isnt buysSum
-          percentage = ( sellsSum / buysSum ) - 1
+          sellsSum = R.sum sellsWorth.sort()
+          buysSum = Math.abs R.sum buysWorth.sort()
+
+          # console.log sellsSum, buysWorth
+
+
+          percentage = 0
+          if 0 isnt sellsSum and 0 isnt buysSum
+            percentage = ( sellsSum / buysSum ) - 1
+
+
+          obj = {}
+          obj[timeframe] =
+            sum: sum
+            percentage: percentage
+
+          obj
+
+
+        values = {}
+        values = R.mergeAll R.map notWithinLast, config.reporting.timescales
+        # values.all = R.sum R.map getFillWorth, fills
 
 
         obj = {}
-        obj[timeframe] =
-          sum: sum
-          percentage: percentage
+        obj[product_id] = values
+        # console.log obj
 
-        obj
-
-
-      values = {}
-      values = R.mergeAll R.map notWithinLast, config.reporting.timescales
-      # values.all = R.sum R.map getFillWorth, fills
-
-
-      obj = {}
-      obj[product_id] = values
-      # console.log obj
-
-      resolve obj
+        resolve obj
 
 
 
-    noFills = ( err )->
-      console.log 'noFills', err
+      noFills = ( err )->
+        console.log 'noFills', err
 
-    getFills( product_id ).then( tabulateFills ).catch( noFills )
+      getFills( product_id ).then( tabulateFills ).catch( noFills )
 
 
-promises = R.map getCurrencyFills, R.keys config.currencies
+  promises = R.map getCurrencyFills, R.keys config.currencies
 
 
 
 
-condenseInfo = (value, product)->
-  formatter = currencyFormatter product
+  condenseInfo = (value, product)->
+    formatter = currencyFormatter product
 
 
-  condenseOneInfo = (value, key)->
-    sum = formatter value.sum
-    sum
+    condenseOneInfo = (value, key)->
+      sum = formatter value.sum
+      sum
 
 
-  timeframeData = ( R.values R.mapObjIndexed condenseOneInfo, value ).join '/'
-  "#{product}: #{timeframeData}"
+    timeframeData = ( R.values R.mapObjIndexed condenseOneInfo, value ).join '/'
+    "#{product}: #{timeframeData}"
 
 
 
 
-RSVP.all(promises).then (results)->
+  RSVP.all(promises).then (results)->
 
-  # Sort Array by highest values
-  highestValue = (doc)->
-    R.values(R.values(doc)[0])[0].sum
+    # Sort Array by highest values
+    highestValue = (doc)->
+      R.values(R.values(doc)[0])[0].sum
 
 
-  prices = ( R.values R.mapObjIndexed condenseInfo, R.mergeAll R.reverse R.sortBy highestValue, results )
-  prices.push config.reporting.timescales.join '/'
+    prices = ( R.values R.mapObjIndexed condenseInfo, R.mergeAll R.reverse R.sortBy highestValue, results )
+    prices.push config.reporting.timescales.join '/'
+    console.log moment().format()
+    console.log prices.join "\n"
 
-  console.log prices.join "\n"
 
+stats()
+
+setInterval stats, ( 60 * 1000 )
 
 process.on 'uncaughtException', (err) ->
   console.log 'Caught exception: ' + err
