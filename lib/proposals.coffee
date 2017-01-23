@@ -7,6 +7,8 @@ module.exports = ( currencies, predictions )->
 
   proposeTrade = ( doc )->
     amount = halfsies doc.current, doc.linear, currencies.currencies[doc.top].balance
+    if amount < 0.01
+      amount = 0.01
 
     obj =
       price: doc.linear
@@ -35,11 +37,10 @@ module.exports = ( currencies, predictions )->
 
   # console.log 'sided', sided
 
-  notTradeable = ( doc )->
-    doc.size < 0.01
+  # notTradeable = ( doc )->
+  #   doc.size < 0.01
 
-
-  orders = R.map cleanUpTrades, R.reject notTradeable, R.map proposeTrade, R.flatten R.values sided
+  orders = R.map cleanUpTrades, R.map proposeTrade, R.flatten R.values sided
 
   # console.log 'orders', orders
   orders

@@ -8,7 +8,7 @@ deepEqual = require 'deep-equal'
 gdax = require './lib/gdax-client'
 currencySideRecent = require './lib/currencySideRecent'
 saveFill = require './lib/saveFill'
-saveMatches = require './lib/saveMatches'
+# saveMatches = require './lib/saveMatches'
 Stream = require './lib/stream'
 
 config = require './config'
@@ -175,18 +175,18 @@ dispatchMatch = ( match, save = false )->
     type: 'ORDER_MATCHED'
     match: match
 
-  if save
-    saveFillSuccess = ( result )->
-      since = moment( result.created_at ).fromNow( true )
+  # if save
+  #   saveFillSuccess = ( result )->
+  #     since = moment( result.created_at ).fromNow( true )
 
-      info = JSON.stringify R.pick ['time','product_id','side','price','size', 'trade_id'], result
+  #     info = JSON.stringify R.pick ['time','product_id','side','price','size', 'trade_id'], result
 
-      if result is true
-        console.log '$', info
-      else
-        console.log '+', info
+  #     if result is true
+  #       console.log '$', info
+  #     else
+  #       console.log '+', info
 
-  saveMatches( match ).then( saveFillSuccess ).catch( universalBad )
+  #   saveMatches( match ).then( saveFillSuccess ).catch( universalBad )
 
 
 
@@ -235,33 +235,33 @@ R.map currencyStream, R.keys config.currencies
        \/  \/         \/            \/          \/
 ###
 
-INTERVAL = 100
+# INTERVAL = 100
 
-throttledDispatchMatch = (match, index)->
-  sendThrottledDispatchMatch = ->
+# throttledDispatchMatch = (match, index)->
+#   sendThrottledDispatchMatch = ->
 
-    info = JSON.stringify R.pick ['time','product_id','side','price','size', 'trade_id'], match
+#     info = JSON.stringify R.pick ['time','product_id','side','price','size', 'trade_id'], match
 
-    console.log '*', moment( match.time ).fromNow( true ), info
-    dispatchMatch match
+#     console.log '*', moment( match.time ).fromNow( true ), info
+#     dispatchMatch match
 
-  setTimeout sendThrottledDispatchMatch, ( ( index * INTERVAL ) + ( Math.random() * INTERVAL ) )
-
-
-hydrateRecentCurrency = ( product_id )->
-  hydrateRecentCurrencySide = ( side )->
-    currencySideRecent( product_id, side, historicalMinutes, config.default.interval.units ).then ( matches )->
-      mapIndexed = R.addIndex R.map
-      mapIndexed throttledDispatchMatch, R.reverse matches
+#   setTimeout sendThrottledDispatchMatch, ( ( index * INTERVAL ) + ( Math.random() * INTERVAL ) )
 
 
-  R.map hydrateRecentCurrencySide, [ 'sell', 'buy' ]
+# hydrateRecentCurrency = ( product_id )->
+#   hydrateRecentCurrencySide = ( side )->
+#     currencySideRecent( product_id, side, historicalMinutes, config.default.interval.units ).then ( matches )->
+#       mapIndexed = R.addIndex R.map
+#       mapIndexed throttledDispatchMatch, R.reverse matches
 
 
-waitAMoment = ->
-  R.map hydrateRecentCurrency, R.keys config.currencies
+#   R.map hydrateRecentCurrencySide, [ 'sell', 'buy' ]
 
-setTimeout waitAMoment, 1000
+
+# waitAMoment = ->
+#   R.map hydrateRecentCurrency, R.keys config.currencies
+
+# setTimeout waitAMoment, 1000
 
 
 
@@ -274,9 +274,9 @@ __________                             ___.
         \/     \/      \/     \/      \/    \/     \/
 ###
 
-saveFills = require './save'
-setTimeout saveFills, 2000
-setInterval saveFills, (1000 * 60 * 15)
+# saveFills = require './save'
+# setTimeout saveFills, 2000
+# setInterval saveFills, (1000 * 60 * 15)
 
 
 # Cancel All Orders, start with a clean slate
