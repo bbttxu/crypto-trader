@@ -18,20 +18,24 @@ if we need to restart, we have a local scoped variable onto which we can re-atta
 ###
 
 # 0 auth mechanism
-authedClient = undefined
+authedClient = ->
+  client = new Gdax.AuthenticatedClient(process.env.API_KEY, process.env.API_SECRET, process.env.API_PASSPHRASE)
+  # console.log moment().format(), 'gdax authedClient', client
+  client
+
 
 # 1 mechanism to create auth mechanism to gdax
-reinitAuthedClient = ->
-  authedClient = new Gdax.AuthenticatedClient(process.env.API_KEY, process.env.API_SECRET, process.env.API_PASSPHRASE)
-  console.log moment().format(), 'gdax authedClient', authedClient
+# reinitAuthedClient = ->
+#   authedClient = new Gdax.AuthenticatedClient(process.env.API_KEY, process.env.API_SECRET, process.env.API_PASSPHRASE)
+#   console.log moment().format(), 'gdax authedClient', authedClient
 
-reinitAuthedClient() # 2 get things started
+# reinitAuthedClient() # 2 get things started
 
 
-clientReject = ( err )->
-  console.log 'gdax client by error', err
+# clientReject = ( err )->
+#   console.log 'gdax client by error', err
 
-  reinitAuthedClient()
+#   reinitAuthedClient()
 
 
 
@@ -48,7 +52,7 @@ cancelAllOrders = ( currencies = [] )->
   new RSVP.Promise (resolve, reject)->
     promiseCancelCurrencyOrder = ( currency )->
       new RSVP.Promise (resolve, reject)->
-        authedClient.cancelAllOrders { product_id: currency }, (err, results)->
+        authedClient().cancelAllOrders { product_id: currency }, (err, results)->
           if err
             console.log 'cancelAllOrders.err', err
             reject err
@@ -104,7 +108,7 @@ getAccounts = ( currency )->
 
       resolve JSON.parse json.body
 
-    authedClient.getAccounts callback
+    authedClient().getAccounts callback
 
 cancelOrder = ( order )->
   new RSVP.Promise (resolve, reject)->
@@ -126,7 +130,7 @@ cancelOrder = ( order )->
         reject false
 
 
-    authedClient.cancelOrder order, callback
+    authedClient().cancelOrder order, callback
 
 buy = ( order )->
   new RSVP.Promise ( resolve, reject )->
@@ -137,7 +141,7 @@ buy = ( order )->
 
       resolve result
 
-    authedClient.buy order, callback
+    authedClient().buy order, callback
 
 sell = ( order )->
   new RSVP.Promise ( resolve, reject )->
@@ -145,13 +149,13 @@ sell = ( order )->
       reject err if err
       resolve result
 
-    authedClient.sell order, callback
+    authedClient().sell order, callback
 
 
 
 getFills = (product = product_id)->
   new RSVP.Promise (resolve, reject)->
-    authedClient.getFills {product_id: product}, (err, data)->
+    authedClient().getFills {product_id: product}, (err, data)->
       if err
         data = JSON.parse err.body
         console.log 'err', data, order
@@ -166,7 +170,7 @@ getOrders = (product_id)->
       resolve result
 
 
-    authedClient.getOrders( product_id, callback )
+    authedClient().getOrders( product_id, callback )
 
 
 
