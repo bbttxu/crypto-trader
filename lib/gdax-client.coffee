@@ -2,14 +2,57 @@ require('dotenv').config({silent: true})
 Gdax = require 'gdax'
 RSVP = require 'rsvp'
 R = require 'ramda'
+moment = require 'moment'
 
-authedClient = new Gdax.AuthenticatedClient(process.env.API_KEY, process.env.API_SECRET, process.env.API_PASSPHRASE)
+
+###
+               __  .__               .____________ .__  .__               __
+_____   __ ___/  |_|  |__   ____   __| _/\_   ___ \|  | |__| ____   _____/  |_
+\__  \ |  |  \   __\  |  \_/ __ \ / __ | /    \  \/|  | |  |/ __ \ /    \   __\
+ / __ \|  |  /|  | |   Y  \  ___// /_/ | \     \___|  |_|  \  ___/|   |  \  |
+(____  /____/ |__| |___|  /\___  >____ |  \______  /____/__|\___  >___|  /__|
+     \/                 \/     \/     \/         \/             \/     \/
+
+local scoped client
+if we need to restart, we have a local scoped variable onto which we can re-attach a new instance
+###
+
+# 0 auth mechanism
+authedClient = ->
+  client = new Gdax.AuthenticatedClient(process.env.API_KEY, process.env.API_SECRET, process.env.API_PASSPHRASE)
+  # console.log moment().format(), 'gdax authedClient', client
+  client
+
+
+# 1 mechanism to create auth mechanism to gdax
+# reinitAuthedClient = ->
+#   authedClient = new Gdax.AuthenticatedClient(process.env.API_KEY, process.env.API_SECRET, process.env.API_PASSPHRASE)
+#   console.log moment().format(), 'gdax authedClient', authedClient
+
+# reinitAuthedClient() # 2 get things started
+
+
+# clientReject = ( err )->
+#   console.log 'gdax client by error', err
+
+#   reinitAuthedClient()
+
+
+
+###
+                __  .__               .___
+  _____   _____/  |_|  |__   ____   __| _/______
+ /     \_/ __ \   __\  |  \ /  _ \ / __ |/  ___/
+|  Y Y  \  ___/|  | |   Y  (  <_> ) /_/ |\___ \
+|__|_|  /\___  >__| |___|  /\____/\____ /____  >
+      \/     \/          \/            \/    \/
+###
 
 cancelAllOrders = ( currencies = [] )->
   new RSVP.Promise (resolve, reject)->
     promiseCancelCurrencyOrder = ( currency )->
       new RSVP.Promise (resolve, reject)->
-        authedClient.cancelAllOrders { product_id: currency }, (err, results)->
+        authedClient().cancelAllOrders { product_id: currency }, (err, results)->
           if err
             console.log 'cancelAllOrders.err', err
             reject err
@@ -65,7 +108,7 @@ getAccounts = ( currency )->
 
       resolve JSON.parse json.body
 
-    authedClient.getAccounts callback
+    authedClient().getAccounts callback
 
 cancelOrder = ( order )->
   new RSVP.Promise (resolve, reject)->
@@ -87,15 +130,18 @@ cancelOrder = ( order )->
         reject false
 
 
-    authedClient.cancelOrder order, callback
+    authedClient().cancelOrder order, callback
 
 buy = ( order )->
   new RSVP.Promise ( resolve, reject )->
     callback = ( err, result )->
-      reject err if err
+      if err
+        clientReject err
+        reject err
+
       resolve result
 
-    authedClient.buy order, callback
+    authedClient().buy order, callback
 
 sell = ( order )->
   new RSVP.Promise ( resolve, reject )->
@@ -103,13 +149,13 @@ sell = ( order )->
       reject err if err
       resolve result
 
-    authedClient.sell order, callback
+    authedClient().sell order, callback
 
 
 
 getFills = (product = product_id)->
   new RSVP.Promise (resolve, reject)->
-    authedClient.getFills {product_id: product}, (err, data)->
+    authedClient().getFills {product_id: product}, (err, data)->
       if err
         data = JSON.parse err.body
         console.log 'err', data, order
@@ -124,8 +170,16 @@ getOrders = (product_id)->
       resolve result
 
 
-    authedClient.getOrders( product_id, callback )
+    authedClient().getOrders( product_id, callback )
 
+
+
+###                                  __
+  ____ ___  _________   ____________/  |_  ______
+_/ __ \\  \/  /\____ \ /  _ \_  __ \   __\/  ___/
+\  ___/ >    < |  |_> >  <_> )  | \/|  |  \___ \
+ \___  >__/\_ \|   __/ \____/|__|   |__| /____  >
+     \/      \/|__|                           \/###
 
 module.exports =
   cancelAllOrders: cancelAllOrders

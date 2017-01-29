@@ -4,6 +4,8 @@ Postal = require 'postal'
 
 Gdax = require 'gdax'
 
+restart = require './restartProcess'
+
 authentication =
   secret: process.env.API_SECRET
   key: process.env.API_KEY
