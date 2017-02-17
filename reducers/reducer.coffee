@@ -20,7 +20,7 @@ initalState =
   predictions: {}
   proposals: []
   matches: {}
-
+  stats: {}
   sent: []
   orders: []
 
@@ -45,6 +45,9 @@ reducers = (state, action) ->
   # heartbeat ensures that proposed orders, and active orders don't stagnate
   state.heartbeat = action.message if action.type is 'HEARTBEAT'
 
+  # Record Stats
+  if action.type is 'UPDATE_STATS'
+    state.stats = action.stats
 
   if action.type is 'UPDATE_ACCOUNT'
     state.currencies[action.currency.currency] = R.pick ['hold', 'balance'], action.currency

@@ -2,16 +2,16 @@ module.exports =
   default:
     interval:
       units: 'seconds'
-      value: '600'
+      value: '300'
 
     trade:
       minimumSize: 0.1
 
 
   currencies:
-    'BTC-USD':
-      sell: {}
-      buy: {}
+    # 'BTC-USD':
+    #   sell: {}
+    #   buy: {}
 
     # 'LTC-USD':
     #   sell: {}
