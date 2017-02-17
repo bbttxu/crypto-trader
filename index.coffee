@@ -257,6 +257,28 @@ channel.subscribe 'message', ( message )->
 # setTimeout waitAMoment, 1000
 
 
+###
+  _________ __          __
+ /   _____//  |______ _/  |_  ______
+ \_____  \\   __\__  \\   __\/  ___/
+ /        \|  |  / __ \|  |  \___ \
+/_______  /|__| (____  /__| /____  >
+        \/           \/          \/ 
+###
+
+updateStats = ->
+  dispatchStats = ( results )->
+    store.dispatch
+      type: 'UPDATE_STATS'
+      stats: R.mergeAll results
+
+  gdax.stats( R.keys config.currencies ).then( dispatchStats )
+
+updateStats()
+setInterval updateStats, 30 * 1000
+
+
+
 
 ###
 __________                             ___.
