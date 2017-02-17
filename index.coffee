@@ -169,25 +169,44 @@ universalBad = ( err )->
   console.log 'bad', err
   throw err if err
 
-dispatchMatch = ( match, save = false )->
+
+###
+   _____          __         .__
+  /     \ _____ _/  |_  ____ |  |__   ____   ______
+ /  \ /  \\__  \\   __\/ ___\|  |  \_/ __ \ /  ___/
+/    Y    \/ __ \|  | \  \___|   Y  \  ___/ \___ \
+\____|__  (____  /__|  \___  >___|  /\___  >____  >
+        \/     \/          \/     \/     \/     \/
+###
+
+Queue = require './lib/queue'
+matchesQueue = Queue()
+
+saveMatches = require './lib/saveMatches'
+
+dispatchMatch = ( match, save = true )->
   store.dispatch
     type: 'ORDER_MATCHED'
     match: match
 
-  # if save
-  #   saveFillSuccess = ( result )->
-  #     since = moment( result.created_at ).fromNow( true )
+  matchesQueue.enqueue match if save
 
-  #     info = JSON.stringify R.pick ['time','product_id','side','price','size', 'trade_id'], result
+asdfasdf = ->
+  match = matchesQueue.dequeue()
+  if match
+    saveFillSuccess = ( result )->
+      since = moment( result.created_at ).fromNow( true )
 
-  #     if result is true
-  #       console.log '$', info
-  #     else
-  #       console.log '+', info
+      info = JSON.stringify R.pick ['time','product_id','side','price','size', 'trade_id'], result
+      console.log '+', info
 
-  #   saveMatches( match ).then( saveFillSuccess ).catch( universalBad )
+    saveFillFailure = ( err )->
+      console.log 'errrrrrr', err
+      matchesQueue.enqueue match
 
+    saveMatches( match ).then( saveFillSuccess ).catch( saveFillFailure )
 
+setInterval asdfasdf, 1000
 
 
 sendHeartbeat = ->
@@ -228,33 +247,31 @@ channel.subscribe 'message', ( message )->
        \/  \/         \/            \/          \/
 ###
 
-# INTERVAL = 100
+INTERVAL = 100
 
-# throttledDispatchMatch = (match, index)->
-#   sendThrottledDispatchMatch = ->
+throttledDispatchMatch = (match, index)->
+  sendThrottledDispatchMatch = ->
 
-#     info = JSON.stringify R.pick ['time','product_id','side','price','size', 'trade_id'], match
+    # log it, but no need to save it
+    dispatchMatch match, false
 
-#     console.log '*', moment( match.time ).fromNow( true ), info
-#     dispatchMatch match
-
-#   setTimeout sendThrottledDispatchMatch, ( ( index * INTERVAL ) + ( Math.random() * INTERVAL ) )
+  setTimeout sendThrottledDispatchMatch, ( ( index * INTERVAL ) + ( Math.random() * INTERVAL ) )
 
 
-# hydrateRecentCurrency = ( product_id )->
-#   hydrateRecentCurrencySide = ( side )->
-#     currencySideRecent( product_id, side, historicalMinutes, config.default.interval.units ).then ( matches )->
-#       mapIndexed = R.addIndex R.map
-#       mapIndexed throttledDispatchMatch, R.reverse matches
+hydrateRecentCurrency = ( product_id )->
+  hydrateRecentCurrencySide = ( side )->
+    currencySideRecent( product_id, side, historicalMinutes, config.default.interval.units ).then ( matches )->
+      mapIndexed = R.addIndex R.map
+      mapIndexed throttledDispatchMatch, R.reverse matches
 
 
-#   R.map hydrateRecentCurrencySide, [ 'sell', 'buy' ]
+  R.map hydrateRecentCurrencySide, [ 'sell', 'buy' ]
 
 
-# waitAMoment = ->
-#   R.map hydrateRecentCurrency, R.keys config.currencies
+waitAMoment = ->
+  R.map hydrateRecentCurrency, R.keys config.currencies
 
-# setTimeout waitAMoment, 1000
+setTimeout waitAMoment, 1000
 
 
 ###
@@ -263,7 +280,7 @@ channel.subscribe 'message', ( message )->
  \_____  \\   __\__  \\   __\/  ___/
  /        \|  |  / __ \|  |  \___ \
 /_______  /|__| (____  /__| /____  >
-        \/           \/          \/ 
+        \/           \/          \/
 ###
 
 updateStats = ->
