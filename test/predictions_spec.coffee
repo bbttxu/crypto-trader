@@ -19,14 +19,17 @@ describe 'predictions', ->
     ,
       price: '8.00000000'
       time: '2016-12-18T18:29:40.000000Z'
+    ,
+      price: '7.95000000'
+      time: '2016-12-18T18:29:50.000000Z'
     ]
 
     result = predictor results
 
     expected = {
-      current: '8.00'
-      linear: 8.496875000186265
-      n: 4
+      current: '7.95'
+      linear: 7.950001466401856
+      n: 5
     }
 
     expected.should.be.eql result
@@ -47,13 +50,16 @@ describe 'predictions', ->
     ,
       price: '8.00000000'
       time: '2016-12-18T18:29:40.000000Z'
+    ,
+      price: '7.95000000'
+      time: '2016-12-18T18:29:50.000000Z'
     ]
 
     result = predictor results
 
     expected = {
-      current: '8.00'
-      n: 4
+      current: '7.95'
+      n: 5
     }
 
     expected.should.be.eql result

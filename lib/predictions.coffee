@@ -14,19 +14,11 @@ linearLast = ( docs, future, base )->
 
   coords = matchesToCartesian( docs, true )
 
-  equation = regression( 'linear', coords ).equation
+  coords.push [ future, null ]
 
-  m = equation[0]
-  b = equation[1]
+  equation = regression( 'linear', coords )
 
-  # console.log coords
-
-  y = ( m * future ) + b
-  # if coords.length > 2
-  #   console.log coords
-  #   console.log 'y', y
-
-  y
+  R.last( equation.points )[1]
 
 
 module.exports = ( side, future, key )->
