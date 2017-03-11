@@ -14,7 +14,10 @@ config = require './config'
 ml = require './ml'
 
 projectionMinutes = config.default.interval.value
-historicalMinutes = projectionMinutes * 3
+
+console.log projectionMinutes
+
+historicalMinutes = projectionMinutes * 5
 
 reducers = require './reducers/reducer'
 
@@ -80,7 +83,7 @@ makeNewTrades = ->
   if sides.buy
     R.map buyOrder, sides.buy
 
-setInterval makeNewTrades, 30000
+setInterval makeNewTrades, ( projectionMinutes * 1000 ) / 10
 
 ###
 _________                            .__
