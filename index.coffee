@@ -201,7 +201,7 @@ asdfasdf = ->
       console.log '+', info
 
     saveFillFailure = ( err )->
-      console.log 'errrrrrr', err
+      console.log 'errrrrrr asdfasdf', err
       matchesQueue.enqueue match
 
     saveMatches( match ).then( saveFillSuccess ).catch( saveFillFailure )
@@ -247,7 +247,7 @@ channel.subscribe 'message', ( message )->
        \/  \/         \/            \/          \/
 ###
 
-INTERVAL = 100
+INTERVAL = 500
 
 throttledDispatchMatch = (match, index)->
   sendThrottledDispatchMatch = ->
