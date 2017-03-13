@@ -32,10 +32,10 @@ authedClient = ->
 # reinitAuthedClient() # 2 get things started
 
 
-# clientReject = ( err )->
-#   console.log 'gdax client by error', err
+clientReject = ( err )->
+  console.log 'gdax client by error clientReject', err
 
-#   reinitAuthedClient()
+  reinitAuthedClient()
 
 
 
@@ -53,7 +53,7 @@ cancelAllOrders = ( currencies = [] )->
     promiseCancelCurrencyOrder = ( currency )->
       new RSVP.Promise (resolve, reject)->
         authedClient().cancelAllOrders { product_id: currency }, (err, results)->
-          if err
+          if err or undefined is results
             console.log 'cancelAllOrders.err', err
             reject err
           else
@@ -114,7 +114,7 @@ cancelOrder = ( order )->
   new RSVP.Promise (resolve, reject)->
     callback = (err, data)->
       if err
-        console.log 'err', err, order
+        console.log 'err cancelOrder', err, order
         reject false
 
       unless data
@@ -158,7 +158,7 @@ getFills = (product = product_id)->
     authedClient().getFills {product_id: product}, (err, data)->
       if err
         data = JSON.parse err.body
-        console.log 'err', data, order
+        console.log 'err getFills', data, order
 
       resolve JSON.parse data.body
 
