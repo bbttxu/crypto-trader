@@ -13,6 +13,8 @@ Streams = require './lib/streams'
 config = require './config'
 ml = require './ml'
 
+exit = require './lib/exit'
+
 projectionMinutes = config.default.interval.value
 
 console.log projectionMinutes
@@ -34,7 +36,7 @@ orderSuccess = ( response )->
 
 orderFailed = ( order )->
   console.log 'orderFailed', order
-
+  exit()
 
 updatedStore = ->
   state = store.getState()
@@ -133,6 +135,7 @@ setInterval clearOutOldOrders, 1000
 universalBad = ( err )->
   console.log 'bad', err
   throw err if err
+  exit()
 
 
 
@@ -168,9 +171,9 @@ updateAccounts()
 setInterval updateAccounts, 59 * 60 * 1000
 
 
-universalBad = ( err )->
-  console.log 'bad', err
-  throw err if err
+# universalBad = ( err )->
+#   console.log 'bad', err
+#   throw err if err
 
 
 ###
@@ -192,24 +195,25 @@ dispatchMatch = ( match, save = true )->
     type: 'ORDER_MATCHED'
     match: match
 
-  matchesQueue.enqueue match if save
+  # matchesQueue.enqueue match if save
 
-asdfasdf = ->
-  match = matchesQueue.dequeue()
-  if match
-    saveFillSuccess = ( result )->
-      since = moment( result.created_at ).fromNow( true )
+# asdfasdf = ->
+#   match = matchesQueue.dequeue()
+#   if match
+#     saveFillSuccess = ( result )->
+#       since = moment( result.created_at ).fromNow( true )
 
-      info = JSON.stringify R.pick ['time','product_id','side','price','size', 'trade_id'], result
-      console.log '+', info
+#       info = JSON.stringify R.pick ['time','product_id','side','price','size', 'trade_id'], result
+#       console.log '+', info
 
-    saveFillFailure = ( err )->
-      console.log 'errrrrrr asdfasdf', err
-      matchesQueue.enqueue match
+#     saveFillFailure = ( err )->
+#       console.log 'errrrrrr asdfasdf', err
+#       matchesQueue.enqueue match
+#       exit()
 
-    saveMatches( match ).then( saveFillSuccess ).catch( saveFillFailure )
+#     saveMatches( match ).then( saveFillSuccess ).catch( saveFillFailure )
 
-setInterval asdfasdf, 1000
+# setInterval asdfasdf, 1000
 
 
 sendHeartbeat = ->
@@ -250,31 +254,31 @@ channel.subscribe 'message', ( message )->
        \/  \/         \/            \/          \/
 ###
 
-INTERVAL = 500
+# INTERVAL = 500
 
-throttledDispatchMatch = (match, index)->
-  sendThrottledDispatchMatch = ->
+# throttledDispatchMatch = (match, index)->
+#   sendThrottledDispatchMatch = ->
 
-    # log it, but no need to save it
-    dispatchMatch match, false
+#     # log it, but no need to save it
+#     dispatchMatch match, false
 
-  setTimeout sendThrottledDispatchMatch, ( ( index * INTERVAL ) + ( Math.random() * INTERVAL ) )
-
-
-hydrateRecentCurrency = ( product_id )->
-  hydrateRecentCurrencySide = ( side )->
-    currencySideRecent( product_id, side, historicalMinutes, config.default.interval.units ).then ( matches )->
-      mapIndexed = R.addIndex R.map
-      mapIndexed throttledDispatchMatch, R.reverse matches
+#   setTimeout sendThrottledDispatchMatch, ( ( index * INTERVAL ) + ( Math.random() * INTERVAL ) )
 
 
-  R.map hydrateRecentCurrencySide, [ 'sell', 'buy' ]
+# hydrateRecentCurrency = ( product_id )->
+#   hydrateRecentCurrencySide = ( side )->
+#     currencySideRecent( product_id, side, historicalMinutes, config.default.interval.units ).then ( matches )->
+#       mapIndexed = R.addIndex R.map
+#       mapIndexed throttledDispatchMatch, R.reverse matches
 
 
-waitAMoment = ->
-  R.map hydrateRecentCurrency, R.keys config.currencies
+#   R.map hydrateRecentCurrencySide, [ 'sell', 'buy' ]
 
-setTimeout waitAMoment, 1000
+
+# waitAMoment = ->
+#   R.map hydrateRecentCurrency, R.keys config.currencies
+
+# setTimeout waitAMoment, 1000
 
 
 ###

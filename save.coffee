@@ -7,7 +7,7 @@ saveFill = require './lib/saveFill'
 config = require './config'
 
 
-INTERVAL = 1000
+INTERVAL = 100
 
 
 throttledDispatchFill = (match, index = 0)->
@@ -21,6 +21,7 @@ throttledDispatchFill = (match, index = 0)->
 
   orNot = (result)->
     console.log 'orNot', result
+    exit(3)
 
 
   sendThrottledDispatchFill = ->
@@ -33,7 +34,7 @@ throttledDispatchFill = (match, index = 0)->
 saveFills = ( fills )->
   # console.log fills
   mapIndexed = R.addIndex R.map
-  mapIndexed throttledDispatchFill, R.reverse fills
+  mapIndexed throttledDispatchFill, fills
 
 cantSaveFills = ( fills )->
   console.log 'cantSaveFills', fills
