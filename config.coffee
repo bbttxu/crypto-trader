@@ -2,7 +2,7 @@ module.exports =
   default:
     interval:
       units: 'seconds'
-      value: '3600'
+      value: '1800'
 
     trade:
       minimumSize: 0.1
