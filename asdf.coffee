@@ -96,8 +96,9 @@ streams = Streams currencies
 isSameSide = (match1, match2)->
   match1.side is match2.side
 
-onlyOne = (array)->
-  array.length is 1
+lessThanASecond = ( run )->
+  console.log 'rejected because duration is less than a 1000 ms', run.duration if run.duration < 1000
+  run.duration < 1000
 
 calculateDuration = (array)->
   first = R.head array
@@ -114,6 +115,11 @@ calculateDuration = (array)->
 bySide = (match)->
   match.side
 
+onlyOne = (array)->
+  # console.log 'rejected because 1', array.n if 1 is array.n
+  array.n is 1
+
+
 sideStats = (values, key)->
   durations = R.pluck 'duration', values
 
@@ -125,13 +131,13 @@ sideStats = (values, key)->
 
 
 streams.subscribe 'match', ( match )->
-  console.log JSON.stringify R.pick interestingBits, match
+  # console.log JSON.stringify R.pick interestingBits, match
 
   matches.push R.pick interestingBits, match
 
-  asdf = R.map calculateDuration, R.groupWith isSameSide, matches
+  asdf = R.reject onlyOne, R.map calculateDuration, R.groupWith isSameSide, matches
 
-  console.log 'asdf', asdf
+  # console.log 'asdf', asdf
 
   grouped = R.groupBy bySide, asdf
 
