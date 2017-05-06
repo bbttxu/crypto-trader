@@ -12,7 +12,11 @@ module.exports = ( currencies )->
     channel = Stream product
 
     channel.subscribe "message:#{product}", ( message )->
+
       river.publish "match", message if 'match' is message.type
+
+      console.log message.type if 'match' is message.type
+
 
   R.map currencyStream, currencies
 

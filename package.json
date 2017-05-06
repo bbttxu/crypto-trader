@@ -17,7 +17,7 @@
   "license": "ISC",
   "dependencies": {
     "coffee-coverage": "^1.0.1",
-    "coffee-script": "1.12.3",
+    "coffee-script": "^1.12.5",
     "coveralls": "^2.11.15",
     "dotenv": "4.0.0",
     "gdax": "0.3.1",
@@ -26,6 +26,7 @@
     "mocha-lcov-reporter": "^1.2.0",
     "moment": "^2.17.1",
     "mongodb": "2.2.22",
+    "pm2": "^2.4.6",
     "postal": "^2.0.5",
     "ramda": "0.23.0",
     "redux": "^3.6.0",

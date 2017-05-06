@@ -10,7 +10,7 @@ module.exports =
 
   currencies:
     'BTC-USD':
-      # sell: {}
+      sell: {}
       buy: {}
 
     # 'LTC-USD':
