@@ -14,6 +14,7 @@ historicalMinutes = projectionMinutes * 3
 
 
 initalState =
+  now: moment()
   heartbeat: 0
   currencies: {}
   prices: {}
@@ -33,14 +34,29 @@ byTime = ( doc )->
   moment( doc.time ).valueOf()
 
 tooOld = ( doc )->
-  cutoff = moment().subtract historicalMinutes, config.default.interval.units
+  # cutoff = moment().subtract historicalMinutes, config.default.interval.units
+
+  # FIXME hard-coded
+  cutoff = moment().subtract 24, 'hours'
   moment( doc.time ).isBefore cutoff
+
+
+asdf = ( value, seconds )->
+  cutoff = moment().subtract value, seconds
+
+  beforeCutoff = ( doc )->
+    moment( doc.time ).isBefore cutoff
+
+  ( values )->
+    R.reject beforeCutoff, values
 
 
 reducers = (state, action) ->
 
   if typeof state == 'undefined'
     return initalState
+
+  state.now = moment()
 
   # heartbeat ensures that proposed orders, and active orders don't stagnate
   state.heartbeat = action.message if action.type is 'HEARTBEAT'
@@ -105,6 +121,9 @@ reducers = (state, action) ->
 
   if action.type is 'ORDER_MATCHED'
 
+    # Store local unix timestamp to model
+    action.match.local = state.now.valueOf()
+
     key = [ action.match.product_id, action.match.side ].join( '-' ).toUpperCase()
 
     state.prices[key] = R.pick [ 'time', 'price'], action.match
@@ -121,18 +140,88 @@ reducers = (state, action) ->
   # 1. remove out-of-window trades
   # 2. new predictions
   keepFresh = (pair)->
+    # console.log 'pear', pair
     side = pair.split('-')[2].toLowerCase()
 
     state.matches[pair] = R.reject tooOld, R.sortBy byTime, state.matches[pair]
 
-    future = moment().add( projectionMinutes, config.default.interval.units ).utc().unix()
+
+    now = moment().utc()
+    cutoff0 = now.subtract 86400, 'seconds'
+    cutoff1 = now.subtract 8640, 'seconds'
+    cutoff2 = state.now.subtract( 864, 'seconds' ).valueOf()
+
+
+    reject0 = ( doc )->
+      moment( doc.time ).isBefore cutoff0
+
+    reject1 = ( doc )->
+      moment( doc.time ).isBefore cutoff1
+
+    reject2 = ( doc )->
+      # console.log doc.local, cutoff2, ( doc.local - cutoff2 )
+      moment( doc.time ).isBefore cutoff2
+
+
+    allStateMatchesPair = R.reject reject0, state.matches[pair]
+    allStateMatchesPair1 = R.reject reject1, state.matches[pair]
+    allStateMatchesPair2 = R.reject reject2, state.matches[pair]
+
+
+    # console.log 'abc'
+    # # console.log state.matches[pair]
+    # console.log allStateMatchesPair.length
+    # console.log allStateMatchesPair1.length
+    # console.log allStateMatchesPair2.length
+    # console.log 'def'
+
+
+
+
+    future = moment().add( 864, 'seconds' ).utc().unix()
+    future1 = moment().add( 8640, 'seconds' ).utc().unix()
+    future2 = moment().add( 86400, 'seconds' ).utc().unix()
 
     # only make a prediction if we're interested in the outcome
 
     # if undefined isnt state.predictions[pair]
     predictor = predictions side, future, pair
+    predictor1 = predictions side, future1, pair
+    predictor2 = predictions side, future2, pair
 
-    state.predictions[pair] = predictor state.matches[pair]
+    guesses = [
+      predictor allStateMatchesPair
+      predictor1 allStateMatchesPair1
+      predictor2 allStateMatchesPair2
+    ]
+
+    # console.log 'guesses', pair, guesses
+
+    noGuess = ( data )->
+      not data.linear
+
+    guesses = R.reject noGuess, guesses
+
+    # console.log 'guesses', pair, guesses
+
+    getBestGuess = ( a )->
+      a.linear
+
+
+    if guesses.length > 0
+
+      discriminator = R.head
+
+      if side is 'sell'
+        discriminator = R.last
+
+      sortedGuesses = R.sortBy getBestGuess, guesses
+
+      theGuess = discriminator sortedGuesses
+
+      # console.log 'best guess is ', pair, side, theGuess
+
+      state.predictions[pair] = theGuess
 
 
   R.map keepFresh, R.keys state.predictions
