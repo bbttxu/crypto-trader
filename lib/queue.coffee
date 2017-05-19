@@ -10,7 +10,7 @@ module.exports = ->
   self.dequeue = ->
     items.shift()
 
-  self.batch = ( index = 20 )->
+  self.batch = ( index = 10 )->
     console.log ' ', items.length if items.length isnt 0
 
     items.splice( ( -1 * index ), index )

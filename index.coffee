@@ -217,7 +217,7 @@ asdfasdf = ->
 
     saveMatches( matches ).then( saveFillSuccess ).catch( saveFillFailure )
 
-setInterval asdfasdf, 6000
+setInterval asdfasdf, 10000
 
 
 sendHeartbeat = ->
