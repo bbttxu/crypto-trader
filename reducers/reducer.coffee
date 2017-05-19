@@ -146,89 +146,89 @@ reducers = (state, action) ->
     state.matches[pair] = R.reject tooOld, R.sortBy byTime, state.matches[pair]
 
 
-    now = moment().utc()
-    cutoff0 = now.subtract 86400, 'seconds'
-    cutoff1 = now.subtract 8640, 'seconds'
-    cutoff2 = state.now.subtract( 864, 'seconds' ).valueOf()
+    # now = moment().utc()
+    # cutoff0 = now.subtract 86400, 'seconds'
+    # cutoff1 = now.subtract 8640, 'seconds'
+    # cutoff2 = state.now.subtract( 864, 'seconds' ).valueOf()
 
 
-    reject0 = ( doc )->
-      moment( doc.time ).isBefore cutoff0
+    # reject0 = ( doc )->
+    #   moment( doc.time ).isBefore cutoff0
 
-    reject1 = ( doc )->
-      moment( doc.time ).isBefore cutoff1
+    # reject1 = ( doc )->
+    #   moment( doc.time ).isBefore cutoff1
 
-    reject2 = ( doc )->
-      # console.log doc.local, cutoff2, ( doc.local - cutoff2 )
-      moment( doc.time ).isBefore cutoff2
-
-
-    allStateMatchesPair = R.reject reject0, state.matches[pair]
-    allStateMatchesPair1 = R.reject reject1, state.matches[pair]
-    allStateMatchesPair2 = R.reject reject2, state.matches[pair]
+    # reject2 = ( doc )->
+    #   # console.log doc.local, cutoff2, ( doc.local - cutoff2 )
+    #   moment( doc.time ).isBefore cutoff2
 
 
-    # console.log 'abc'
-    # # console.log state.matches[pair]
-    # console.log allStateMatchesPair.length
-    # console.log allStateMatchesPair1.length
-    # console.log allStateMatchesPair2.length
-    # console.log 'def'
+    # allStateMatchesPair = R.reject reject0, state.matches[pair]
+    # allStateMatchesPair1 = R.reject reject1, state.matches[pair]
+    # allStateMatchesPair2 = R.reject reject2, state.matches[pair]
+
+
+    # # console.log 'abc'
+    # # # console.log state.matches[pair]
+    # # console.log allStateMatchesPair.length
+    # # console.log allStateMatchesPair1.length
+    # # console.log allStateMatchesPair2.length
+    # # console.log 'def'
 
 
 
 
-    future = moment().add( 864, 'seconds' ).utc().unix()
-    future1 = moment().add( 8640, 'seconds' ).utc().unix()
-    future2 = moment().add( 86400, 'seconds' ).utc().unix()
+    # future = moment().add( 864, 'seconds' ).utc().unix()
+    # future1 = moment().add( 8640, 'seconds' ).utc().unix()
+    # future2 = moment().add( 86400, 'seconds' ).utc().unix()
 
-    # only make a prediction if we're interested in the outcome
+    # # only make a prediction if we're interested in the outcome
 
-    # if undefined isnt state.predictions[pair]
-    predictor = predictions side, future, pair
-    predictor1 = predictions side, future1, pair
-    predictor2 = predictions side, future2, pair
+    # # if undefined isnt state.predictions[pair]
+    # predictor = predictions side, future, pair
+    # predictor1 = predictions side, future1, pair
+    # predictor2 = predictions side, future2, pair
 
-    guesses = [
-      predictor allStateMatchesPair
-      predictor1 allStateMatchesPair1
-      predictor2 allStateMatchesPair2
-    ]
+    # guesses = [
+    #   predictor allStateMatchesPair
+    #   predictor1 allStateMatchesPair1
+    #   predictor2 allStateMatchesPair2
+    # ]
 
-    # console.log 'guesses', pair, guesses
+    # # console.log 'guesses', pair, guesses
 
-    noGuess = ( data )->
-      not data.linear
+    # noGuess = ( data )->
+    #   not data.linear
 
-    guesses = R.reject noGuess, guesses
+    # guesses = R.reject noGuess, guesses
 
-    # console.log 'guesses', pair, guesses
+    # # console.log 'guesses', pair, guesses
 
-    getBestGuess = ( a )->
-      a.linear
-
-
-    if guesses.length > 0
-
-      discriminator = R.head
-
-      if side is 'sell'
-        discriminator = R.last
-
-      sortedGuesses = R.sortBy getBestGuess, guesses
-
-      theGuess = discriminator sortedGuesses
-
-      # console.log 'best guess is ', pair, side, theGuess
-
-      state.predictions[pair] = theGuess
+    # getBestGuess = ( a )->
+    #   a.linear
 
 
-  R.map keepFresh, R.keys state.predictions
+    # if guesses.length > 0
 
-  predictionResults = R.values R.pick [ 'predictions' ], state
+    #   discriminator = R.head
 
-  state.proposals = proposals ( R.pick [ 'currencies' ], state ), predictionResults
+    #   if side is 'sell'
+    #     discriminator = R.last
+
+    #   sortedGuesses = R.sortBy getBestGuess, guesses
+
+    #   theGuess = discriminator sortedGuesses
+
+    #   # console.log 'best guess is ', pair, side, theGuess
+
+    #   state.predictions[pair] = theGuess
+
+
+  # R.map keepFresh, R.keys state.predictions
+
+  # predictionResults = R.values R.pick [ 'predictions' ], state
+
+  # state.proposals = proposals ( R.pick [ 'currencies' ], state ), predictionResults
 
   # console.log R.keys state
   # console.log moment().format(), JSON.stringify R.pick ['proposals'], state
