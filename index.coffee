@@ -195,25 +195,29 @@ dispatchMatch = ( match, save = true )->
     type: 'ORDER_MATCHED'
     match: match
 
-  # matchesQueue.enqueue match if save
+  matchesQueue.enqueue match if save
 
-# asdfasdf = ->
-#   match = matchesQueue.dequeue()
-#   if match
-#     saveFillSuccess = ( result )->
-#       since = moment( result.created_at ).fromNow( true )
+showSavedMatch = ( result )->
+  info = JSON.stringify R.pick ['time','product_id','side','price','size', 'trade_id'], result
+  console.log '+', info
 
-#       info = JSON.stringify R.pick ['time','product_id','side','price','size', 'trade_id'], result
-#       console.log '+', info
 
-#     saveFillFailure = ( err )->
-#       console.log 'errrrrrr asdfasdf', err
-#       matchesQueue.enqueue match
-#       exit()
+asdfasdf = ->
+  matches = matchesQueue.batch()
+  console.log '---', matches.length if matches.length isnt 0
+  if 0 isnt matches.length
+    saveFillSuccess = ( results )->
+      # since = moment( result.created_at ).fromNow( true )
+      R.map showSavedMatch, results
 
-#     saveMatches( match ).then( saveFillSuccess ).catch( saveFillFailure )
+    saveFillFailure = ( err )->
+      console.log 'errrrrrr asdfasdf', err
+      matchesQueue.enqueue match
+      exit()
 
-# setInterval asdfasdf, 1000
+    saveMatches( matches ).then( saveFillSuccess ).catch( saveFillFailure )
+
+setInterval asdfasdf, 6000
 
 
 sendHeartbeat = ->

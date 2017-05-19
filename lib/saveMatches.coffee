@@ -7,28 +7,24 @@ moment = require 'moment'
 
 necessaryFields = ['side', 'size', 'price', 'product_id', 'time', 'trade_id']
 
+mongoConnection = undefined
+mongoCollection = undefined
 
-saveMatches = (match)->
+mongo.connect process.env.MONGO_URL, (err, db)->
+  if err
+    console.log 'error with mongo connection', err
+
+  mongoConnection = db
+  mongoCollection = db.collection 'matches'
+
+saveMatches = ( matches )->
   new RSVP.Promise (resolve, reject)->
-    mongo.connect process.env.MONGO_URL, (err, db)->
+
+    details = R.map R.pick( necessaryFields ), matches
+
+    mongoCollection.insert details, (err, whiz)->
       reject err if err
-
-      collection = db.collection 'matches'
-
-      collection.findOne {trade_id: match.trade_id}, (err, gee)->
-        reject err if err
-
-        if gee is null
-          details = R.pick necessaryFields, match
-
-          collection.insertOne details, (err, whiz)->
-            reject err if err
-            db.close()
-            resolve details
-
-        else
-          db.close()
-          resolve true
+      resolve details
 
 
 module.exports = saveMatches
