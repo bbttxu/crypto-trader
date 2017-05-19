@@ -258,31 +258,35 @@ channel.subscribe 'message', ( message )->
        \/  \/         \/            \/          \/
 ###
 
-# INTERVAL = 500
+INTERVAL = 50
 
-# throttledDispatchMatch = (match, index)->
-#   sendThrottledDispatchMatch = ->
+throttledDispatchMatch = (match, index)->
+  sendThrottledDispatchMatch = ->
 
-#     # log it, but no need to save it
-#     dispatchMatch match, false
+    # log it, but no need to save it
+    dispatchMatch match, false
 
-#   setTimeout sendThrottledDispatchMatch, ( ( index * INTERVAL ) + ( Math.random() * INTERVAL ) )
-
-
-# hydrateRecentCurrency = ( product_id )->
-#   hydrateRecentCurrencySide = ( side )->
-#     currencySideRecent( product_id, side, historicalMinutes, config.default.interval.units ).then ( matches )->
-#       mapIndexed = R.addIndex R.map
-#       mapIndexed throttledDispatchMatch, R.reverse matches
+  setTimeout sendThrottledDispatchMatch, ( ( index * INTERVAL ) + ( Math.random() * INTERVAL ) )
 
 
-#   R.map hydrateRecentCurrencySide, [ 'sell', 'buy' ]
+hydrateRecentCurrency = ( product_id )->
+  hydrateRecentCurrencySide = ( side )->
+    currencySideRecent( product_id, side, historicalMinutes, config.default.interval.units ).then ( matches )->
+      odd  = (v for v in matches by 2)
+      even = (v for v in matches[1..] by 2)
 
 
-# waitAMoment = ->
-#   R.map hydrateRecentCurrency, R.keys config.currencies
+      mapIndexed = R.addIndex R.map
+      mapIndexed throttledDispatchMatch, odd.concat( R.reverse( even ) )
 
-# setTimeout waitAMoment, 1000
+
+  R.map hydrateRecentCurrencySide, [ 'sell', 'buy' ]
+
+
+waitAMoment = ->
+  R.map hydrateRecentCurrency, R.keys config.currencies
+
+setTimeout waitAMoment, 1000
 
 
 ###
