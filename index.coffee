@@ -258,7 +258,7 @@ channel.subscribe 'message', ( message )->
        \/  \/         \/            \/          \/
 ###
 
-INTERVAL = 50
+INTERVAL = 10
 
 throttledDispatchMatch = (match, index)->
   sendThrottledDispatchMatch = ->

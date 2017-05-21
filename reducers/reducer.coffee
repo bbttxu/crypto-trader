@@ -129,7 +129,7 @@ reducers = (state, action) ->
 
     state.prices[key] = R.pick [ 'time', 'price'], action.match
 
-    console.log moment().format(), ( R.values R.pick ['product_id', 'price', 'side', 'size'], action.match ).join ' '
+    # console.log moment().format(), ( R.values R.pick ['product_id', 'price', 'side', 'size'], action.match ).join ' '
 
     state.matches.push action.match
 
