@@ -125,126 +125,15 @@ reducers = (state, action) ->
 
     key = [ action.match.product_id, action.match.side ].join( '-' ).toUpperCase()
 
-    # console.log key
-
     state.prices[key] = R.pick [ 'time', 'price'], action.match
 
     # console.log moment().format(), ( R.values R.pick ['product_id', 'price', 'side', 'size'], action.match ).join ' '
 
     state.matches.push action.match
 
-    # console.log key, state.matches
-    # if state.matches[key]
-    #   # state.matches[key] = []
-
-    #   state.matches[key].push action.match
-    #   console.log key, state.matches[key].length
-
-
-  # Ensure that for all currency pairs
-  # 1. remove out-of-window trades
-  # 2. new predictions
-  # keepFresh = (pair)->
-  #   # console.log 'pear', pair
-  #   side = pair.split('-')[2].toLowerCase()
-
-  #   state.matches[pair]
-
-
-  #   now = moment().utc()
-  #   # cutoff0 = now.subtract 86400, 'seconds'
-  #   # cutoff1 = now.subtract 8640, 'seconds'
-  #   cutoff2 = state.now.subtract( 864, 'seconds' ).valueOf()
-
-
-  #   # reject0 = ( doc )->
-  #   #   moment( doc.time ).isBefore cutoff0
-
-  #   # reject1 = ( doc )->
-  #   #   moment( doc.time ).isBefore cutoff1
-
-  #   reject2 = ( doc )->
-  #     # console.log doc.local, cutoff2, ( doc.local - cutoff2 )
-  #     moment( doc.time ).isBefore cutoff2
-
-
-  #   # allStateMatchesPair = R.reject reject0, state.matches[pair]
-  #   # allStateMatchesPair1 = R.reject reject1, state.matches[pair]
-  #   allStateMatchesPair2 = R.reject reject2, state.matches[pair]
-
-
-  #   # console.log 'abc'
-  #   # # console.log state.matches[pair]
-  #   # console.log allStateMatchesPair.length
-  #   # console.log allStateMatchesPair1.length
-  #   # console.log allStateMatchesPair2.length
-  #   # console.log 'def'
-
-
-
-
-  #   # future = moment().add( 864, 'seconds' ).utc().unix()
-  #   # future1 = moment().add( 8640, 'seconds' ).utc().unix()
-  #   future2 = moment().add( 864, 'seconds' ).utc().unix()
-
-  #   # only make a prediction if we're interested in the outcome
-
-  #   # if undefined isnt state.predictions[pair]
-  #   # predictor = predictions side, future, pair
-  #   # predictor1 = predictions side, future1, pair
-  #   predictor2 = predictions side, future2, pair
-
-  #   guesses = [
-  #     # predictor allStateMatchesPair
-  #     # predictor1 allStateMatchesPair1
-  #     predictor2 allStateMatchesPair2
-  #   ]
-
-  #   # console.log 'guesses', pair, guesses
-
-  #   # noGuess = ( data )->
-  #   #   not data.linear
-
-  #   # guesses = R.reject noGuess, guesses
-
-  #   # # console.log 'guesses', pair, guesses
-
-  #   # getBestGuess = ( a )->
-  #   #   a.linear
-
-
-  #   # if guesses.length > 0
-
-  #   #   discriminator = R.head
-
-  #   #   if side is 'sell'
-  #   #     discriminator = R.last
-
-  #   #   sortedGuesses = R.sortBy getBestGuess, guesses
-
-  #   #   theGuess = discriminator sortedGuesses
-
-  #   console.log 'best guesses are ', pair, side, theGuess
-
-  #   #   state.predictions[pair] = theGuess
-
-
 
   updateCurrencyIntents = ( asdfasdf )->
     console.log 'updateCurrencyIntents', state.matches.length, asdfasdf
-
-    # beforeThis = ( doc )->
-    #   # cutoff = moment().subtract historicalMinutes, config.default.interval.units
-
-    #   # FIXME hard-coded
-    #   cutoff = moment().subtract 864, 'seconds'
-    #   moment( doc.time ).isBefore cutoff
-
-    # state.matches[intent] = R.reject tooOld, R.sortBy byTime, state.matches[intent]
-
-    # console.log R.uniq R.pluck 'product_id', state.matches[intent]
-
-    # console.log intent, state.matches[intent].length
 
 
   updatePredictionsByCurrencySide = ( matches, key )->
@@ -295,6 +184,35 @@ reducers = (state, action) ->
 
     # R.map updateCurrencyIntents, currencyIntents
 
+  hasProjection = ( doc )->
+    doc.linear
+
+  proposalsToArray = ( proposal, key )->
+    proposal.timeframe = key
+    proposal
+
+
+  findBestProposal = ( proposals, currencySide )->
+    side = currencySide.split( '-' )[2].toLowerCase()
+    # console.log side, proposals
+
+
+    doable = R.values R.mapObjIndexed proposalsToArray, R.filter hasProjection, proposals
+
+    # console.log 'doable', doable
+
+    ordered = R.sortBy R.prop( 'linear' ), doable
+
+    # console.log 'ordered', ordered
+
+    if 'sell' is side
+      ordered = R.reverse ordered
+
+    # console.log 'do it', R.head ordered
+
+    R.head ordered
+
+
   # heartbeat ensures that proposed orders, and active orders don't stagnate
   if action.type is 'HEARTBEAT'
     state.heartbeat = action.message
@@ -303,6 +221,9 @@ reducers = (state, action) ->
     now = moment()
 
     state.predictions = updatePredictions R.keys state.predictions
+
+    state.proposals = R.mapObjIndexed findBestProposal, state.predictions
+
 
     console.log now.fromNow()
 
