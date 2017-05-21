@@ -39,6 +39,8 @@ module.exports = ( side, future, key )->
 
     equations = {}
 
+    equations.n = results.length
+
     return equations if results.length <= 3
 
     linearLastResults = linearLast( results, future, base )
@@ -53,7 +55,5 @@ module.exports = ( side, future, key )->
     equations.future = future
 
     equations.current = pricing[base] last.price
-
-    equations.n = results.length
 
     equations
