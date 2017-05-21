@@ -85,7 +85,7 @@ makeNewTrades = ->
   if sides.buy
     R.map buyOrder, sides.buy
 
-setInterval makeNewTrades, ( projectionMinutes * 1000 ) / 10
+setInterval makeNewTrades, ( 864 * 1000 ) / 10
 
 ###
 _________                            .__
@@ -121,7 +121,7 @@ clearOutOldOrders = ->
 
   tooOld = ( order )->
     # console.log order.time, moment( order.time ).isBefore moment().subtract( projectionMinutes, 'minutes' )
-    moment( order.time ).isBefore moment().subtract( projectionMinutes, config.default.interval.units )
+    moment( order.time ).isBefore moment().subtract( 864, 'seconds' )
 
   expired = R.filter tooOld, state.orders
   if expired.length > 0
@@ -323,8 +323,8 @@ __________                             ___.
 ###
 
 saveFills = require './save'
-# setTimeout saveFills, 2000
-# setInterval saveFills, (1000 * 60 * 15)
+setTimeout saveFills, 2000
+setInterval saveFills, (1000 * 60 * 15)
 
 
 # Cancel All Orders, start with a clean slate

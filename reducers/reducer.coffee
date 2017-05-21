@@ -5,6 +5,8 @@ moment = require 'moment'
 pricing = require '../lib/pricing'
 predictions = require '../lib/predictions'
 proposals = require '../lib/proposals'
+cleanUpTrades = require '../lib/cleanUpTrades'
+
 defaults = require '../defaults'
 
 config = require '../config'
@@ -177,12 +179,17 @@ reducers = (state, action) ->
 
     foo = R.mapObjIndexed updatePredictionsByCurrencySide, grouped
 
-    # console.log foo
 
+    # In order to prevent us make proposals for currencies and sides we don't want
+    # we winnow out those we're not interested in
+    final = {}
+    finalize = ( currencySidePair )->
+      final[ currencySidePair ] = foo[ currencySidePair ]
 
-    foo
+    R.forEach finalize, currencyIntents
 
-    # R.map updateCurrencyIntents, currencyIntents
+    final
+
 
   hasProjection = ( doc )->
     doc.linear
@@ -213,6 +220,21 @@ reducers = (state, action) ->
     R.head ordered
 
 
+  makeTradeProposal = ( doc, key )->
+    # console.log 'makeTradeProposal'
+
+    parts = key.split '-'
+
+    if doc
+      doc.side = parts[2].toLowerCase()
+      doc.product_id = [ parts[0], parts[1] ].join '-'
+      doc.size = 0.01
+      doc.price = doc.linear
+
+      # console.log doc
+
+    doc
+
   # heartbeat ensures that proposed orders, and active orders don't stagnate
   if action.type is 'HEARTBEAT'
     state.heartbeat = action.message
@@ -222,7 +244,15 @@ reducers = (state, action) ->
 
     state.predictions = updatePredictions R.keys state.predictions
 
-    state.proposals = R.mapObjIndexed findBestProposal, state.predictions
+    state.proposals = R.map cleanUpTrades, R.reject R.isNil, R.values R.mapObjIndexed makeTradeProposal, R.mapObjIndexed findBestProposal, state.predictions
+
+    # console.log state.proposals
+
+    # console.log state.currencies
+
+    # predictionResults = R.values R.pick [ 'predictions' ], state
+
+    # console.log R.map cleanUpTrades, R.reject R.isNil, R.values R.mapObjIndexed makeTradeProposal, state.proposals
 
 
     console.log 'started predictions', start.fromNow()
