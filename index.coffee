@@ -41,7 +41,7 @@ orderFailed = ( order )->
 updatedStore = ->
   state = store.getState()
 
-  keys = [ 'sent', 'orders', 'proposals', 'predictions' ]
+  keys = [ 'proposals' ]
   important = R.pick keys, state
   console.log moment().format(), important
 
@@ -53,7 +53,7 @@ makeNewTrades = ->
 
   keys = [ 'orders', 'proposals' ]
   important = R.pick keys, state
-  # console.log moment().format(), JSON.stringify important
+  console.log moment().format(), JSON.stringify important
 
   predictionResults = R.values R.pick [ 'predictions' ], state
 

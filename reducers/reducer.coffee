@@ -132,8 +132,8 @@ reducers = (state, action) ->
     state.matches.push action.match
 
 
-  updateCurrencyIntents = ( asdfasdf )->
-    console.log 'updateCurrencyIntents', state.matches.length, asdfasdf
+  # updateCurrencyIntents = ( asdfasdf )->
+  #   console.log 'updateCurrencyIntents', state.matches.length, asdfasdf
 
 
   updatePredictionsByCurrencySide = ( matches, key )->
@@ -165,7 +165,7 @@ reducers = (state, action) ->
 
 
   updatePredictions = ( currencyIntents )->
-    console.log 'updatePredictions', currencyIntents
+    # console.log 'updatePredictions', currencyIntents
 
     state.matches = R.sortBy R.prop( 'time' ), state.matches
 
@@ -177,7 +177,7 @@ reducers = (state, action) ->
 
     foo = R.mapObjIndexed updatePredictionsByCurrencySide, grouped
 
-    console.log foo
+    # console.log foo
 
 
     foo
@@ -218,14 +218,14 @@ reducers = (state, action) ->
     state.heartbeat = action.message
     console.log 'HEARTBEAT'
 
-    now = moment()
+    start = moment()
 
     state.predictions = updatePredictions R.keys state.predictions
 
     state.proposals = R.mapObjIndexed findBestProposal, state.predictions
 
 
-    console.log now.fromNow()
+    console.log 'started predictions', start.fromNow()
 
     # R.map keepFresh, R.keys state.predictions
 
