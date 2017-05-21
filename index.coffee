@@ -272,7 +272,7 @@ throttledDispatchMatch = (match, index)->
 hydrateRecentCurrency = ( product_id )->
   hydrateRecentCurrencySide = ( side )->
     # currencySideRecent( product_id, side, historicalMinutes, config.default.interval.units ).then ( matches )->
-    currencySideRecent( product_id, side, 864, 'seconds' ).then ( matches )->
+    currencySideRecent( product_id, side, 86400, 'seconds' ).then ( matches )->
       odd  = (v for v in matches by 2)
       even = (v for v in matches[1..] by 2)
 

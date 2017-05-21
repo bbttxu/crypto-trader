@@ -247,12 +247,6 @@ reducers = (state, action) ->
     # console.log intent, state.matches[intent].length
 
 
-  byTimeFrame = ( foo )->
-
-
-
-
-
   updatePredictionsByCurrencySide = ( matches, key )->
 
     side = key.split( '-' )[2].toLowerCase()
@@ -276,12 +270,9 @@ reducers = (state, action) ->
       predictor = predictions side, future, key
       predictor docs
 
+    R.map makePredictions, R.groupBy byTimeFrame, matches
 
-    localMatches = R.map makePredictions, R.groupBy byTimeFrame, matches
 
-    console.log localMatches
-
-    localMatches
 
 
   updatePredictions = ( currencyIntents )->
