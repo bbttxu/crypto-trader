@@ -11,7 +11,7 @@ module.exports = ->
     items.shift()
 
   self.batch = ( index = 100 )->
-    console.log ' ', items.length if items.length isnt 0
+    console.log items.length, 'queued' if items.length isnt 0
 
     items.splice( ( -1 * index ), index )
 

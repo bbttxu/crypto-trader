@@ -204,11 +204,11 @@ showSavedMatch = ( result )->
 
 asdfasdf = ->
   matches = matchesQueue.batch()
-  console.log '---', matches.length if matches.length isnt 0
+  console.log matches.length, 'recorded'  if matches.length isnt 0
   if 0 isnt matches.length
     saveFillSuccess = ( results )->
       # since = moment( result.created_at ).fromNow( true )
-      R.map showSavedMatch, results
+      # R.map showSavedMatch, results
 
     saveFillFailure = ( err )->
       console.log 'errrrrrr asdfasdf', err
@@ -271,7 +271,8 @@ throttledDispatchMatch = (match, index)->
 
 hydrateRecentCurrency = ( product_id )->
   hydrateRecentCurrencySide = ( side )->
-    currencySideRecent( product_id, side, historicalMinutes, config.default.interval.units ).then ( matches )->
+    # currencySideRecent( product_id, side, historicalMinutes, config.default.interval.units ).then ( matches )->
+    currencySideRecent( product_id, side, 864, 'seconds' ).then ( matches )->
       odd  = (v for v in matches by 2)
       even = (v for v in matches[1..] by 2)
 

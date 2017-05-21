@@ -20,14 +20,16 @@ initalState =
   prices: {}
   predictions: {}
   proposals: []
-  matches: {}
+  matches: []
   stats: {}
   sent: []
   orders: []
 
-initalState.matches = defaults config, []
+# initalState.matches = defaults config, []
 initalState.predictions = defaults config, {}
 initalState.proposals = defaults config, []
+
+console.log initalState
 
 
 byTime = ( doc )->
@@ -57,9 +59,6 @@ reducers = (state, action) ->
     return initalState
 
   state.now = moment()
-
-  # heartbeat ensures that proposed orders, and active orders don't stagnate
-  state.heartbeat = action.message if action.type is 'HEARTBEAT'
 
   # Record Stats
   if action.type is 'UPDATE_STATS'
@@ -126,102 +125,197 @@ reducers = (state, action) ->
 
     key = [ action.match.product_id, action.match.side ].join( '-' ).toUpperCase()
 
+    # console.log key
+
     state.prices[key] = R.pick [ 'time', 'price'], action.match
 
     console.log moment().format(), ( R.values R.pick ['product_id', 'price', 'side', 'size'], action.match ).join ' '
 
-    unless state.matches[key]
-      state.matches[key] = []
+    state.matches.push action.match
 
-    state.matches[key].push action.match
+    # console.log key, state.matches
+    # if state.matches[key]
+    #   # state.matches[key] = []
+
+    #   state.matches[key].push action.match
+    #   console.log key, state.matches[key].length
 
 
   # Ensure that for all currency pairs
   # 1. remove out-of-window trades
   # 2. new predictions
-  keepFresh = (pair)->
-    # console.log 'pear', pair
-    side = pair.split('-')[2].toLowerCase()
+  # keepFresh = (pair)->
+  #   # console.log 'pear', pair
+  #   side = pair.split('-')[2].toLowerCase()
 
-    state.matches[pair] = R.reject tooOld, R.sortBy byTime, state.matches[pair]
-
-
-    # now = moment().utc()
-    # cutoff0 = now.subtract 86400, 'seconds'
-    # cutoff1 = now.subtract 8640, 'seconds'
-    # cutoff2 = state.now.subtract( 864, 'seconds' ).valueOf()
+  #   state.matches[pair]
 
 
-    # reject0 = ( doc )->
-    #   moment( doc.time ).isBefore cutoff0
-
-    # reject1 = ( doc )->
-    #   moment( doc.time ).isBefore cutoff1
-
-    # reject2 = ( doc )->
-    #   # console.log doc.local, cutoff2, ( doc.local - cutoff2 )
-    #   moment( doc.time ).isBefore cutoff2
+  #   now = moment().utc()
+  #   # cutoff0 = now.subtract 86400, 'seconds'
+  #   # cutoff1 = now.subtract 8640, 'seconds'
+  #   cutoff2 = state.now.subtract( 864, 'seconds' ).valueOf()
 
 
-    # allStateMatchesPair = R.reject reject0, state.matches[pair]
-    # allStateMatchesPair1 = R.reject reject1, state.matches[pair]
-    # allStateMatchesPair2 = R.reject reject2, state.matches[pair]
+  #   # reject0 = ( doc )->
+  #   #   moment( doc.time ).isBefore cutoff0
+
+  #   # reject1 = ( doc )->
+  #   #   moment( doc.time ).isBefore cutoff1
+
+  #   reject2 = ( doc )->
+  #     # console.log doc.local, cutoff2, ( doc.local - cutoff2 )
+  #     moment( doc.time ).isBefore cutoff2
 
 
-    # # console.log 'abc'
-    # # # console.log state.matches[pair]
-    # # console.log allStateMatchesPair.length
-    # # console.log allStateMatchesPair1.length
-    # # console.log allStateMatchesPair2.length
-    # # console.log 'def'
+  #   # allStateMatchesPair = R.reject reject0, state.matches[pair]
+  #   # allStateMatchesPair1 = R.reject reject1, state.matches[pair]
+  #   allStateMatchesPair2 = R.reject reject2, state.matches[pair]
+
+
+  #   # console.log 'abc'
+  #   # # console.log state.matches[pair]
+  #   # console.log allStateMatchesPair.length
+  #   # console.log allStateMatchesPair1.length
+  #   # console.log allStateMatchesPair2.length
+  #   # console.log 'def'
 
 
 
 
-    # future = moment().add( 864, 'seconds' ).utc().unix()
-    # future1 = moment().add( 8640, 'seconds' ).utc().unix()
-    # future2 = moment().add( 86400, 'seconds' ).utc().unix()
+  #   # future = moment().add( 864, 'seconds' ).utc().unix()
+  #   # future1 = moment().add( 8640, 'seconds' ).utc().unix()
+  #   future2 = moment().add( 864, 'seconds' ).utc().unix()
 
-    # # only make a prediction if we're interested in the outcome
+  #   # only make a prediction if we're interested in the outcome
 
-    # # if undefined isnt state.predictions[pair]
-    # predictor = predictions side, future, pair
-    # predictor1 = predictions side, future1, pair
-    # predictor2 = predictions side, future2, pair
+  #   # if undefined isnt state.predictions[pair]
+  #   # predictor = predictions side, future, pair
+  #   # predictor1 = predictions side, future1, pair
+  #   predictor2 = predictions side, future2, pair
 
-    # guesses = [
-    #   predictor allStateMatchesPair
-    #   predictor1 allStateMatchesPair1
-    #   predictor2 allStateMatchesPair2
-    # ]
+  #   guesses = [
+  #     # predictor allStateMatchesPair
+  #     # predictor1 allStateMatchesPair1
+  #     predictor2 allStateMatchesPair2
+  #   ]
 
-    # # console.log 'guesses', pair, guesses
+  #   # console.log 'guesses', pair, guesses
 
-    # noGuess = ( data )->
-    #   not data.linear
+  #   # noGuess = ( data )->
+  #   #   not data.linear
 
-    # guesses = R.reject noGuess, guesses
+  #   # guesses = R.reject noGuess, guesses
 
-    # # console.log 'guesses', pair, guesses
+  #   # # console.log 'guesses', pair, guesses
 
-    # getBestGuess = ( a )->
-    #   a.linear
+  #   # getBestGuess = ( a )->
+  #   #   a.linear
 
 
-    # if guesses.length > 0
+  #   # if guesses.length > 0
 
-    #   discriminator = R.head
+  #   #   discriminator = R.head
 
-    #   if side is 'sell'
-    #     discriminator = R.last
+  #   #   if side is 'sell'
+  #   #     discriminator = R.last
 
-    #   sortedGuesses = R.sortBy getBestGuess, guesses
+  #   #   sortedGuesses = R.sortBy getBestGuess, guesses
 
-    #   theGuess = discriminator sortedGuesses
+  #   #   theGuess = discriminator sortedGuesses
 
-    #   # console.log 'best guess is ', pair, side, theGuess
+  #   console.log 'best guesses are ', pair, side, theGuess
 
-    #   state.predictions[pair] = theGuess
+  #   #   state.predictions[pair] = theGuess
+
+
+
+  updateCurrencyIntents = ( asdfasdf )->
+    console.log 'updateCurrencyIntents', state.matches.length, asdfasdf
+
+    # beforeThis = ( doc )->
+    #   # cutoff = moment().subtract historicalMinutes, config.default.interval.units
+
+    #   # FIXME hard-coded
+    #   cutoff = moment().subtract 864, 'seconds'
+    #   moment( doc.time ).isBefore cutoff
+
+    # state.matches[intent] = R.reject tooOld, R.sortBy byTime, state.matches[intent]
+
+    # console.log R.uniq R.pluck 'product_id', state.matches[intent]
+
+    # console.log intent, state.matches[intent].length
+
+
+  byTimeFrame = ( foo )->
+
+
+
+
+
+  updatePredictionsByCurrencySide = ( matches, key )->
+
+    side = key.split( '-' )[2].toLowerCase()
+
+    past = moment().subtract( 864, 'seconds' ).utc().unix()
+    future = moment().add( 864, 'seconds' ).utc().unix()
+
+
+    minutes = moment().subtract( 864, 'seconds' ).utc().unix()
+    hours = moment().subtract( 8640, 'seconds' ).utc().unix()
+    day = moment().subtract( 86400, 'seconds' ).utc().unix()
+
+    byTimeFrame = ( doc )->
+       docTime = moment( doc.time ).utc().unix()
+
+       return 864 if docTime > minutes
+       return 8640 if docTime < minutes and docTime > hours
+       86400
+
+    makePredictions = ( docs )->
+      predictor = predictions side, future, key
+      predictor docs
+
+
+    localMatches = R.map makePredictions, R.groupBy byTimeFrame, matches
+
+    console.log localMatches
+
+    localMatches
+
+
+  updatePredictions = ( currencyIntents )->
+    console.log 'updatePredictions', currencyIntents
+
+    state.matches = R.sortBy R.prop( 'time' ), state.matches
+
+    byProductAndSide = ( doc )->
+      [ doc.product_id, doc.side ].join( '-' ).toUpperCase()
+
+
+    grouped = R.groupBy byProductAndSide, state.matches
+
+    foo = R.mapObjIndexed updatePredictionsByCurrencySide, grouped
+
+    console.log foo
+
+
+    foo
+
+    # R.map updateCurrencyIntents, currencyIntents
+
+  # heartbeat ensures that proposed orders, and active orders don't stagnate
+  if action.type is 'HEARTBEAT'
+    state.heartbeat = action.message
+    console.log 'HEARTBEAT'
+
+    now = moment()
+
+    state.predictions = updatePredictions R.keys state.predictions
+
+    console.log now.fromNow()
+
+    # R.map keepFresh, R.keys state.predictions
 
 
   # R.map keepFresh, R.keys state.predictions
