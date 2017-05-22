@@ -6,6 +6,7 @@ pricing = require '../lib/pricing'
 predictions = require '../lib/predictions'
 proposals = require '../lib/proposals'
 cleanUpTrades = require '../lib/cleanUpTrades'
+checkObsoleteTrade = require '../lib/checkObsoleteTrade'
 
 defaults = require '../defaults'
 
@@ -29,7 +30,7 @@ initalState =
 
 # initalState.matches = defaults config, []
 initalState.predictions = defaults config, {}
-initalState.proposals = defaults config, []
+# initalState.proposals = defaults config, []
 
 console.log initalState
 
@@ -129,7 +130,17 @@ reducers = (state, action) ->
 
     state.prices[key] = R.pick [ 'time', 'price'], action.match
 
-    # console.log moment().format(), ( R.values R.pick ['product_id', 'price', 'side', 'size'], action.match ).join ' '
+
+    # Find any proposals that are no longer relevant
+    # e.g. price is out-of-date and would incur a fee
+    existingTradeCriteria = (foo)->
+      action.match.side is foo.side and action.match.product_id is foo.product_id
+
+    index = R.findIndex(existingTradeCriteria)(state.proposals)
+
+    if index > 0
+      if checkObsoleteTrade state.proposals[index], action.match.price
+        state.proposals.splice index, 1
 
     state.matches.push action.match
 
