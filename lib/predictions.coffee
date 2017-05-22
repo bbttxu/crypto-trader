@@ -43,12 +43,17 @@ module.exports = ( side, future, key )->
 
     return equations if results.length <= 3
 
-    equations.current = pricing[base] last.price
-
     linearLastResults = linearLast( results, future, base )
 
     if linearLastResults and isMyGoodSide(linearLastResults) and not isNaN( linearLastResults )
       equations.linear = linearLastResults
+    else
+      return a =
+        n: results.length
 
+
+    equations.future = future
+
+    equations.current = pricing[base] last.price
 
     equations

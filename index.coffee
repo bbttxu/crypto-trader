@@ -41,7 +41,7 @@ orderFailed = ( order )->
 updatedStore = ->
   state = store.getState()
 
-  keys = [ 'sent', 'orders', 'proposals', 'predictions' ]
+  keys = [ 'proposals' ]
   important = R.pick keys, state
   console.log moment().format(), important
 
@@ -53,7 +53,7 @@ makeNewTrades = ->
 
   keys = [ 'orders', 'proposals' ]
   important = R.pick keys, state
-  # console.log moment().format(), JSON.stringify important
+  console.log moment().format(), JSON.stringify important
 
   predictionResults = R.values R.pick [ 'predictions' ], state
 
@@ -85,7 +85,7 @@ makeNewTrades = ->
   if sides.buy
     R.map buyOrder, sides.buy
 
-setInterval makeNewTrades, ( projectionMinutes * 1000 ) / 10
+setInterval makeNewTrades, ( 864 * 1000 ) / 10
 
 ###
 _________                            .__
@@ -121,7 +121,7 @@ clearOutOldOrders = ->
 
   tooOld = ( order )->
     # console.log order.time, moment( order.time ).isBefore moment().subtract( projectionMinutes, 'minutes' )
-    moment( order.time ).isBefore moment().subtract( projectionMinutes, config.default.interval.units )
+    moment( order.time ).isBefore moment().subtract( 864, 'seconds' )
 
   expired = R.filter tooOld, state.orders
   if expired.length > 0
@@ -195,25 +195,29 @@ dispatchMatch = ( match, save = true )->
     type: 'ORDER_MATCHED'
     match: match
 
-  # matchesQueue.enqueue match if save
+  matchesQueue.enqueue match if save
 
-# asdfasdf = ->
-#   match = matchesQueue.dequeue()
-#   if match
-#     saveFillSuccess = ( result )->
-#       since = moment( result.created_at ).fromNow( true )
+showSavedMatch = ( result )->
+  info = JSON.stringify R.pick ['time','product_id','side','price','size', 'trade_id'], result
+  console.log '+', info
 
-#       info = JSON.stringify R.pick ['time','product_id','side','price','size', 'trade_id'], result
-#       console.log '+', info
 
-#     saveFillFailure = ( err )->
-#       console.log 'errrrrrr asdfasdf', err
-#       matchesQueue.enqueue match
-#       exit()
+asdfasdf = ->
+  matches = matchesQueue.batch()
+  console.log matches.length, 'recorded'  if matches.length isnt 0
+  if 0 isnt matches.length
+    saveFillSuccess = ( results )->
+      # since = moment( result.created_at ).fromNow( true )
+      # R.map showSavedMatch, results
 
-#     saveMatches( match ).then( saveFillSuccess ).catch( saveFillFailure )
+    saveFillFailure = ( err )->
+      console.log 'errrrrrr asdfasdf', err
+      matchesQueue.enqueue match
+      exit()
 
-# setInterval asdfasdf, 1000
+    saveMatches( matches ).then( saveFillSuccess ).catch( saveFillFailure )
+
+setInterval asdfasdf, 6000
 
 
 sendHeartbeat = ->
@@ -254,31 +258,36 @@ channel.subscribe 'message', ( message )->
        \/  \/         \/            \/          \/
 ###
 
-# INTERVAL = 500
+INTERVAL = 10
 
-# throttledDispatchMatch = (match, index)->
-#   sendThrottledDispatchMatch = ->
+throttledDispatchMatch = (match, index)->
+  sendThrottledDispatchMatch = ->
 
-#     # log it, but no need to save it
-#     dispatchMatch match, false
+    # log it, but no need to save it
+    dispatchMatch match, false
 
-#   setTimeout sendThrottledDispatchMatch, ( ( index * INTERVAL ) + ( Math.random() * INTERVAL ) )
-
-
-# hydrateRecentCurrency = ( product_id )->
-#   hydrateRecentCurrencySide = ( side )->
-#     currencySideRecent( product_id, side, historicalMinutes, config.default.interval.units ).then ( matches )->
-#       mapIndexed = R.addIndex R.map
-#       mapIndexed throttledDispatchMatch, R.reverse matches
+  setTimeout sendThrottledDispatchMatch, ( ( index * INTERVAL ) + ( Math.random() * INTERVAL ) )
 
 
-#   R.map hydrateRecentCurrencySide, [ 'sell', 'buy' ]
+hydrateRecentCurrency = ( product_id )->
+  hydrateRecentCurrencySide = ( side )->
+    # currencySideRecent( product_id, side, historicalMinutes, config.default.interval.units ).then ( matches )->
+    currencySideRecent( product_id, side, 86400, 'seconds' ).then ( matches )->
+      odd  = (v for v in matches by 2)
+      even = (v for v in matches[1..] by 2)
 
 
-# waitAMoment = ->
-#   R.map hydrateRecentCurrency, R.keys config.currencies
+      mapIndexed = R.addIndex R.map
+      mapIndexed throttledDispatchMatch, odd.concat( R.reverse( even ) )
 
-# setTimeout waitAMoment, 1000
+
+  R.map hydrateRecentCurrencySide, [ 'sell', 'buy' ]
+
+
+waitAMoment = ->
+  R.map hydrateRecentCurrency, R.keys config.currencies
+
+setTimeout waitAMoment, 1000
 
 
 ###

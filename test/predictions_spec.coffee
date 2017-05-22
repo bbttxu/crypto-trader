@@ -29,6 +29,7 @@ describe 'predictions', ->
     expected = {
       current: '7.95'
       linear: 7.950001466401856
+      future: 1482086050
       n: 5
     }
 
@@ -58,7 +59,6 @@ describe 'predictions', ->
     result = predictor results
 
     expected = {
-      current: '7.95'
       n: 5
     }
 
