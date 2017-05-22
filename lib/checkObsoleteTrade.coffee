@@ -6,12 +6,12 @@ checkObsoleteTrade = ( trade, price )->
 
   if trade.side is 'sell'
     if tradePrice > newPrice
-      return trade
+      return false
 
   if trade.side is 'buy'
     if tradePrice < newPrice
-      return trade
+      return false
 
-  {}
+  true
 
 module.exports = checkObsoleteTrade

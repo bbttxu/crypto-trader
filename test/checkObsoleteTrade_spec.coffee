@@ -11,7 +11,7 @@ describe 'checkObsoleteTrade', ->
 
     price = '123.46'
 
-    expected = {}
+    expected = true
 
     result = checkObsoleteTrade proposal, price
 
@@ -25,7 +25,7 @@ describe 'checkObsoleteTrade', ->
 
     price = '123.45'
 
-    expected = {}
+    expected = true
 
     result = checkObsoleteTrade proposal, price
 
@@ -41,7 +41,7 @@ describe 'checkObsoleteTrade', ->
 
     result = checkObsoleteTrade proposal, price
 
-    result.should.be.eql proposal
+    result.should.be.eql false
 
 
 
@@ -53,7 +53,7 @@ describe 'checkObsoleteTrade', ->
 
     price = '123.44'
 
-    expected = {}
+    expected = true
 
     result = checkObsoleteTrade proposal, price
 
@@ -67,7 +67,7 @@ describe 'checkObsoleteTrade', ->
 
     price = '123.45'
 
-    expected = {}
+    expected = true
 
     result = checkObsoleteTrade proposal, price
 
@@ -83,4 +83,4 @@ describe 'checkObsoleteTrade', ->
 
     result = checkObsoleteTrade proposal, price
 
-    result.should.be.eql proposal
+    result.should.be.eql false
