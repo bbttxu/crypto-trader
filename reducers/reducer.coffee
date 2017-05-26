@@ -27,6 +27,7 @@ initalState =
   stats: {}
   sent: []
   orders: []
+  positions: {}
 
 # initalState.matches = defaults config, []
 initalState.predictions = defaults config, {}
@@ -67,8 +68,37 @@ reducers = (state, action) ->
   if action.type is 'UPDATE_STATS'
     state.stats = action.stats
 
+  if action.type is 'ORDER_MATCHED'
+
+    # Store local unix timestamp to model
+    action.match.local = state.now.valueOf()
+
+    key = [ action.match.product_id, action.match.side ].join( '-' ).toUpperCase()
+
+    state.prices[key] = R.pick [ 'time', 'price'], action.match
+
+
+    # Find any proposals that are no longer relevant
+    # e.g. price is out-of-date and would incur a fee
+    existingTradeCriteria = (foo)->
+      action.match.side is foo.side and action.match.product_id is foo.product_id
+
+    index = R.findIndex(existingTradeCriteria)(state.proposals)
+
+    if index > 0
+      if checkObsoleteTrade state.proposals[index], action.match.price
+        state.proposals.splice index, 1
+
+    state.matches.push action.match
+
   if action.type is 'UPDATE_ACCOUNT'
     state.currencies[action.currency.currency] = R.pick ['hold', 'balance'], action.currency
+
+    if state.currencies['BTC']
+      console.log state.currencies.BTC
+
+      state.positions['BTC'] = ( parseFloat(state.currencies['BTC'].balance) + parseFloat(state.currencies['BTC'].hold) ) # * parseFloat( state.prices['BTC-USD-SELL'].price)
+      state.positions['BTC-price'] = state.stats['BTC-USD']
 
   if action.type is 'ORDER_SENT'
     currency = action.order.product_id.split('-')[1]
@@ -120,29 +150,6 @@ reducers = (state, action) ->
         state.currencies[currency].balance = pricing.size( parseFloat( state.currencies[currency].balance ) + size )
 
         state.orders.splice( index, 1 )
-
-  if action.type is 'ORDER_MATCHED'
-
-    # Store local unix timestamp to model
-    action.match.local = state.now.valueOf()
-
-    key = [ action.match.product_id, action.match.side ].join( '-' ).toUpperCase()
-
-    state.prices[key] = R.pick [ 'time', 'price'], action.match
-
-
-    # Find any proposals that are no longer relevant
-    # e.g. price is out-of-date and would incur a fee
-    existingTradeCriteria = (foo)->
-      action.match.side is foo.side and action.match.product_id is foo.product_id
-
-    index = R.findIndex(existingTradeCriteria)(state.proposals)
-
-    if index > 0
-      if checkObsoleteTrade state.proposals[index], action.match.price
-        state.proposals.splice index, 1
-
-    state.matches.push action.match
 
 
   # updateCurrencyIntents = ( asdfasdf )->

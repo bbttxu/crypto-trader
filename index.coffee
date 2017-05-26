@@ -41,11 +41,11 @@ orderFailed = ( order )->
 updatedStore = ->
   state = store.getState()
 
-  keys = [ 'proposals' ]
+  keys = [ 'currencies', 'stats', 'positions' ]
   important = R.pick keys, state
   console.log moment().format(), important
 
-# store.subscribe updatedStore
+store.subscribe updatedStore
 
 
 makeNewTrades = ->
@@ -85,7 +85,7 @@ makeNewTrades = ->
   if sides.buy
     R.map buyOrder, sides.buy
 
-setInterval makeNewTrades, ( 864 * 1000 ) / 10
+# setInterval makeNewTrades, ( 864 * 1000 ) / 10
 
 ###
 _________                            .__
@@ -168,7 +168,7 @@ updateAccounts = ->
   gdax.getAccounts().then( showAccounts )
 
 updateAccounts()
-setInterval updateAccounts, 59 * 60 * 1000
+setInterval updateAccounts, 15 * 60 * 1000
 
 
 # universalBad = ( err )->
@@ -328,8 +328,8 @@ setInterval saveFills, (1000 * 60 * 15)
 
 
 # Cancel All Orders, start with a clean slate
-gdax.cancelAllOrders( R.keys config.currencies ).then (result)->
-  console.log result
+# gdax.cancelAllOrders( R.keys config.currencies ).then (result)->
+#   console.log result
 
 process.on 'uncaughtException', (err) ->
   console.log 'Caught exception: ' + err
