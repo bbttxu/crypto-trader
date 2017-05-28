@@ -8,6 +8,7 @@ deepEqual = require 'deep-equal'
 gdax = require './lib/gdax-client'
 currencySideRecent = require './lib/currencySideRecent'
 saveFill = require './lib/saveFill'
+savePosition = require './lib/savePosition'
 Streams = require './lib/streams'
 
 config = require './config'
@@ -176,11 +177,19 @@ updateAccounts = ->
 updateAccounts()
 setInterval updateAccounts, 15 * 60 * 1000
 
-
+#
 saveAccountPositions = ->
-  state = store.getState()
-  console.log moment().format(), JSON.stringify state.positions
+  now = moment()
 
+  # Get current position and timestamp it
+  position = store.getState().positions
+  position.time = now.toISOString()
+
+  #
+  savePosition( position ).then ( result )->
+    console.log result, now.format()
+
+#
 setInterval saveAccountPositions, 15 * 60 * 1000
 
 
@@ -234,7 +243,7 @@ sendHeartbeat = ->
     type: 'HEARTBEAT'
     message: moment().valueOf()
 
-setInterval sendHeartbeat, 30 * 1000
+setInterval sendHeartbeat, 15 * 1000
 
 
 
