@@ -23,7 +23,7 @@ savePositions = ( position )->
 
     mongoCollection.insert position, (err, whiz)->
       reject err if err
-      resolve details
+      resolve position
 
 
 module.exports = savePositions
