@@ -91,6 +91,7 @@ clearOutOldOrders = ->
     R.map cancelOrder, expired
 
 clearOutOldOrders()
+setInterval clearOutOldOrders, ( 864 * 1000 ) / 10
 
 # Cancel All Orders, start with a clean slate
 gdax.cancelAllOrders( R.keys config.currencies ).then (result)->
