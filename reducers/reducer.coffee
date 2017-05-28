@@ -7,6 +7,7 @@ predictions = require '../lib/predictions'
 proposals = require '../lib/proposals'
 cleanUpTrades = require '../lib/cleanUpTrades'
 checkObsoleteTrade = require '../lib/checkObsoleteTrade'
+positionDetermine = require '../lib/positionDetermine'
 
 defaults = require '../defaults'
 
@@ -77,6 +78,7 @@ reducers = (state, action) ->
 
     state.prices[key] = R.pick [ 'time', 'price'], action.match
 
+    state.positions = positionDetermine state.currencies, state.prices
 
     # Find any proposals that are no longer relevant
     # e.g. price is out-of-date and would incur a fee
@@ -94,11 +96,8 @@ reducers = (state, action) ->
   if action.type is 'UPDATE_ACCOUNT'
     state.currencies[action.currency.currency] = R.pick ['hold', 'balance'], action.currency
 
-    if state.currencies['BTC']
-      console.log state.currencies.BTC
+    state.positions = positionDetermine state.currencies, state.prices
 
-      state.positions['BTC'] = ( parseFloat(state.currencies['BTC'].balance) + parseFloat(state.currencies['BTC'].hold) ) # * parseFloat( state.prices['BTC-USD-SELL'].price)
-      state.positions['BTC-price'] = state.stats['BTC-USD']
 
   if action.type is 'ORDER_SENT'
     currency = action.order.product_id.split('-')[1]
@@ -256,37 +255,18 @@ reducers = (state, action) ->
   # heartbeat ensures that proposed orders, and active orders don't stagnate
   if action.type is 'HEARTBEAT'
     state.heartbeat = action.message
-    console.log 'HEARTBEAT'
 
-    start = moment()
+    start = moment().valueOf()
 
     state.predictions = updatePredictions R.keys state.predictions
 
     state.proposals = R.map cleanUpTrades, R.reject R.isNil, R.values R.mapObjIndexed makeTradeProposal, R.mapObjIndexed findBestProposal, state.predictions
 
-    # console.log state.proposals
 
-    # console.log state.currencies
+    console.log 'started predictions',
+    console.log 'HEARTBEAT', ( moment().valueOf() - start )
 
-    # predictionResults = R.values R.pick [ 'predictions' ], state
-
-    # console.log R.map cleanUpTrades, R.reject R.isNil, R.values R.mapObjIndexed makeTradeProposal, state.proposals
-
-
-    console.log 'started predictions', start.fromNow()
-
-    # R.map keepFresh, R.keys state.predictions
-
-
-  # R.map keepFresh, R.keys state.predictions
-
-  # predictionResults = R.values R.pick [ 'predictions' ], state
-
-  # state.proposals = proposals ( R.pick [ 'currencies' ], state ), predictionResults
-
-  # console.log R.keys state
-  # console.log moment().format(), JSON.stringify R.pick ['proposals'], state
-
+  # return
   state
 
 module.exports = reducers
