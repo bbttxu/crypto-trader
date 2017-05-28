@@ -44,7 +44,7 @@ updatedStore = ->
 
   keys = [ 'positions' ]
   important = R.pick keys, state
-  console.log moment().format(), 'we got this', '$', important.positions.total.total.toFixed( 2 )
+  console.log moment().format(), 'we got this', '$', important.positions.total.totalUSD.toFixed( 2 )
 
 # store.subscribe updatedStore
 setInterval updatedStore, 59 * 1000
@@ -112,7 +112,7 @@ makeNewTrades = ->
 
   keys = [ 'orders', 'proposals' ]
   important = R.pick keys, state
-  console.log moment().format(), JSON.stringify important
+  # console.log moment().format(), JSON.stringify important
 
   predictionResults = R.values R.pick [ 'predictions' ], state
 
@@ -205,6 +205,7 @@ saveAccountPositions = ->
     console.log result, now.format()
 
 #
+setTimeout saveAccountPositions, 1 * 5 * 1000
 setInterval saveAccountPositions, 15 * 60 * 1000
 
 
