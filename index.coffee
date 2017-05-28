@@ -8,6 +8,7 @@ deepEqual = require 'deep-equal'
 gdax = require './lib/gdax-client'
 currencySideRecent = require './lib/currencySideRecent'
 saveFill = require './lib/saveFill'
+savePosition = require './lib/savePosition'
 Streams = require './lib/streams'
 
 config = require './config'
@@ -41,51 +42,12 @@ orderFailed = ( order )->
 updatedStore = ->
   state = store.getState()
 
-  keys = [ 'proposals' ]
+  keys = [ 'positions' ]
   important = R.pick keys, state
-  console.log moment().format(), important
+  console.log moment().format(), 'we got this', '$', important.positions.total.total.toFixed( 2 )
 
 # store.subscribe updatedStore
-
-
-makeNewTrades = ->
-  state = store.getState()
-
-  keys = [ 'orders', 'proposals' ]
-  important = R.pick keys, state
-  console.log moment().format(), JSON.stringify important
-
-  predictionResults = R.values R.pick [ 'predictions' ], state
-
-  bySide = ( trade )->
-    trade.side
-
-  sides = R.groupBy bySide, state.proposals
-
-  console.log sides
-
-  sellOrder = ( order )->
-    store.dispatch
-      type: 'ORDER_SENT'
-      order: order
-
-    gdax.sell( order ).then( orderSuccess ).catch( orderFailed )
-
-  buyOrder = ( order )->
-    store.dispatch
-      type: 'ORDER_SENT'
-      order: order
-
-    gdax.buy( order ).then( orderSuccess ).catch( orderFailed )
-
-
-  if sides.sell
-    R.map sellOrder, sides.sell
-
-  if sides.buy
-    R.map buyOrder, sides.buy
-
-setInterval makeNewTrades, ( 864 * 1000 ) / 10
+setInterval updatedStore, 59 * 1000
 
 ###
 _________                            .__
@@ -128,8 +90,63 @@ clearOutOldOrders = ->
     console.log 'cancel', R.pluck 'order_id', expired
     R.map cancelOrder, expired
 
+clearOutOldOrders()
 
-setInterval clearOutOldOrders, 1000
+# Cancel All Orders, start with a clean slate
+gdax.cancelAllOrders( R.keys config.currencies ).then (result)->
+  console.log result
+
+
+###
+___________                  .___
+\__    ___/___________     __| _/____   ______
+  |    |  \_  __ \__  \   / __ |/ __ \ /  ___/
+  |    |   |  | \// __ \_/ /_/ \  ___/ \___ \
+  |____|   |__|  (____  /\____ |\___  >____  >
+                      \/      \/    \/     \/
+                      Trades
+###
+
+makeNewTrades = ->
+  state = store.getState()
+
+  keys = [ 'orders', 'proposals' ]
+  important = R.pick keys, state
+  console.log moment().format(), JSON.stringify important
+
+  predictionResults = R.values R.pick [ 'predictions' ], state
+
+  bySide = ( trade )->
+    trade.side
+
+  sides = R.groupBy bySide, state.proposals
+
+  console.log sides
+
+  sellOrder = ( order )->
+    store.dispatch
+      type: 'ORDER_SENT'
+      order: order
+
+    gdax.sell( order ).then( orderSuccess ).catch( orderFailed )
+
+  buyOrder = ( order )->
+    store.dispatch
+      type: 'ORDER_SENT'
+      order: order
+
+    gdax.buy( order ).then( orderSuccess ).catch( orderFailed )
+
+
+  if sides.sell
+    R.map sellOrder, sides.sell
+
+  if sides.buy
+    R.map buyOrder, sides.buy
+
+setInterval makeNewTrades, ( 864 * 1000 ) / 10
+
+
 
 
 universalBad = ( err )->
@@ -138,10 +155,15 @@ universalBad = ( err )->
   exit()
 
 
-
-
-# Update Account info
-
+###
+   _____                                   __
+  /  _  \   ____  ____  ____  __ __  _____/  |_
+ /  /_\  \_/ ___\/ ___\/  _ \|  |  \/    \   __\
+/    |    \  \__\  \__(  <_> )  |  /   |  \  |
+\____|__  /\___  >___  >____/|____/|___|  /__|
+        \/     \/    \/                 \/
+        Update Account info
+###
 
 getRelevantCurrencies = ( currencyPairs )->
   split = ( currencyPair )->
@@ -168,12 +190,23 @@ updateAccounts = ->
   gdax.getAccounts().then( showAccounts )
 
 updateAccounts()
-setInterval updateAccounts, 59 * 60 * 1000
+setInterval updateAccounts, 15 * 60 * 1000
 
+#
+saveAccountPositions = ->
+  now = moment()
 
-# universalBad = ( err )->
-#   console.log 'bad', err
-#   throw err if err
+  # Get current position and timestamp it
+  position = store.getState().positions
+  position.time = now.toISOString()
+
+  #
+  savePosition( position ).then ( result )->
+    console.log result, now.format()
+
+#
+setInterval saveAccountPositions, 15 * 60 * 1000
+
 
 
 ###
@@ -204,7 +237,7 @@ showSavedMatch = ( result )->
 
 asdfasdf = ->
   matches = matchesQueue.batch()
-  console.log matches.length, 'recorded'  if matches.length isnt 0
+
   if 0 isnt matches.length
     saveFillSuccess = ( results )->
       # since = moment( result.created_at ).fromNow( true )
@@ -327,9 +360,9 @@ setTimeout saveFills, 2000
 setInterval saveFills, (1000 * 60 * 15)
 
 
-# Cancel All Orders, start with a clean slate
-gdax.cancelAllOrders( R.keys config.currencies ).then (result)->
-  console.log result
 
 process.on 'uncaughtException', (err) ->
   console.log 'Caught exception: ' + err
+
+
+
