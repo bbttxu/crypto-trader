@@ -262,9 +262,7 @@ reducers = (state, action) ->
 
     state.proposals = R.map cleanUpTrades, R.reject R.isNil, R.values R.mapObjIndexed makeTradeProposal, R.mapObjIndexed findBestProposal, state.predictions
 
-
-    console.log 'started predictions',
-    console.log 'HEARTBEAT', ( moment().valueOf() - start )
+    console.log 'HEARTBEAT', ( moment().valueOf() - start ), 'ms'
 
   # return
   state
