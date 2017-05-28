@@ -41,11 +41,12 @@ orderFailed = ( order )->
 updatedStore = ->
   state = store.getState()
 
-  keys = [ 'currencies', 'stats', 'positions' ]
+  keys = [ 'positions' ]
   important = R.pick keys, state
-  console.log moment().format(), important
+  console.log moment().format(), 'we got this', '$', important.positions.total.total.toFixed( 2 )
 
-store.subscribe updatedStore
+# store.subscribe updatedStore
+# setInterval updatedStore, 59 * 1000
 
 
 makeNewTrades = ->
@@ -129,7 +130,7 @@ clearOutOldOrders = ->
     R.map cancelOrder, expired
 
 
-setInterval clearOutOldOrders, 1000
+# setInterval clearOutOldOrders, 1000
 
 
 universalBad = ( err )->
@@ -138,10 +139,15 @@ universalBad = ( err )->
   exit()
 
 
-
-
-# Update Account info
-
+###
+   _____                                   __
+  /  _  \   ____  ____  ____  __ __  _____/  |_
+ /  /_\  \_/ ___\/ ___\/  _ \|  |  \/    \   __\
+/    |    \  \__\  \__(  <_> )  |  /   |  \  |
+\____|__  /\___  >___  >____/|____/|___|  /__|
+        \/     \/    \/                 \/
+Update Account info
+###
 
 getRelevantCurrencies = ( currencyPairs )->
   split = ( currencyPair )->
@@ -171,9 +177,12 @@ updateAccounts()
 setInterval updateAccounts, 15 * 60 * 1000
 
 
-# universalBad = ( err )->
-#   console.log 'bad', err
-#   throw err if err
+saveAccountPositions = ->
+  state = store.getState()
+  console.log moment().format(), JSON.stringify state.positions
+
+setInterval saveAccountPositions, 15 * 60 * 1000
+
 
 
 ###
@@ -204,7 +213,7 @@ showSavedMatch = ( result )->
 
 asdfasdf = ->
   matches = matchesQueue.batch()
-  console.log matches.length, 'recorded'  if matches.length isnt 0
+
   if 0 isnt matches.length
     saveFillSuccess = ( results )->
       # since = moment( result.created_at ).fromNow( true )
@@ -333,3 +342,6 @@ setInterval saveFills, (1000 * 60 * 15)
 
 process.on 'uncaughtException', (err) ->
   console.log 'Caught exception: ' + err
+
+
+
