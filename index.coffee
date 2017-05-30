@@ -90,12 +90,12 @@ clearOutOldOrders = ->
     console.log 'cancel', R.pluck 'order_id', expired
     R.map cancelOrder, expired
 
-clearOutOldOrders()
-setInterval clearOutOldOrders, ( 864 * 1000 ) / 10
+# clearOutOldOrders()
+# setInterval clearOutOldOrders, ( 864 * 1000 ) / 10
 
 # Cancel All Orders, start with a clean slate
-gdax.cancelAllOrders( R.keys config.currencies ).then (result)->
-  console.log result
+# gdax.cancelAllOrders( R.keys config.currencies ).then (result)->
+#   console.log result
 
 
 ###
@@ -145,7 +145,7 @@ makeNewTrades = ->
   if sides.buy
     R.map buyOrder, sides.buy
 
-setInterval makeNewTrades, ( 864 * 1000 ) / 10
+# setInterval makeNewTrades, ( 864 * 1000 ) / 10
 
 
 
@@ -366,5 +366,31 @@ setInterval saveFills, (1000 * 60 * 15)
 process.on 'uncaughtException', (err) ->
   console.log 'Caught exception: ' + err
 
+###
+___________       __
+\__    ___/____  |  | __ ____
+  |    |  \__  \ |  |/ // __ \
+  |    |   / __ \|    <\  ___/
+  |____|  (____  /__|_ \\___  >
+               \/     \/    \/
+               the money and run
 
+If the USD balance exceeds 10.1% of other balances, then take 1/101 of that USD balance
+###
 
+takeTheMoneyAndRun = ->
+  state = store.getState()
+
+  keys = [ 'positions' ]
+  important = R.pick keys, state
+
+  if important.positions.USD and important.positions.BTC and important.positions.ETH and important.positions.LTC
+    console.log moment().format(), 'take the money and run', '$', important.positions
+
+    usdSum = important.positions.USD.balance
+    otherSum = ( important.positions.ETH.balance + important.positions.LTC.balance important.positions.BTC.balance )
+
+    console.log usdSum, usdSum/otherSum, otherSum
+
+store.subscribe takeTheMoneyAndRun
+# setInterval updatedStore, 59 * 1000
