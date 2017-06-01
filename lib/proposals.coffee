@@ -5,8 +5,12 @@ cleanUpTrades = require './cleanUpTrades'
 
 module.exports = ( currencies, predictions )->
 
+  console.log( currencies, 'asdf' )
+
   proposeTrade = ( doc )->
     amount = halfsies doc.current, doc.linear, currencies.currencies[doc.top].balance
+
+    console.log amount, 'amount'
     if amount < 0.01
       amount = 0.01
 
@@ -20,6 +24,7 @@ module.exports = ( currencies, predictions )->
 
   predictionSides = ( value, key )->
     parts = key.split( '-' )
+    console.log 'parts', parts
 
     value.side = parts[2].toLowerCase()
     value.top = parts[0]

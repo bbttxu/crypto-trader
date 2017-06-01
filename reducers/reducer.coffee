@@ -4,10 +4,11 @@ moment = require 'moment'
 
 pricing = require '../lib/pricing'
 predictions = require '../lib/predictions'
-proposals = require '../lib/proposals'
+# proposals = require '../lib/proposals'
 cleanUpTrades = require '../lib/cleanUpTrades'
 checkObsoleteTrade = require '../lib/checkObsoleteTrade'
 positionDetermine = require '../lib/positionDetermine'
+halfsies = require '../lib/halfsies'
 
 defaults = require '../defaults'
 
@@ -30,9 +31,8 @@ initalState =
   orders: []
   positions: {}
 
-# initalState.matches = defaults config, []
 initalState.predictions = defaults config, {}
-# initalState.proposals = defaults config, []
+
 
 console.log initalState
 
@@ -218,37 +218,30 @@ reducers = (state, action) ->
 
   findBestProposal = ( proposals, currencySide )->
     side = currencySide.split( '-' )[2].toLowerCase()
-    # console.log side, proposals
-
 
     doable = R.values R.mapObjIndexed proposalsToArray, R.filter hasProjection, proposals
 
-    # console.log 'doable', doable
-
     ordered = R.sortBy R.prop( 'linear' ), doable
-
-    # console.log 'ordered', ordered
 
     if 'sell' is side
       ordered = R.reverse ordered
-
-    # console.log 'do it', R.head ordered
 
     R.head ordered
 
 
   makeTradeProposal = ( doc, key )->
-    # console.log 'makeTradeProposal'
 
     parts = key.split '-'
 
     if doc
       doc.side = parts[2].toLowerCase()
       doc.product_id = [ parts[0], parts[1] ].join '-'
-      doc.size = 0.01
       doc.price = doc.linear
 
-      # console.log doc
+      doc.size = halfsies doc.current, doc.linear, state.currencies[ parts[0] ].balance
+
+      if doc.size < 0.01
+        doc.size = 0.01
 
     doc
 
@@ -260,7 +253,11 @@ reducers = (state, action) ->
 
     state.predictions = updatePredictions R.keys state.predictions
 
-    state.proposals = R.map cleanUpTrades, R.reject R.isNil, R.values R.mapObjIndexed makeTradeProposal, R.mapObjIndexed findBestProposal, state.predictions
+    bestPredictions = R.reject R.isNil, R.values R.mapObjIndexed makeTradeProposal, R.mapObjIndexed findBestProposal, state.predictions
+
+    # console.log 'v', bestPredictions
+
+    state.proposals = R.map cleanUpTrades, bestPredictions
 
     console.log 'HEARTBEAT', ( moment().valueOf() - start ), 'ms'
 
