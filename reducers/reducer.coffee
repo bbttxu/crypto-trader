@@ -9,6 +9,8 @@ cleanUpTrades = require '../lib/cleanUpTrades'
 checkObsoleteTrade = require '../lib/checkObsoleteTrade'
 positionDetermine = require '../lib/positionDetermine'
 halfsies = require '../lib/halfsies'
+handleFractionalSize = require '../lib/handleFractionalSize'
+
 
 defaults = require '../defaults'
 
@@ -240,8 +242,6 @@ reducers = (state, action) ->
 
       doc.size = halfsies doc.current, doc.linear, state.currencies[ parts[0] ].balance
 
-      if doc.size < 0.01
-        doc.size = 0.01
 
     doc
 
@@ -255,9 +255,28 @@ reducers = (state, action) ->
 
     bestPredictions = R.reject R.isNil, R.values R.mapObjIndexed makeTradeProposal, R.mapObjIndexed findBestProposal, state.predictions
 
-    # console.log 'v', bestPredictions
 
-    state.proposals = R.map cleanUpTrades, bestPredictions
+
+    #
+    #
+    fdsa = ( doc )->
+      handleFractionalSize doc, 0.01
+
+    dontOverextend = R.filter fdsa, bestPredictions
+
+
+    #
+    #
+    ensureMinimumSize = ( doc )->
+      if doc.size < 0.01
+        doc.size = 0.01
+
+      doc
+
+
+    validBids = R.map ensureMinimumSize, dontOverextend
+
+    state.proposals = R.map cleanUpTrades, validBids
 
     console.log 'HEARTBEAT', ( moment().valueOf() - start ), 'ms'
 
