@@ -266,7 +266,7 @@ reducers = (state, action) ->
 
 
     #
-    #
+    # TODO could roll into cleanUpTrades??
     ensureMinimumSize = ( doc )->
       if doc.size < 0.01
         doc.size = 0.01
