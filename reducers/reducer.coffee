@@ -221,6 +221,10 @@ reducers = (state, action) ->
   findBestProposal = ( proposals, currencySide )->
     side = currencySide.split( '-' )[2].toLowerCase()
 
+    return proposals unless proposals
+
+    console.log 1, proposals
+    
     doable = R.values R.mapObjIndexed proposalsToArray, R.filter hasProjection, proposals
 
     ordered = R.sortBy R.prop( 'linear' ), doable
@@ -251,8 +255,12 @@ reducers = (state, action) ->
 
     start = moment().valueOf()
 
+    console.log 3, state.predictions
+
     state.predictions = updatePredictions R.keys state.predictions
 
+    console.log 4, state.predictions
+    
     bestPredictions = R.reject R.isNil, R.values R.mapObjIndexed makeTradeProposal, R.mapObjIndexed findBestProposal, state.predictions
 
 
@@ -261,6 +269,8 @@ reducers = (state, action) ->
     #
     fdsa = ( doc )->
       handleFractionalSize doc, 0.01
+
+    console.log 2, bestPredictions
 
     dontOverextend = R.filter fdsa, bestPredictions
 
