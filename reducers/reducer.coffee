@@ -104,12 +104,6 @@ reducers = (state, action) ->
   if action.type is 'ORDER_SENT'
     currency = action.order.product_id.split('-')[1]
     side = action.order.side
-    # size = parseFloat action.order.size
-
-    # console.log currency, side, size
-
-    # if 'buy' is side
-    #   size = -1 * size
 
     state.currencies[currency].hold = pricing.size( parseFloat( state.currencies[currency].hold ) + parseFloat( action.order.size ) )
     state.currencies[currency].balance = pricing.size( parseFloat( state.currencies[currency].balance ) - parseFloat( action.order.size ) )
@@ -153,9 +147,6 @@ reducers = (state, action) ->
         state.orders.splice( index, 1 )
 
 
-  # updateCurrencyIntents = ( asdfasdf )->
-  #   console.log 'updateCurrencyIntents', state.matches.length, asdfasdf
-
 
   updatePredictionsByCurrencySide = ( matches, key )->
 
@@ -186,7 +177,6 @@ reducers = (state, action) ->
 
 
   updatePredictions = ( currencyIntents )->
-    # console.log 'updatePredictions', currencyIntents
 
     state.matches = R.sortBy R.prop( 'time' ), state.matches
 
@@ -221,10 +211,11 @@ reducers = (state, action) ->
   findBestProposal = ( proposals, currencySide )->
     side = currencySide.split( '-' )[2].toLowerCase()
 
+
+    #
+    # if undefined return
     return proposals unless proposals
 
-    console.log 1, proposals
-    
     doable = R.values R.mapObjIndexed proposalsToArray, R.filter hasProjection, proposals
 
     ordered = R.sortBy R.prop( 'linear' ), doable
@@ -255,12 +246,8 @@ reducers = (state, action) ->
 
     start = moment().valueOf()
 
-    console.log 3, state.predictions
-
     state.predictions = updatePredictions R.keys state.predictions
 
-    console.log 4, state.predictions
-    
     bestPredictions = R.reject R.isNil, R.values R.mapObjIndexed makeTradeProposal, R.mapObjIndexed findBestProposal, state.predictions
 
 
@@ -269,8 +256,6 @@ reducers = (state, action) ->
     #
     fdsa = ( doc )->
       handleFractionalSize doc, 0.01
-
-    console.log 2, bestPredictions
 
     dontOverextend = R.filter fdsa, bestPredictions
 
