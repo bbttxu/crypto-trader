@@ -11,7 +11,7 @@ module.exports = ->
     items.shift()
 
   self.batch = ( index = 100 )->
-    items.splice( ( -1 * index ), index )
+    items.splice( 0, index )
 
   self.peek = ->
     items[0]
