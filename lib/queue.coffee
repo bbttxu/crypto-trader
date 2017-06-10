@@ -3,8 +3,6 @@ module.exports = ->
   items = []
 
   self.enqueue = (item) ->
-    if 'undefined' is typeof items
-      items = []
     items.push item
 
   self.dequeue = ->
