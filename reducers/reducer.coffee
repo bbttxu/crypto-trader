@@ -10,6 +10,7 @@ checkObsoleteTrade = require '../lib/checkObsoleteTrade'
 positionDetermine = require '../lib/positionDetermine'
 halfsies = require '../lib/halfsies'
 handleFractionalSize = require '../lib/handleFractionalSize'
+stategy = require '../lib/stategy'
 
 
 defaults = require '../defaults'
@@ -31,6 +32,7 @@ initalState =
   stats: {}
   sent: []
   orders: []
+  advice: {}
   positions: {}
 
 initalState.predictions = defaults config, {}
@@ -70,6 +72,8 @@ reducers = (state, action) ->
   # Record Stats
   if action.type is 'UPDATE_STATS'
     state.stats = action.stats
+    state.advice = stategy action.stats
+
 
   if action.type is 'ORDER_MATCHED'
 
@@ -244,9 +248,18 @@ reducers = (state, action) ->
   if action.type is 'HEARTBEAT'
     state.heartbeat = action.message
 
+
     start = moment().valueOf()
 
-    state.predictions = updatePredictions R.keys state.predictions
+
+    asdfasdf = ( a, b )->
+      asdfasdfasdf = ( c )->
+        [ b, c ].join( '-' ).toUpperCase()
+
+      R.map asdfasdfasdf, R.keys a
+
+
+    state.predictions = updatePredictions R.uniq R.flatten R.values R.mapObjIndexed asdfasdf, state.advice
 
     bestPredictions = R.reject R.isNil, R.values R.mapObjIndexed makeTradeProposal, R.mapObjIndexed findBestProposal, state.predictions
 
