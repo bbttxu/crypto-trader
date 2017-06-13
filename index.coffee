@@ -267,8 +267,6 @@ setInterval sendHeartbeat, 30 * 1000
 channel = Streams R.keys config.currencies
 
 channel.subscribe 'message', ( message )->
-  if message.type is 'heartbeat'
-    sendHeartbeat()
 
   if message.type is 'match'
     dispatchMatch message
