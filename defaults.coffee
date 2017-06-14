@@ -2,7 +2,7 @@
 
 R = require 'ramda'
 
-config = require './config'
+config = require './config.coffee'
 
 
 

@@ -1,7 +1,7 @@
 R = require 'ramda'
 Postal = require 'postal'
 
-Stream = require './stream'
+Stream = require './stream.coffee'
 
 river = Postal.channel 'message'
 

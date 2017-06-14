@@ -1,4 +1,4 @@
-pricing = require './pricing'
+pricing = require './pricing.coffee'
 
 currencies =
   usd: '$'

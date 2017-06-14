@@ -4,7 +4,7 @@ Postal = require 'postal'
 
 Gdax = require 'gdax'
 
-restart = require './restartProcess'
+restart = require './restartProcess.coffee'
 
 authentication =
   secret: process.env.API_SECRET

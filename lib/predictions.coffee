@@ -2,8 +2,8 @@ regression = require 'regression'
 R = require 'ramda'
 moment = require 'moment'
 
-matchesToCartesian = require './matchesToCartesian'
-pricing = require './pricing'
+matchesToCartesian = require './matchesToCartesian.coffee'
+pricing = require './pricing.coffee'
 
 linearLast = ( docs, future, base )->
 

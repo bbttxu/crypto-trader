@@ -5,16 +5,16 @@ moment = require 'moment'
 thunk = require 'redux-thunk'
 deepEqual = require 'deep-equal'
 
-gdax = require './lib/gdax-client'
-currencySideRecent = require './lib/currencySideRecent'
-saveFill = require './lib/saveFill'
-savePosition = require './lib/savePosition'
-Streams = require './lib/streams'
+gdax = require './lib/gdax-client.coffee'
+currencySideRecent = require './lib/currencySideRecent.coffee'
+saveFill = require './lib/saveFill.coffee'
+savePosition = require './lib/savePosition.coffee'
+Streams = require './lib/streams.coffee'
 
-config = require './config'
-ml = require './ml'
+config = require './config.coffee'
+ml = require './ml.coffee'
 
-exit = require './lib/exit'
+exit = require './lib/exit.coffee'
 
 projectionMinutes = config.default.interval.value
 
@@ -22,7 +22,7 @@ console.log projectionMinutes
 
 historicalMinutes = projectionMinutes * 5
 
-reducers = require './reducers/reducer'
+reducers = require './reducers/reducer.coffee'
 
 { createStore, applyMiddleware } = require 'redux'
 
@@ -220,10 +220,10 @@ setInterval saveAccountPositions, 15 * 60 * 1000
         \/     \/          \/     \/     \/     \/
 ###
 
-Queue = require './lib/queue'
+Queue = require './lib/queue.coffee'
 matchesQueue = Queue()
 
-saveMatches = require './lib/saveMatches'
+saveMatches = require './lib/saveMatches.coffee'
 
 dispatchMatch = ( match, save = true )->
   store.dispatch
@@ -355,7 +355,7 @@ __________                             ___.
         \/     \/      \/     \/      \/    \/     \/
 ###
 
-saveFills = require './save'
+saveFills = require './save.coffee'
 setTimeout saveFills, 2000
 setInterval saveFills, (1000 * 60 * 15)
 

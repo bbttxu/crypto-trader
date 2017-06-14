@@ -5,10 +5,10 @@ R = require 'ramda'
 RSVP = require 'rsvp'
 moment = require 'moment'
 
-pricing = require './pricing'
-aggregate = require './aggregate'
-pulse = require './pulse'
-groupByIntervalTime = require './groupByIntervalTime'
+pricing = require './pricing.coffee'
+aggregate = require './aggregate.coffee'
+pulse = require './pulse.coffee'
+groupByIntervalTime = require './groupByIntervalTime.coffee'
 
 module.exports = ( product, side, interval = 60 )->
   ago = moment().subtract( 1, 'hour' )

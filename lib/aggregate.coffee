@@ -1,6 +1,6 @@
 R = require 'ramda'
 
-pricing = require './pricing'
+pricing = require './pricing.coffee'
 
 emptyAggregate =
   volume: 0

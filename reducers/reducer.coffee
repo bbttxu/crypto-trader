@@ -2,20 +2,20 @@ R = require 'ramda'
 redux = require 'redux'
 moment = require 'moment'
 
-pricing = require '../lib/pricing'
-predictions = require '../lib/predictions'
+pricing = require '../lib/pricing.coffee'
+predictions = require '../lib/predictions.coffee'
 # proposals = require '../lib/proposals'
-cleanUpTrades = require '../lib/cleanUpTrades'
-checkObsoleteTrade = require '../lib/checkObsoleteTrade'
-positionDetermine = require '../lib/positionDetermine'
-halfsies = require '../lib/halfsies'
-handleFractionalSize = require '../lib/handleFractionalSize'
-stategy = require '../lib/stategy'
+cleanUpTrades = require '../lib/cleanUpTrades.coffee'
+checkObsoleteTrade = require '../lib/checkObsoleteTrade.coffee'
+positionDetermine = require '../lib/positionDetermine.coffee'
+halfsies = require '../lib/halfsies.coffee'
+handleFractionalSize = require '../lib/handleFractionalSize.coffee'
+stategy = require '../lib/stategy.coffee'
 
 
-defaults = require '../defaults'
+defaults = require '../defaults.coffee'
 
-config = require '../config'
+config = require '../config.coffee'
 
 projectionMinutes = config.default.interval.value
 historicalMinutes = projectionMinutes * 3

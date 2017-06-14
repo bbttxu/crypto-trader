@@ -1,7 +1,7 @@
 R = require 'ramda'
 
 halfsies = require './halfsies'
-cleanUpTrades = require './cleanUpTrades'
+cleanUpTrades = require './cleanUpTrades.coffee'
 
 module.exports = ( currencies, predictions )->
 

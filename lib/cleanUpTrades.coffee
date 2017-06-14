@@ -1,7 +1,7 @@
 uuid = require 'uuid'
 # moment = require 'moment'
 
-pricing = require './pricing'
+pricing = require './pricing.coffee'
 
 cleanUpTrades = ( trade )->
   priceFormat = trade.product_id.split( '-' )[1]

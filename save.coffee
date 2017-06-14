@@ -1,10 +1,10 @@
 R = require 'ramda'
 moment = require 'moment'
 
-gdax = require './lib/gdax-client'
-saveFill = require './lib/saveFill'
+gdax = require './lib/gdax-client.coffee'
+saveFill = require './lib/saveFill.coffee'
 
-config = require './config'
+config = require './config.coffee'
 
 
 INTERVAL = 100

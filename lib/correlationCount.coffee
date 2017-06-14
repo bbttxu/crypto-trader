@@ -1,7 +1,7 @@
 RSVP = require 'rsvp'
 R = require 'ramda'
 
-pricing = require './pricing'
+pricing = require './pricing.coffee'
 
 module.exports = (data)->
   new RSVP.Promise (resolve, reject)->
