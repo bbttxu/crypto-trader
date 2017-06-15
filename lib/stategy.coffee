@@ -20,6 +20,8 @@ lastIsHigherThanOpen = ( stats )->
 
 #
 # possible resultant states
+trumpDontCare = {}
+
 buyAdvice =
   buy: {}
 
@@ -39,12 +41,21 @@ module.exports = ( stats )->
   # TODO why doesn't the line below work?
   # shouldWeSell = all lastIsHigherThanOpen, usdStats
 
+  # are all stats negative
+  shouldWeBuy = all equals(false), values map lastIsHigherThanOpen, usdStats
+  # TODO why doesn't the line below work?
+  # shouldWeBuy = all lastIsHigherThanOpen, usdStats
+
 
   # determine advice
-  asdf = if ( true is shouldWeSell ) then sellAdvice else buyAdvice
+  asdf = trumpDontCare
+  asdf = sellAdvice if shouldWeSell
+  asdf = buyAdvice if shouldWeBuy
 
   makeProductAdvice = ->
+    # console.log 'a', asdf
     asdf
+
 
   # apply advice
   currentAdvice = map makeProductAdvice, usdStats
