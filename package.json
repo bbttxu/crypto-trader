@@ -37,5 +37,8 @@
     "thunk": "^0.0.1",
     "uuid": "3.0.1",
     "webpack": "2.6.1"
+  },
+  "devDependencies": {
+    "webpack-node-externals": "^1.6.0"
   }
 }

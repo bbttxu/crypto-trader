@@ -1,0 +1,8 @@
+{
+	// Comments are supported
+    "uid": "app",
+    "append": true,
+    "watch": true,
+    "script": "coffee index.coffee",
+    "sourceDir": "/home/adam/crypto-trader"
+}
