@@ -1,21 +1,22 @@
 require('dotenv').config( silent: true )
 
-mongo = require('mongodb').MongoClient
+# mongo = require('mongodb').MongoClient
 RSVP = require 'rsvp'
+
+mongoConnection = require('../lib/mongoConnection')
 
 getFills = (product)->
   new RSVP.Promise (resolve, reject)->
-    mongo.connect process.env.MONGO_URL, (err, db)->
+    mongoConnection.then (db)->
       collection = db.collection 'fill'
 
       onError = (err)->
-        db.close()
+        # db.close()
         console.log 'getFills.err', err
         reject err
 
       callback = (results)->
-        db.close()
-
+        # db.close()
         resolve results
 
       search =
