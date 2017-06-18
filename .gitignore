@@ -1,4 +1,4 @@
-# Logs
+ Logs
 logs
 *.log
 npm-debug.log*
@@ -38,3 +38,5 @@ jspm_packages
 
 # no secrets please
 .env
+
+asdf.coffee
