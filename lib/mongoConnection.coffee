@@ -3,19 +3,21 @@ require('dotenv').config( silent: true )
 RSVP = require 'rsvp'
 mongo = require('mongodb').MongoClient
 
-mongoConnection = undefined
+persistedMongoConnection = undefined
 
+#
+#
 module.exports = new RSVP.Promise (resolve, reject)->
 
   # return persisted connection if available
-  resolve mongoConnection if undefined isnt mongoConnection
+  resolve persistedMongoConnection if undefined isnt persistedMongoConnection
 
   # otherwise make connection
-  mongo.connect process.env.MONGO_URL, (err, db)->
+  mongo.connect process.env.MONGO_URL, (err, connection)->
     reject err if err
 
     # Persist connection
-    mongoConnection = db
+    persistedMongoConnection = connection
 
     # resolve connection
-    resolve mongoConnection
+    resolve persistedMongoConnection

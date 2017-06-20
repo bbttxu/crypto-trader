@@ -1,13 +1,15 @@
 require('dotenv').config( silent: true )
 
-mongo = require('mongodb').MongoClient
+# mongo = require('mongodb').MongoClient
 RSVP = require 'rsvp'
 moment = require 'moment'
 
+mongoConnection = require('../lib/mongoConnection')
+
 saveFill = (fill)->
   new RSVP.Promise (resolve, reject)->
-    mongo.connect process.env.MONGO_URL, (err, db)->
-      reject err if err
+    mongoConnection.then (db)->
+      # reject err if err
 
       collection = db.collection 'fill'
 
@@ -25,11 +27,11 @@ saveFill = (fill)->
 
           collection.insertOne fill, (err, whiz)->
             reject err if err
-            db.close()
+            # db.close()
             resolve fill
 
         else
-          db.close()
+          # db.close()
           resolve true
 
 
