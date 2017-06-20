@@ -160,6 +160,7 @@ reducers = (state, action) ->
     future = moment().add( 864, 'seconds' ).utc().unix()
 
 
+    seconds = moment().subtract( 86, 'seconds' ).utc().unix()
     minutes = moment().subtract( 864, 'seconds' ).utc().unix()
     hours = moment().subtract( 8640, 'seconds' ).utc().unix()
     day = moment().subtract( 86400, 'seconds' ).utc().unix()
@@ -167,15 +168,22 @@ reducers = (state, action) ->
     byTimeFrame = ( doc )->
        docTime = moment( doc.time ).utc().unix()
 
-       return 864 if docTime > minutes
+       return 86 if docTime > seconds
+       return 864 if docTime < seconds and docTime > minutes
        return 8640 if docTime < minutes and docTime > hours
        86400
 
-    makePredictions = ( docs )->
-      predictor = predictions side, future, key
-      predictor docs
+    makePredictions = ( docs, z )->
+      start = Date.now().valueOf()
 
-    R.map makePredictions, R.groupBy byTimeFrame, matches
+      predictor = predictions side, future, key
+      fdsa = predictor docs
+
+      console.log z, docs.length, Date.now().valueOf() - start, key, side
+
+      fdsa
+
+    R.mapObjIndexed makePredictions, R.groupBy byTimeFrame, matches
 
 
 
