@@ -26,9 +26,12 @@ initalState =
   heartbeat: 0
   currencies: {}
   prices: {}
+  matches: []
+
+  # Projections stores equations that can project a price point into the future
+  projections: {}
   predictions: {}
   proposals: []
-  matches: []
   stats: {}
   sent: []
   orders: []
