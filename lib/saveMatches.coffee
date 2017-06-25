@@ -13,15 +13,15 @@ necessaryFields = ['side', 'size', 'price', 'product_id', 'time', 'trade_id']
 #
 saveMatches = ( matches )->
   new RSVP.Promise (resolve, reject)->
-    mongoConnection.then (db)->
+    mongoConnection().then (db)->
 
       matchesCollection = db.collection 'matches'
 
       details = R.map R.pick( necessaryFields ), matches
 
-      matchesCollection.insert details, (err, whiz)->
-        reject err if err
-
+      matchesCollection.insert( details ).then (whiz)->
+        # reject err if err
+        # console.log whiz, details
         resolve details
 
 
