@@ -4,33 +4,36 @@ require('dotenv').config( silent: true )
 RSVP = require 'rsvp'
 moment = require 'moment'
 
-mongoConnection = require('../lib/mongoConnection')
+mongoConnection = require('./mongoConnection')
 
 #
 #
-currencySideRecent = ( product, side, intervalUnits = 1, intervalLength = 'hour' )->
+currencySideRecent = ( product_id, side, intervalUnits = 1, intervalLength = 'hour' )->
   ago = moment().subtract( intervalUnits, intervalLength )
 
+
   search =
-    product_id: product
+    product_id: product_id
     side: side
     time:
       $gte: ago.toISOString()
 
 
+
   new RSVP.Promise (resolve, reject)->
+
+
     throwCurrencySideRecentError = (err)->
+      console.log 'zzzzaaasss'
       console.log err
       reject err
 
-    mongoConnection.then (db)->
-      throwCurrencySideRecentError err if err
 
-      collection = db.collection 'matches'
+    mongoConnection().then (db)->
 
-      foo = collection.find( search ).toArray (err, docs)->
-        throwCurrencySideRecentError err if err
-        # db.close()
+      matchesCollection = db.collection 'matches'
+
+      matchesCollection.find( search ).toArray().then (docs)->
 
         resolve docs
 

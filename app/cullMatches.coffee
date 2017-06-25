@@ -7,7 +7,7 @@ mongoConnection = require('../lib/mongoConnection')
 #
 #
 cullMatches = ->
-  mongoConnection.then (db)->
+  mongoConnection().then (db)->
 
     matches = db.collection 'matches'
 

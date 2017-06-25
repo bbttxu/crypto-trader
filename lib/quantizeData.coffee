@@ -1,3 +1,9 @@
+###
+TODO
+where is this used
+the mongo query needs to be rewritten as a promise
+###
+
 require('dotenv').config( silent: true )
 
 # mongo = require('mongodb').MongoClient
@@ -25,7 +31,7 @@ module.exports = ( product, side, interval = 60 )->
 
 
   new RSVP.Promise (resolve, reject)->
-    mongoConnection.then (db)->
+    mongoConnection().then (db)->
       reject err if err
 
       collection = db.collection 'matches'

@@ -9,26 +9,19 @@ mongoConnection = require('../lib/mongoConnection')
 
 necessaryFields = ['side', 'size', 'price', 'product_id', 'time', 'trade_id']
 
-# mongoConnection = undefined
-# mongoCollection = undefined
-
-# mongo.connect process.env.MONGO_URL, (err, db)->
-#   if err
-#     console.log 'error with mongo connection', err
-
-#   mongoConnection = db
-#   mongoCollection = db.collection 'matches'
-
+#
+#
 saveMatches = ( matches )->
   new RSVP.Promise (resolve, reject)->
-    mongoConnection.then (db)->
+    mongoConnection().then (db)->
 
-      matches = db.collection 'matches'
+      matchesCollection = db.collection 'matches'
 
       details = R.map R.pick( necessaryFields ), matches
 
-      matches.insert details, (err, whiz)->
-        reject err if err
+      matchesCollection.insert( details ).then (whiz)->
+        # reject err if err
+        # console.log whiz, details
         resolve details
 
 
