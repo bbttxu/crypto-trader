@@ -82,9 +82,19 @@ reducers = (state, action) ->
 
     key = [ action.match.product_id, action.match.side ].join( '-' ).toUpperCase()
 
-    state.prices[key] = R.pick [ 'time', 'price'], action.match
+    latestPrice = state.prices[key]
+    thisPrice = R.pick [ 'time', 'price'], action.match
 
-    state.positions = positionDetermine state.currencies, state.prices
+    # console.log latestPrice
+    unless latestPrice
+      state.prices[key] = thisPrice
+      # console.log thisPrice
+
+    if latestPrice and moment( thisPrice.time ).isAfter moment( latestPrice.time )
+
+      state.prices[key] = R.pick [ 'time', 'price'], action.match
+
+      state.positions = positionDetermine state.currencies, state.prices
 
     # Find any proposals that are no longer relevant
     # e.g. price is out-of-date and would incur a fee
