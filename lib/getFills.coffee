@@ -7,7 +7,7 @@ mongoConnection = require('../lib/mongoConnection')
 
 getFills = (product)->
   new RSVP.Promise (resolve, reject)->
-    mongoConnection.then (db)->
+    mongoConnection().then (db)->
       collection = db.collection 'fill'
 
       onError = (err)->

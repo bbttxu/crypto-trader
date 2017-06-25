@@ -5,7 +5,7 @@ mongoConnection = require('../lib/mongoConnection')
 RSVP = require 'rsvp'
 
 getFills = (product)->
-  mongoConnection.then (db)->
+  mongoConnection().then (db)->
     collection = db.collection 'matches'
 
     onError = (err)->

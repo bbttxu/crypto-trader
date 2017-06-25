@@ -22,7 +22,7 @@ necessaryFields = ['side', 'size', 'price', 'product_id', 'time', 'trade_id']
 
 savePositions = ( position )->
   new RSVP.Promise (resolve, reject)->
-    mongoConnection.then (db)->
+    mongoConnection().then (db)->
       positions = db.collection 'positions'
 
       positions.insert position, (err, whiz)->

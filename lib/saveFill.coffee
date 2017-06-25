@@ -8,7 +8,7 @@ mongoConnection = require('../lib/mongoConnection')
 
 saveFill = (fill)->
   new RSVP.Promise (resolve, reject)->
-    mongoConnection.then (db)->
+    mongoConnection().then (db)->
       # reject err if err
 
       collection = db.collection 'fill'
