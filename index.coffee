@@ -4,6 +4,7 @@ R = require 'ramda'
 moment = require 'moment'
 thunk = require 'redux-thunk'
 deepEqual = require 'deep-equal'
+shuffle = require('knuth-shuffle').knuthShuffle
 
 gdax = require './lib/gdax-client'
 currencySideRecent = require './lib/currencySideRecent'
@@ -293,7 +294,7 @@ channel.subscribe 'message', ( message )->
 
 INTERVAL = 10
 
-throttledDispatchMatch = (match, index)->
+throttledDispatchMatch = (match, index = 0)->
   sendThrottledDispatchMatch = ->
 
     # log it, but no need to save it
@@ -304,14 +305,14 @@ throttledDispatchMatch = (match, index)->
 
 hydrateRecentCurrency = ( product_id )->
   hydrateRecentCurrencySide = ( side )->
-    # currencySideRecent( product_id, side, historicalMinutes, config.default.interval.units ).then ( matches )->
     currencySideRecent( product_id, side, 86400, 'seconds' ).then ( matches )->
-      odd  = (v for v in matches by 2)
-      even = (v for v in matches[1..] by 2)
+
+      # put the latest in first
+      last = matches.pop()
+      throttledDispatchMatch last
 
 
-      mapIndexed = R.addIndex R.map
-      mapIndexed throttledDispatchMatch, odd.concat( R.reverse( even ) )
+      R.addIndex R.map throttledDispatchMatch, shuffle matches
 
 
   R.map hydrateRecentCurrencySide, [ 'sell', 'buy' ]
