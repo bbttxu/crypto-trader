@@ -83,16 +83,15 @@ reducers = (state, action) ->
     key = [ action.match.product_id, action.match.side ].join( '-' ).toUpperCase()
 
     latestPrice = state.prices[key]
-    thisPrice = R.pick [ 'time', 'price'], action.match
+    thisPrice = R.pick [ 'trade_id', 'price'], action.match
 
-    # console.log latestPrice
     unless latestPrice
       state.prices[key] = thisPrice
-      # console.log thisPrice
 
-    if latestPrice and moment( thisPrice.time ).isAfter moment( latestPrice.time )
+    # Only update if trade_id is greater than current
+    if latestPrice and thisPrice.trade_id > latestPrice.trade_id
 
-      state.prices[key] = R.pick [ 'time', 'price'], action.match
+      state.prices[key] = thisPrice
 
       state.positions = positionDetermine state.currencies, state.prices
 
