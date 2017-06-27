@@ -37,7 +37,7 @@ module.exports = ( product, side, interval = 60 )->
       collection = db.collection 'matches'
 
       foo = collection.find( search ).toArray (err, docs)->
-        # db.close()
+        db.close()
 
         grouped = groupByInterval docs
 

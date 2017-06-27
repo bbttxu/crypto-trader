@@ -11,12 +11,12 @@ getFills = (product)->
       collection = db.collection 'fill'
 
       onError = (err)->
-        # db.close()
+        db.close()
         console.log 'getFills.err', err
         reject err
 
       callback = (results)->
-        # db.close()
+        db.close()
         resolve results
 
       search =

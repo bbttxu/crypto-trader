@@ -22,6 +22,9 @@ saveMatches = ( matches )->
       matchesCollection.insert( details ).then (whiz)->
         # reject err if err
         # console.log whiz, details
+
+        db.close() # close DB
+
         resolve details
 
 

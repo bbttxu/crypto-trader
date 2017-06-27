@@ -27,11 +27,11 @@ saveFill = (fill)->
 
           collection.insertOne fill, (err, whiz)->
             reject err if err
-            # db.close()
+            db.close()
             resolve fill
 
         else
-          # db.close()
+          db.close()
           resolve true
 
 

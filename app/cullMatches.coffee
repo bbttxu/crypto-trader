@@ -17,6 +17,8 @@ cullMatches = ->
         '$lte': moment().subtract(7, 'days').format()
 
     matches.deleteMany( query ).then ( message )->
+      db.close() # close DB
+
       nDeleted = message.deletedCount
 
       console.log nDeleted, 'deleted' if nDeleted > 0

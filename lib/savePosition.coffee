@@ -26,6 +26,8 @@ savePositions = ( position )->
       positions = db.collection 'positions'
 
       positions.insert position, (err, whiz)->
+        db.close() # close DB
+
         reject err if err
         resolve position
 

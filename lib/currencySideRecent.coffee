@@ -34,6 +34,7 @@ currencySideRecent = ( product_id, side, intervalUnits = 1, intervalLength = 'ho
       matchesCollection = db.collection 'matches'
 
       matchesCollection.find( search ).toArray().then (docs)->
+        db.close() # close DB
 
         resolve docs
 

@@ -9,12 +9,12 @@ getFills = (product)->
     collection = db.collection 'matches'
 
     onError = (err)->
-      # db.close()
+      db.close()
       console.log 'dataMatches.err', err
       reject err
 
     callback = (results)->
-      # db.close()
+      db.close()
 
       resolve results
 
