@@ -7,7 +7,7 @@ moment = require 'moment'
 
 mongoConnection = require('../lib/mongoConnection')
 
-necessaryFields = ['side', 'size', 'price', 'product_id', 'time', 'trade_id']
+necessaryFields = ['side', 'size', 'price', 'product_id', 'time', 'trade_id', 'timestamp', 'sequence']
 
 #
 #
