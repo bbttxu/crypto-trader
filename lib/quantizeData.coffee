@@ -1,9 +1,17 @@
+###
+TODO
+where is this used
+the mongo query needs to be rewritten as a promise
+###
+
 require('dotenv').config( silent: true )
 
-mongo = require('mongodb').MongoClient
+# mongo = require('mongodb').MongoClient
 R = require 'ramda'
 RSVP = require 'rsvp'
 moment = require 'moment'
+
+mongoConnection = require('../lib/mongoConnection')
 
 pricing = require './pricing'
 aggregate = require './aggregate'
@@ -23,13 +31,13 @@ module.exports = ( product, side, interval = 60 )->
 
 
   new RSVP.Promise (resolve, reject)->
-    mongo.connect process.env.MONGO_URL, (err, db)->
+    mongoConnection().then (db)->
       reject err if err
 
       collection = db.collection 'matches'
 
       foo = collection.find( search ).toArray (err, docs)->
-        db.close()
+        # db.close()
 
         grouped = groupByInterval docs
 
