@@ -44,14 +44,14 @@ describe 'stategy', ->
         volume_30day: '1885740.08020019'
 
     expected =
-      'BTC-USD':
-        sell: {}
+      # 'BTC-USD':
+      #   sell: {}
 
-      'LTC-USD':
-        sell: {}
+      # 'LTC-USD':
+      #   sell: {}
 
-      'ETH-USD':
-        sell: {}
+      # 'ETH-USD':
+      #   sell: {}
 
       'ETH-BTC':
         sell: {}
@@ -68,27 +68,27 @@ describe 'stategy', ->
   it 'suggest nothing when one crypto against USD is negative over past 24 hours', ->
 
     input =
-      'BTC-USD':
-        open: '2700.98000000'
-        high: '2808.78000000'
-        low: '2611.41000000'
-        volume: '14089.26793633'
-        last: '2785.45000000'
-        volume_30day: '549927.99376405'
-      'LTC-USD':
-        open: '28.87000000'
-        high: '30.85000000'
-        low: '27.99000000'
-        volume: '303268.37611229'
-        last: '30.19000000'
-        volume_30day: '13725441.3761901'
-      'ETH-USD':
-        last: '255.73000000'
-        high: '261.00000000'
-        low: '250.00000000'
-        volume: '142351.75567783'
-        open: '257.56000000'
-        volume_30day: '7720386.72199821'
+      # 'BTC-USD':
+      #   open: '2700.98000000'
+      #   high: '2808.78000000'
+      #   low: '2611.41000000'
+      #   volume: '14089.26793633'
+      #   last: '2785.45000000'
+      #   volume_30day: '549927.99376405'
+      # 'LTC-USD':
+      #   open: '28.87000000'
+      #   high: '30.85000000'
+      #   low: '27.99000000'
+      #   volume: '303268.37611229'
+      #   last: '30.19000000'
+      #   volume_30day: '13725441.3761901'
+      # 'ETH-USD':
+      #   last: '255.73000000'
+      #   high: '261.00000000'
+      #   low: '250.00000000'
+      #   volume: '142351.75567783'
+      #   open: '257.56000000'
+      #   volume_30day: '7720386.72199821'
       'ETH-BTC':
         open: '0.09463000'
         high: '0.09557000'
@@ -105,14 +105,14 @@ describe 'stategy', ->
         volume_30day: '1885740.08020019'
 
     expected =
-      'BTC-USD':
-        {}
+      # 'BTC-USD':
+      #   {}
 
-      'LTC-USD':
-        {}
+      # 'LTC-USD':
+      #   {}
 
-      'ETH-USD':
-        {}
+      # 'ETH-USD':
+      #   {}
 
       'ETH-BTC':
         sell: {}
@@ -130,27 +130,27 @@ describe 'stategy', ->
   it 'suggest buy when all crypto against USD is negative over past 24 hours', ->
 
     input =
-      'BTC-USD':
-        last: '2700.98000000'
-        high: '2808.78000000'
-        low: '2611.41000000'
-        volume: '14089.26793633'
-        open: '2785.45000000'
-        volume_30day: '549927.99376405'
-      'LTC-USD':
-        last: '28.87000000'
-        high: '30.85000000'
-        low: '27.99000000'
-        volume: '303268.37611229'
-        open: '30.19000000'
-        volume_30day: '13725441.3761901'
-      'ETH-USD':
-        last: '255.73000000'
-        high: '261.00000000'
-        low: '250.00000000'
-        volume: '142351.75567783'
-        open: '257.56000000'
-        volume_30day: '7720386.72199821'
+      # 'BTC-USD':
+      #   last: '2700.98000000'
+      #   high: '2808.78000000'
+      #   low: '2611.41000000'
+      #   volume: '14089.26793633'
+      #   open: '2785.45000000'
+      #   volume_30day: '549927.99376405'
+      # 'LTC-USD':
+      #   last: '28.87000000'
+      #   high: '30.85000000'
+      #   low: '27.99000000'
+      #   volume: '303268.37611229'
+      #   open: '30.19000000'
+      #   volume_30day: '13725441.3761901'
+      # 'ETH-USD':
+      #   last: '255.73000000'
+      #   high: '261.00000000'
+      #   low: '250.00000000'
+      #   volume: '142351.75567783'
+      #   open: '257.56000000'
+      #   volume_30day: '7720386.72199821'
       'ETH-BTC':
         open: '0.09463000'
         high: '0.09557000'
@@ -167,14 +167,14 @@ describe 'stategy', ->
         volume_30day: '1885740.08020019'
 
     expected =
-      'BTC-USD':
-        buy: {}
+      # 'BTC-USD':
+      #   buy: {}
 
-      'LTC-USD':
-        buy: {}
+      # 'LTC-USD':
+      #   buy: {}
 
-      'ETH-USD':
-        buy: {}
+      # 'ETH-USD':
+      #   buy: {}
 
       'ETH-BTC':
         sell: {}
