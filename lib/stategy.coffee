@@ -48,33 +48,33 @@ module.exports = ( stats )->
 
 
   # determine advice
-  asdf = trumpDontCare
-  asdf = sellAdvice if shouldWeSell
-  asdf = buyAdvice if shouldWeBuy
+  # asdf = trumpDontCare
+  # asdf = sellAdvice if shouldWeSell
+  # asdf = buyAdvice if shouldWeBuy
 
-  makeProductAdvice = ->
-    # console.log 'a', asdf
-    asdf
+  # makeProductAdvice = ->
+  #   # console.log 'a', asdf
+  #   asdf
 
 
   # apply advice
-  currentAdvice = map makeProductAdvice, usdStats
+  # currentAdvice = map makeProductAdvice, usdStats
 
 
   #
   # TODO this _should_ reflect the initial config pattern
   gee =
-    'BTC-USD':
-      sell: {}
-      buy: {}
+    # 'BTC-USD':
+    #   sell: {}
+    #   buy: {}
 
-    'LTC-USD':
-      sell: {}
-      buy: {}
+    # 'LTC-USD':
+    #   sell: {}
+    #   buy: {}
 
-    'ETH-USD':
-      sell: {}
-      buy: {}
+    # 'ETH-USD':
+    #   sell: {}
+    #   buy: {}
 
     'ETH-BTC':
       sell: {}
@@ -85,5 +85,5 @@ module.exports = ( stats )->
       buy: {}
 
 
-  merge gee, currentAdvice
+  # merge gee, currentAdvice
 
