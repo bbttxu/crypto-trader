@@ -59,3 +59,15 @@ describe 'intervaler', ->
     result = a( 900, 8640 )
 
     result.should.be.equal expected
+
+
+  #
+  it 'returns undefined if outside', ->
+
+    a = intervaler( intervals )
+
+    expected = 8640
+
+    result = a( 900, 86400 )
+
+    should.not.exist( result )
