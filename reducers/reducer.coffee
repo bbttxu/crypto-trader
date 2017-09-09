@@ -28,7 +28,13 @@ initalState =
   prices: {}
   predictions: {}
   proposals: []
+
+  # store recent matches by interval
   matches: {}
+
+  projections: {}
+
+
   stats: {}
   sent: []
   orders: []
@@ -122,7 +128,6 @@ reducers = (state, action) ->
     if view
       state = R.set lens, view.concat( action.match ), state
 
-
     unless view
 
       # ensure product
@@ -135,6 +140,34 @@ reducers = (state, action) ->
       unless state['matches'][action.product_id][action.side][action.interval]
         state['matches'][action.product_id][action.side][action.interval] = [ action.match ]
 
+
+  # if action.type is 'UPDATE_PROJECTION'
+
+  #   # console.log action, 'abc'
+
+  #   path = [ 'projections', action.product_id, action.side, action.interval ]
+  #   lens = R.lensPath path
+
+
+  #   view = R.view lens, state
+
+  #   if view
+  #     state = R.set lens, action.projection, state
+
+  #     console.log path, R.view lens, state
+
+
+  #   unless view
+
+  #     # ensure product
+  #     unless state['projections'][action.product_id]
+  #       state['projections'][action.product_id] = {}
+
+  #     unless state['projections'][action.product_id][action.side]
+  #       state['projections'][action.product_id][action.side] = {}
+
+  #     unless state['projections'][action.product_id][action.side][action.interval]
+  #       state['projections'][action.product_id][action.side][action.interval] = [ action.match ]
 
 
     # console.log 'aaa', state.matches

@@ -4,14 +4,12 @@
   unnest
 } = require 'ramda'
 
-
-
 arrayify = require './arrayify'
 
-currencySides = ( config )->
+currencySides = ( config ) ->
   currencies = config.currencies
 
-  addSides = ( product )->
+  addSides = ( product ) ->
     arrayify( [ product ] )( keys config.currencies[product] )
 
   unnest map addSides, keys currencies

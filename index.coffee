@@ -286,6 +286,22 @@ addMatch = ( match, save = false )->
   matchesQueue.enqueue match if save
 
 
+
+updateProjection = ( thisProjection )->
+
+  # console.log thisProjection, 'ada'
+
+  # trimProjection = R.pick ['n', 'm', 'b'], thisProjection
+
+  store.dispatch
+    type: 'UPDATE_PROJECTION'
+    projection: thisProjection.projection
+    product_id: thisProjection.product_id
+    side: thisProjection.side
+    interval: thisProjection.interval
+
+
+
 #
 #
 removeMatch = ( product_id, side, interval, data )->
@@ -302,41 +318,90 @@ showSavedMatch = ( result )->
   info = JSON.stringify R.pick ['time','product_id','side','price','size', 'trade_id'], result
   console.log '+', info
 
-fdsa = ->
-  state = store.getState()
+# fdsa = ->
+#   state = store.getState()
 
-  lens = R.lensPath [ 'matches', 'BTC-USD', 'sell', '86' ]
+#   path = [ 'matches', 'BTC-USD', 'sell', '86' ]
 
-  data = R.view lens, state
+#   lens = R.lensPath path
 
-  if data
-    console.log data.length, 'd'
+#   data = R.view lens, state
 
-    now = moment().unix()
+#   if data
+#     console.log path, data.length
 
-    before86 = ( data )->
-      # console.log data.sequence, now, data.timestamp, now - data.timestamp, ( now - data.timestamp > 86 ), 'f'
-      now - data.timestamp < 86
+#     now = moment().unix()
 
-
-    tooOld = R.reject before86, data
-
-    lkjdajk = ( data )->
-      addMatch data, false
-
-    R.map lkjdajk, tooOld
-
-    eiuoew = ( data )->
-      removeMatch 'BTC-USD', 'sell', '86', data
-
-    R.map eiuoew, tooOld
+#     before86 = ( data )->
+#       # console.log data.sequence, now, data.timestamp, now - data.timestamp, ( now - data.timestamp > 86 ), 'f'
+#       now - data.timestamp < 86
 
 
-setInterval fdsa, 1 * 1000
+#     tooOld = R.reject before86, data
+
+#     lkjdajk = ( data )->
+#       addMatch data, false
+
+#     R.map lkjdajk, tooOld
+
+#     eiuoew = ( data )->
+#       removeMatch 'BTC-USD', 'sell', '86', data
+
+#     R.map eiuoew, tooOld
 
 
+# setInterval fdsa, 1 * 860
+
+fdsa = ( product_id, side, interval, nextInterval )->
+  floatInterval = parseFloat interval
+
+  gfds = ->
+    state = store.getState()
+
+    path = [ 'matches', product_id, side, interval ]
+
+    lens = R.lensPath path
+
+    data = R.view lens, state
+
+    if data
+      console.log path, data.length
+
+      now = moment().unix()
+
+      before86 = ( data )->
+        now - data.timestamp < floatInterval
 
 
+      valid = R.filter before86, data
+
+      tooOld = R.reject before86, data
+
+      eiuoew = ( data )->
+        removeMatch product_id, side, interval, data
+
+      R.map eiuoew, tooOld
+
+      if nextInterval
+        lkjdajk = ( data )->
+          addMatch data, false
+
+        R.map lkjdajk, tooOld
+
+  console.log floatInterval * 10, product_id, side, interval, nextInterval
+  # setInterval gfds, floatInterval * 10
+
+fdsa( 'BTC-USD', 'sell', '86', '864' )
+# fdsa( 'BTC-USD', 'buy', '86', '864' )
+
+
+lkjh = (data)->
+  data = store.getState()
+  console.log R.keys data
+  console.log R.pick ['prices'], data
+
+
+store.subscribe lkjh
 
 
 asdfasdf = ->
@@ -407,6 +472,8 @@ throttledDispatchMatch = (match, index = 0)->
 hydrateRecentCurrency = ( product_id )->
   hydrateRecentCurrencySide = ( side )->
     currencySideRecent( product_id, side, 86400, 'seconds' ).then ( matches )->
+
+      console.log matches
 
       # put the latest in first
       last = matches.pop()
