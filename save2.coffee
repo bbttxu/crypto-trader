@@ -1,6 +1,4 @@
 require('dotenv').config( silent: true )
-
-# mongo = require('mongodb').MongoClient
 mongoConnection = require('./lib/mongoConnection')
 
 {
@@ -13,145 +11,116 @@ mongoConnection = require('./lib/mongoConnection')
   pluck
   flatten
   uniq
+  indexOf
+  difference
+  reject
 } = require 'ramda'
 
 RSVP = require 'rsvp'
 
-updateCurrency = ( product_id )->
+saveFill = require './lib/saveFill'
 
-  new RSVP.Promise ( resolve, reject )->
-    # getFills( product_id ).then ( data )->
-    #   resolve pluck 'order_id', data
+moment = require 'moment'
 
-    console.log product_id
+promiseToUpdateCurrency = ( product_id )->
 
+  new RSVP.Promise (resolve, reject)->
 
-    onSuccess = (db)->
-      # if err
-      #   console.log 'err', err
-      #   reject err
-
-      # resolve db
-
-      # Persist connection
-      # persistedMongoConnection = connection
-
-      # console.log db
+    api = new RSVP.Promise (resolve, reject)->
+      getFills( product_id ).then ( data )->
+        resolve data
 
 
-      collection = db.collection 'fill'
 
-      console.log collection
+    storage = new RSVP.Promise ( resolve, reject )->
 
+      onSuccess = (db)->
+        collection = db.collection 'fill'
 
-      console.log { product_id: product_id }
-      collection
-        .find( { product_id: product_id } )
-        .limit( 100 )
-        .toArray (err,data)->
-          if err
-            console.log 'err', err
-            reject err
+        # console.log { product_id: product_id }
+        collection
+          .find( { product_id: product_id } )
+          .limit( 100 )
+          .sort( created_at: -1 )
+          .toArray (err,data)->
+            if err
+              console.log 'err', err
+              reject err
 
-          console.log data
-          # resolve persistedMongoConnection
-          resolve pluck 'order_id', data
+            resolve pluck 'order_id', data
 
-    onError = (fail)->
-      console.log fail
-      reject fail
+      onError = (fail)->
+        console.log 'fail', fail
+        reject fail
 
+      mongoConnection().then(onSuccess).catch(onError)
 
-    # resolve product_id
-    # otherwise make connection
-    mongoConnection().then(onSuccess).catch(onError)
-      # if err
-      #   console.log 'err', err
-      #   reject err
-
-      # resolve db
-
-      # # Persist connection
-      # # persistedMongoConnection = connection
-
-      # console.log db
-
-
-      # collection = db.collection 'fill'
-
-      # console.log { product_id: product_id }
-      # collection.find( { product_id: product_id } ).then (data)->
-      #   console.log data
-      #   # resolve persistedMongoConnection
-      #   resolve 'haha'
+    RSVP.hash({
+      api: api
+      storage: storage
+    }).then( (results)->
+      resolve results
+    ).catch( (err)->
+      reject err
+    )
 
 
 
 save = ( config ) ->
-  console.log config
+  console.log 'config', config
 
   currencies = keys config.currencies
 
   ->
-    promises = map updateCurrency, currencies
-    console.log 'save!', promises
+    promises = map promiseToUpdateCurrency, currencies
+
+
+
     RSVP.all( promises ).then ( matches )->
-      console.log matches
-      console.log uniq flatten matches
+      # console.log matches
+
+      storage = flatten pluck 'storage', matches
+      api = flatten pluck 'api', matches
+
+      alreadyInStorage = ( fill )->
+        index = indexOf fill.order_id, storage
+        # console.log fill.order_id, index, index isnt -1
+
+        index isnt -1
+
+
+
+      leftovers = reject alreadyInStorage, api
+
+      # console.log 'adsf', leftovers
+
+
+
+      saveThisFill = ( match )->
+
+        wereGood = (result)->
+
+          since = moment( match.created_at ).fromNow( true )
+          if result is true
+            console.log '$', since, match.product_id, match.side, match.price, match.size, match.price / match.size
+          else
+            console.log '+', since
+
+        orNot = (result)->
+          console.log 'orNot', result
+          exit(3)
+
+
+        saveFill( match ).then( wereGood ).catch(orNot)
+
+
+      map saveThisFill, leftovers
+
+      console.log leftovers.length, 'saved'
+      # console.log uniq flatten matches
 
 
     # console.log currencies
 
 
 module.exports = save
-
-
-# R = require 'ramda'
-# moment = require 'moment'
-
-# gdax = require './lib/gdax-client'
-# saveFill = require './lib/saveFill'
-
-# config = require './config'
-
-
-# INTERVAL = 100
-
-
-# throttledDispatchFill = (match, index = 0)->
-#   # console.log index
-#   wereGood = (result)->
-
-#     since = moment( match.created_at ).fromNow( true )
-#     if result is true
-#       console.log '$', since, match.product_id, match.side, match.price, match.size, match.price / match.size
-#     else
-#       console.log '+', since
-
-#   orNot = (result)->
-#     console.log 'orNot', result
-#     exit(3)
-
-
-#   sendThrottledDispatchFill = ->
-
-#     saveFill( match ).then( wereGood ).catch(orNot)
-
-#   setTimeout sendThrottledDispatchFill, ( ( index * INTERVAL ) + ( Math.random() * INTERVAL ) )
-
-
-# saveFills = ( fills )->
-#   # console.log fills
-#   mapIndexed = R.addIndex R.map
-#   mapIndexed throttledDispatchFill, fills
-
-# cantSaveFills = ( fills )->
-#   console.log 'cantSaveFills', fills
-
-
-# getCurrencyFills = ( product_id )->
-#   gdax.getFills( product_id ).then( saveFills ).catch( cantSaveFills )
-
-
-# module.exports = ->
-#   R.map getCurrencyFills, R.keys config.currencies
