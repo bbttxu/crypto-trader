@@ -30,7 +30,7 @@ sellAdvice =
 
 module.exports = ( stats )->
 
-  shortCircuit = 
+  shortCircuit =
     'ETH-BTC':
       sell: {}
       buy: {}
@@ -48,7 +48,7 @@ module.exports = ( stats )->
     'LTC-USD':
       buy: {}
 
-  return shortCircuit
+  # return shortCircuit
 
   # get USD products
   usdProducts = filter tradesAgainstUSD, keys stats

@@ -20,3 +20,7 @@ describe 'handleFractionalSize', ->
   #
   it 'allows size above randomized size', ->
     handleFractionalSize( bid, minimumSize, 0.6 ).should.be.ok
+
+  #
+  it 'always returns the over', ->
+    handleFractionalSize( size: 0.011, minimumSize ).should.be.ok
