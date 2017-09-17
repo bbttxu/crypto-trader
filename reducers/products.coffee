@@ -31,6 +31,7 @@ historicalMinutes = projectionMinutes * 3
 
 
 initalState =
+  tick: 0
   # now: moment()
   # heartbeat: 0
   # currencies: {}
@@ -41,7 +42,7 @@ initalState =
 
   matches: {}
 
-  # projections: {}
+  projections: {}
 
 
   # stats: {}
@@ -82,7 +83,47 @@ reducer = (state, action) ->
   if typeof state == 'undefined'
     return initalState
 
+  state.tick = state.tick + 1
+
   # log action
+
+
+  if action.type is 'PROJECTION_UPDATE'
+    console.log 'PROJECTION_UPDATE', action.type, action.path, action.projection
+
+    projectionLens = lensPath [ 'projection' ].concat action.path
+    projectionView = view projectionLens, state
+
+    if projectionView
+      console.log 'a'
+      state = set projectionLens, projectionView
+
+
+
+    unless projectionView
+      console.log 'b'
+      product_id = action.path[0]
+      side = action.path[1]
+      interval = action.path[2]
+
+      console.log 'c', product_id, side, interval
+
+      # state = set projectionLens, projectionView
+
+      # ensure projection
+      unless state['projections'][product_id]
+        state['projections'][product_id] = {}
+
+        console.log 'd'
+
+      unless state['projections'][product_id][side]
+        state['projections'][product_id][side] = {}
+
+      unless state['projections'][product_id][side][interval]
+        state['projections'][product_id][side][interval] = [ action.projection ]
+
+
+
 
   if action.type is 'ADD_MATCH'
     # console.log action, 'ADD_ORDER'
