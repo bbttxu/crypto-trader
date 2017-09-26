@@ -95,7 +95,6 @@ stats = ( currencies = [] )->
       reject promise
 
     resolveIssues = ( issues )->
-      # console.log 'resolveIssues', issues
       resolve issues
 
     RSVP.all( allCurrencyStats ).then( resolveIssues ).catch( rejectPromise )

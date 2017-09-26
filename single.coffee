@@ -1,6 +1,8 @@
 
 
-PRODUCT_ID = 'LTC-BTC'
+PRODUCT_ID = 'BTC-USD'
+
+SIZING = 10
 
 log = require './lib/log'
 
@@ -17,6 +19,8 @@ mongoConnection = require('./lib/mongoConnection')
   equals
   filter
   head
+  pluck
+  all
 } = require 'ramda'
 
 
@@ -30,6 +34,9 @@ initalState =
   bottom: {}
   run: []
   runs: []
+  sell: {}
+  buy: {}
+
 
 
 asdf = ( fill )->
@@ -63,13 +70,76 @@ reducer = (state, action) ->
   if 'UPDATE_TOP' is action.type
     state.top = action.data
 
+    state.sellAmount = state.top.available / SIZING
+
   if 'UPDATE_BOTTOM' is action.type
     state.bottom = action.data
 
+    if state.top and state.sell and state.sell
 
+      state.buyAmount = state.bottom.available / state.sell.price / SIZING
 
   if 'ADD_MATCH' is action.type
     console.log 'ADD_MATCH', action.match
+
+
+    skinny = ( data )->
+      pick [ 'side', 'size', 'price', 'sequence', 'time' ], data
+
+
+    unless isEmpty state.run
+
+      sameSide = ( runners )->
+        runners.side is action.match.side
+
+      # if all pass
+      # being the same side as action.match
+      # then add it to the run
+      # else
+      #   move the latest run to the runs
+      #   empty out the run field so that the next one who can do it
+
+      importantValue = all sameSide, state.run
+
+      if importantValue
+        state.run.push skinny action.match
+
+
+      unless importantValue
+        state.runs.push state.run
+        state.run = []
+
+
+    if isEmpty state.run
+      state.run = [ skinny action.match ]
+
+
+
+
+    if 'sell' is action.match.side
+      keys = [
+        'price'
+        'sequence'
+        'time'
+      ]
+
+
+      state.sell = pick keys, action.match
+      state.sellPrice = state.sell.price
+
+
+
+  if state.top and state.sell
+    state.topValue = state.sell.price * state.top.available
+
+
+  if state.bottom and state.buy
+    state.buyPrice = state.bottom.available
+
+
+
+
+
 
 
     # console.log 'always!!!', all(equals(propEq('side', action.match.side)))(state.run), state.run.length
@@ -149,30 +219,42 @@ updateAccountTotals = ( product_id )->
   topKey = parts[0]
   bottomKey = parts[1]
 
+
+  matchCurrency = ( currency )->
+    console.log 'matchCurrency', currency
+    ( record )->
+      currency is record.currency
+
+
+  dispatchCurrency = ( currency )->
+    ( record )->
+      store.dispatch
+        type: currency
+        data: record
+
+
   new RSVP.Promise ( resolve, reject )->
     getAccounts( product_id ).then ( result )->
-
-      console.log result
-
-
-      matchCurrency = ( currency )->
-        console.log 'matchCurrency', currency
-        ( record )->
-          # console.log 'matchCurrency', 'record', record
-          currency is record.currency
-
-
-      dispatchCurrency = ( currency )->
-        ( record )->
-          store.dispatch
-            type: currency
-            data: record
-
-
-
-      # console.log topKey
       dispatchCurrency( 'UPDATE_TOP' ) head filter matchCurrency( topKey ), result
       dispatchCurrency( 'UPDATE_BOTTOM' ) head filter matchCurrency( bottomKey ), result
+
+
+
+
+
+Stream = require './lib/stream'
+
+productStream = Stream PRODUCT_ID
+
+productStream.subscribe "message:#{PRODUCT_ID}", ( hi )->
+  if 'match' is hi.type
+    store.dispatch
+      type: 'ADD_MATCH'
+      match: hi
+
+
+
+
 
 
 
@@ -187,7 +269,11 @@ start = ( product_id )->
   updateAccountTotals( product_id ).then( onSuccess ).catch( onError )
 
 
-  onSuccess = ( db )->
+
+
+
+
+  # onSuccess = ( db )->
     # fills = db.collection 'fill'
     # matches = db.collection 'matches'
 
@@ -249,13 +335,17 @@ _throttle = require 'lodash.throttle'
 updatedStore = ->
   state = store.getState()
   importantKeys = [
-    'tick',
-    'progress',
-    'volume',
-    'ratio',
-    'run',
-    'top',
+    'tick'
+    'progress'
+    'volume'
+    'ratio'
+    'run'
     'bottom'
+    'sell'
+    'topValue'
+    'top'
+    'buy'
+    'buyPrice'
     # 'runs'
   ]
   # importantKeys = [ 'tick', 'prices', 'matches' ]
@@ -263,10 +353,13 @@ updatedStore = ->
   important = pick importantKeys, state
 
   # console.log moment().format(), 'we got this', '$',
-  # important.positions.total.totalUSD.toFixed( 2 )
+
 
   # log keys state
-  log important
+  log state
+
+  # important.positions.total.totalUSD.toFixed( 2 )
+  # log important
   console.log state.run.length, 'shrug :/'
 
 store.subscribe _throttle updatedStore, 1000

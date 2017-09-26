@@ -20,8 +20,6 @@ module.exports = ->
     mongo.connect process.env.MONGO_URL, (err, connection)->
       reject err if err
 
-      # console.log connection
-
       # Persist connection
       persistedMongoConnection = connection
 
