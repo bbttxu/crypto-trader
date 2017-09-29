@@ -21,6 +21,9 @@ mongoConnection = require('./lib/mongoConnection')
   head
   pluck
   all
+  last
+  keys
+  where
 } = require 'ramda'
 
 
@@ -57,9 +60,12 @@ progress = ( data )->
   a = map asdf, data
 
   # console.log 'a', a
+{ createStore, applyMiddleware } = require 'redux'
+thunk = require 'redux-thunk'
 
+moment = require 'moment'
 
-
+consolidateRun = require './consolidateRun'
 
 
 reducer = (state, action) ->
@@ -79,12 +85,25 @@ reducer = (state, action) ->
 
       state.buyAmount = state.bottom.available / state.sell.price / SIZING
 
+
+  if 'ADD_RUN' is action.type
+    console.log 'add _ run'
+    # state.runs.push action.run
+
   if 'ADD_MATCH' is action.type
-    console.log 'ADD_MATCH', action.match
+    # console.log 'ADD_MATCH', action.match
 
 
     skinny = ( data )->
-      pick [ 'side', 'size', 'price', 'sequence', 'time' ], data
+      data.timestamp = moment( data.time ).unix()
+      pick [
+        'side',
+        'size',
+        'price',
+        'sequence',
+        # 'time',
+        'timestamp'
+      ], data
 
 
     unless isEmpty state.run
@@ -106,7 +125,15 @@ reducer = (state, action) ->
 
 
       unless importantValue
-        state.runs.push state.run
+
+        # doit = consolidateRun state.run, PRODUCT_ID
+
+        # console.log 'doit'
+
+        # saveRun( state.run, PRODUCT_ID ).then ( run )->
+        #   console.log 'saveRun sucess', run
+        state.runs.push consolidateRun state.run, PRODUCT_ID
+
         state.run = []
 
 
@@ -183,17 +210,15 @@ reducer = (state, action) ->
   state.ratio = state.progress / state.volume
 
 
+
+
   state.tick = 1 + state.tick
   state
 
-
-
-{ createStore, applyMiddleware } = require 'redux'
-thunk = require 'redux-thunk'
-
-
-
 store = createStore reducer, applyMiddleware(thunk.default)
+
+saveRun = require('./saveRun')
+
 
 
 ###
@@ -214,7 +239,7 @@ RSVP = require 'rsvp'
 updateAccountTotals = ( product_id )->
   parts = product_id.split '-'
 
-  console.log parts, 'zz'
+  # console.log parts, 'zz'
 
   topKey = parts[0]
   bottomKey = parts[1]
@@ -332,37 +357,39 @@ start = ( product_id )->
 
 
 _throttle = require 'lodash.throttle'
+
+past = undefined
+
 updatedStore = ->
   state = store.getState()
   importantKeys = [
+    # 'progress'
+    # 'volume'
+    # 'ratio'
+    # 'bottom'
+    # 'sell'
+    # 'topValue'
+    # 'top'
+    # 'buy'
+    # 'buyPrice'
+    'runs'
     'tick'
-    'progress'
-    'volume'
-    'ratio'
-    'run'
-    'bottom'
-    'sell'
-    'topValue'
-    'top'
-    'buy'
-    'buyPrice'
-    # 'runs'
+    # 'run'
   ]
   # importantKeys = [ 'tick', 'prices', 'matches' ]
   # importantKeys = [ 'tick', 'prices', 'projections' ]
   important = pick importantKeys, state
 
-  # console.log moment().format(), 'we got this', '$',
+  if past
+    if past isnt important
+      log important
+      past = important
+
+  unless past
+    past = important
 
 
-  # log keys state
-  log state
-
-  # important.positions.total.totalUSD.toFixed( 2 )
-  # log important
-  console.log state.run.length, 'shrug :/'
-
-store.subscribe _throttle updatedStore, 1000
+store.subscribe _throttle updatedStore, 6000
 
 start( PRODUCT_ID )
 

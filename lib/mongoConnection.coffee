@@ -14,8 +14,6 @@ module.exports = ->
     # return persisted connection if available
     resolve persistedMongoConnection if persistedMongoConnection
 
-    # console.log 'a c db', persistedMongoConnection
-
     # otherwise make connection
     mongo.connect process.env.MONGO_URL, (err, connection)->
       reject err if err
