@@ -9,6 +9,8 @@ log = require './lib/log'
 require('dotenv').config( silent: true )
 mongoConnection = require('./lib/mongoConnection')
 
+cleanUpTrade = require './lib/cleanUpTrades'
+
 {
   map
   pick
@@ -142,13 +144,45 @@ reducer = (state, action) ->
 
         # saveRun( state.run, PRODUCT_ID ).then ( run )->
         #   console.log 'saveRun sucess', run
-        state.runs.push consolidateRun state.run, PRODUCT_ID
+
+
+        # Don't use runs that are only one fill long
+        if state.run.length > 1
+          state.runs.push consolidateRun state.run, PRODUCT_ID
 
         state.run = []
 
 
     if isEmpty state.run
       state.run = [ skinny action.match ]
+
+      # console.log skinny action.match
+      # console.log ( skinny action.match ).side
+      # console.log state[ ( skinny action.match ).side ]
+
+      # console.log
+      bidPrice =
+        parseFloat( ( skinny action.match ).price ) +
+        2.0 * parseFloat( state[ ( skinny action.match ).side ].d_price )
+
+      bid = cleanUpTrade
+        price: bidPrice
+        side: action.match.side
+        product_id: PRODUCT_ID
+
+
+      lkfafdijwe = state[ ( skinny action.match ).side ]
+
+      iuwoiqe = merge lkfafdijwe, bid: bid
+
+
+      if 'sell' is ( skinny action.match ).side
+        state.sell = iuwoiqe
+
+      else
+        state.buy = iuwoiqe
+      #   state[ ( skinny action.match ).side ],
+      #   { bid: bid }
 
 
 
@@ -163,7 +197,7 @@ reducer = (state, action) ->
       ]
 
 
-      state.sell = pick keys, action.match
+      state.sell = merge state.sell, pick keys, action.match
       state.sellPrice = state.sell.price
 
     if 'buy' is action.match.side
@@ -175,7 +209,7 @@ reducer = (state, action) ->
       ]
 
 
-      state.buy = pick keys, action.match
+      state.buy = merge state.buy, pick keys, action.match
       state.buyPrice = state.buy.price
 
 
