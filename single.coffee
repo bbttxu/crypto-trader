@@ -24,6 +24,14 @@ mongoConnection = require('./lib/mongoConnection')
   last
   keys
   where
+  groupBy
+  prop
+  mapObjIndexed
+  forEachObjIndexed
+  lensPath
+  view
+  merge
+  set
 } = require 'ramda'
 
 
@@ -39,6 +47,7 @@ initalState =
   runs: []
   sell: {}
   buy: {}
+  bid: {}
 
 
 
@@ -67,6 +76,7 @@ moment = require 'moment'
 
 consolidateRun = require './consolidateRun'
 
+averageOf = require './lib/averageOf'
 
 reducer = (state, action) ->
   if typeof state == 'undefined'
@@ -95,7 +105,7 @@ reducer = (state, action) ->
 
 
     skinny = ( data )->
-      data.timestamp = moment( data.time ).unix()
+      data.timestamp = moment( data.time ).valueOf()
       pick [
         'side',
         'size',
@@ -142,18 +152,31 @@ reducer = (state, action) ->
 
 
 
+    action.match.timestamp = moment( action.match.time ).valueOf()
 
     if 'sell' is action.match.side
       keys = [
         'price'
         'sequence'
         'time'
+        'timestamp'
       ]
 
 
       state.sell = pick keys, action.match
       state.sellPrice = state.sell.price
 
+    if 'buy' is action.match.side
+      keys = [
+        'price'
+        'sequence'
+        'time'
+        'timestamp'
+      ]
+
+
+      state.buy = pick keys, action.match
+      state.buyPrice = state.buy.price
 
 
   if state.top and state.sell
@@ -211,7 +234,28 @@ reducer = (state, action) ->
 
 
 
+  determineMiddle = ( runs, side )->
+    n = sum pluck 'n', runs
+    n_runs = runs.length
 
+    response =
+      d_time: averageOf( 'd_time' )( runs )
+      d_price: averageOf( 'd_price' )( runs )
+      d_volume: averageOf( 'volume' )( runs )
+      n: n
+      n_runs: n_runs
+      n_runs_ratio: n / n_runs
+
+
+  mergeIntoState = ( data, side )->
+    state[side] = merge state[side], data
+
+
+  forEachObjIndexed mergeIntoState, mapObjIndexed determineMiddle, groupBy prop( 'side' ), state.runs
+
+
+  #
+  #  tick it
   state.tick = 1 + state.tick
   state
 
@@ -238,8 +282,6 @@ RSVP = require 'rsvp'
 
 updateAccountTotals = ( product_id )->
   parts = product_id.split '-'
-
-  # console.log parts, 'zz'
 
   topKey = parts[0]
   bottomKey = parts[1]
@@ -286,10 +328,10 @@ productStream.subscribe "message:#{PRODUCT_ID}", ( hi )->
 start = ( product_id )->
 
   onSuccess = ( result )->
-    console.log result
+    console.log 'start onSuccess', result
 
   onError = ( error )->
-    console.log error
+    console.log 'start onError', error
 
   updateAccountTotals( product_id ).then( onSuccess ).catch( onError )
 
@@ -367,12 +409,12 @@ updatedStore = ->
     # 'volume'
     # 'ratio'
     # 'bottom'
-    # 'sell'
+    'sell'
     # 'topValue'
     # 'top'
-    # 'buy'
+    'buy'
     # 'buyPrice'
-    'runs'
+    # 'runs'
     'tick'
     # 'run'
   ]
@@ -389,7 +431,7 @@ updatedStore = ->
     past = important
 
 
-store.subscribe _throttle updatedStore, 6000
+store.subscribe _throttle updatedStore, 3000
 
 start( PRODUCT_ID )
 
