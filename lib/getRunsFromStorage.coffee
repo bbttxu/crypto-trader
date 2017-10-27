@@ -28,12 +28,10 @@ getRunsFromStorage = ( search )->
       $ne: 0
     d_time:
       $ne: 0
-
     end:
       $gt: moment().subtract( 1, 'week' ).valueOf()
 
 
-  console.log defaults
 
 
   #

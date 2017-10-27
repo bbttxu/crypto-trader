@@ -78,20 +78,12 @@ addBid = ( bid, cancelPlease )->
   log bid
 
   onGood = ( foo )->
-    # console.log 'sell onGood'
-
     message = foo.body
 
     if message.message
       console.log 'message.message', message.message
 
     else
-      # console.log 'foo', foo.body
-      # log keys foo
-
-
-      # console.log 'zzz', merge( JSON.parse( foo.body ), bid )
-
       store.dispatch
         type: 'ADD_BID'
         bid: merge( JSON.parse( foo.body ), bid )
@@ -116,23 +108,17 @@ decisioner = require './lib/decisioner'
 
 
 asdf = ( fill )->
-  # console.log 'asdf', fill
-
   value = fill.price * fill.size
-  # console.log 'q'
+
   if fill.side is 'buy'
-    # console.log value, fill
     value = -1.0 * value
 
-  # console.log value
   value
 
 progress = ( data )->
-  # console.log 'progress', data
-
   a = map asdf, data
 
-  # console.log 'a', a
+
 { createStore, applyMiddleware } = require 'redux'
 thunk = require 'redux-thunk'
 
@@ -150,7 +136,6 @@ makeNewBid = ( bid, cancelPlease )->
 
       if bid.bid.size < 0.01
         bid.bid.size = 0.01
-        # console.log 'min bid size met', bid.bid.size
 
 
       addBid bid.bid
@@ -162,11 +147,8 @@ makeNewBid = ( bid, cancelPlease )->
     obj[ cancelThisID ] = gdax.cancelOrder( cancelThisID )
     obj
 
-    # array
-    # gdax.cancelOrder( cancelThisID )
 
 
-  # console.log '!?!?!?', mergeAll map makeCancellation, cancelPlease
 
   RSVP.hashSettled( mergeAll map makeCancellation, cancelPlease ).then( ( good )->
 
@@ -187,7 +169,6 @@ makeNewBid = ( bid, cancelPlease )->
           type: 'BID_CANCELLED'
           id: id
 
-        # log payload
 
         store.dispatch payload
 
@@ -207,9 +188,6 @@ reducer = (state, action) ->
 
 
   if 'BID_CANCELLED' is action.type
-    # console.log 'ppapasdf', action
-
-    # console.log findIndex propEq( 'id', action.id ), state.bids
     state.bids = reject propEq( 'id', action.id ), state.bids
     console.log 'BID_CANCELLED', action.id, state.bids
 
@@ -227,27 +205,13 @@ reducer = (state, action) ->
   if 'UPDATE_BOTTOM' is action.type
     state.bottom = action.data
 
-    # if state.top and state.sell and state.sell
-
-    # console.log '!!!!!'
-    # console.log keys state
-    # console.log state.bottom, state.bottom.available
-    # console.log state.sell, state.sell.price
-    # console.log '!!!!!'
-
 
   state.sellAmount = state.top.available / SIZING
-
-
-
-  # console.log '!', state.bottom.available, 'state.sell.price', state.sell.price, SIZING
-
 
 
   state.buyAmount = state.bottom.available / state.sell.price / SIZING
 
   if 'ADD_BID' is action.type
-    # console.log 'ADD_BID'
     console.log 'ADD_BID', JSON.stringify action.bid
 
     state.bids.push action.bid
@@ -260,8 +224,6 @@ reducer = (state, action) ->
     state.runs.push action.run
 
   if 'ADD_MATCH' is action.type
-    # console.log 'ADD_MATCH', action.match
-
 
     skinny = ( data )->
       data.timestamp = moment( data.time ).valueOf()
@@ -275,8 +237,6 @@ reducer = (state, action) ->
       ], data
 
 
-    # console.log 'skinny', JSON.stringify skinny action.match
-
     state[ action.match.side ] = merge state[ action.match.side ], pick [ 'price', 'sequence', 'timestamp' ], action.match
 
 
@@ -285,12 +245,6 @@ reducer = (state, action) ->
       sameSide = ( runners )->
         runners.side is action.match.side
 
-      # if all pass
-      # being the same side as action.match
-      # then add it to the run
-      # else
-      #   move the latest run to the runs
-      #   empty out the run field so that the next one who can do it
 
       importantValue = all sameSide, state.run
 
@@ -299,22 +253,12 @@ reducer = (state, action) ->
 
 
       unless importantValue
-
-        # doit = consolidateRun state.run, PRODUCT_ID
-
-        # console.log 'doit'
-
-        # saveRun( state.run, PRODUCT_ID ).then ( run )->
-        #   console.log 'saveRun sucess', run
-
-
         # Don't use runs that are only one fill long
         if state.run.length > 1
           console.log 'new run', JSON.stringify consolidateRun state.run, PRODUCT_ID
 
 
           saveRun state.run
-          # state.runs.push consolidateRun state.run, PRODUCT_ID
 
         state.run = []
 
@@ -322,11 +266,7 @@ reducer = (state, action) ->
     if isEmpty state.run
       state.run = [ skinny action.match ]
 
-      # console.log skinny action.match
-      # console.log ( skinny action.match ).side
-      # console.log state[ ( skinny action.match ).side ]
 
-      # console.log
       bidPrice =
         parseFloat( ( skinny action.match ).price ) +
         2.0 * parseFloat( state[ ( skinny action.match ).side ].d_price )
@@ -339,16 +279,13 @@ reducer = (state, action) ->
 
 
       lkfafdijwe = state[ action.match.side ]
-      # console.log action.match.side, lkfafdijwe, 'lkfafdijwe'
 
       iuwoiqe = merge lkfafdijwe, bid: bid
 
       if 'sell' is action.match.side
-        # console.log 'SELL SELL SELL', iuwoiqe, action.match
         state.sell = iuwoiqe
 
       if 'buy' is action.match.side
-        # console.log 'BUY BUY BUY', iuwoiqe, action.match
         state.buy = iuwoiqe
 
 
@@ -394,45 +331,9 @@ reducer = (state, action) ->
     state.buyPrice = state.bottom.available
 
 
-
-
-
-
-
-    # console.log 'always!!!', all(equals(propEq('side', action.match.side)))(state.run), state.run.length
-
-
-
-    # unless isEmpty state.run
-
-
-    #   if all(equals(propEq('side', action.match.side)))(state.run)
-    #     console.log 'state.run', state.run
-    #     state.run.push action.match
-
-    #   else
-    #     console.log state.runs.length, 'else', pick ['size', 'price', 'trade_id', 'side'], action.match
-
-    #     newRun = state.run
-    #     console.log 'newRun', newRun
-    #     state.runs.push newRun
-    #     state.run = [ action.match ]
-    # else
-    #   console.log '-- make default', pick ['size', 'price', 'trade_id', 'side'], action.match
-    #   state.run.push pick ['size', 'price', 'trade_id', 'side'], action.match
-
-
-
-
-
-    # state.runs.push action.match
-
-
   if 'FILL_ADDED' is action.type
     state.fills.push action.fill
 
-  # console.log state, 'z'
-  # console.log state.fills.length, 'y'
 
   state.progress = sum progress state.fills
   state.volume = sum map Math.abs, progress state.fills
@@ -525,9 +426,7 @@ updateAccountTotals = ( product_id )->
 
 
   matchCurrency = ( currency )->
-    # console.log 'matchCurrency', currency
     ( record )->
-      # console.log 'matchCurrency', currency, record
       currency is record.currency
 
 
@@ -540,11 +439,8 @@ updateAccountTotals = ( product_id )->
 
   new RSVP.Promise ( resolve, reject )->
     gdax.getAccounts( product_id ).then ( result )->
-      # console.log 'aaaa'
       dispatchCurrency( 'UPDATE_TOP' ) head filter matchCurrency( topKey ), result
-      # console.log 'vvvv', bottomKey
       dispatchCurrency( 'UPDATE_BOTTOM' ) head filter matchCurrency( bottomKey ), result
-      # console.log 'zzzz'
 
 
 
@@ -583,67 +479,12 @@ start = ( product_id )->
   setInterval init, 60 * 1000
 
 
-
-
-
-
-
-  # onSuccess = ( db )->
-    # fills = db.collection 'fill'
-    # matches = db.collection 'matches'
-
-
-
-    # fills
-    #   .find( { product_id: product_id } ).toArray (err,data)->
-    #     if err
-    #       console.log 'err', err
-    #       reject err
-
-    #     # console.log data
-
-    #     mapDispatch = (fill)->
-    #       store.dispatch
-    #         type: 'FILL_ADDED'
-    #         fill: fill
-
-    #     map mapDispatch, data
-
-    # matches
-    #   .find( { product_id: product_id } )
-    #   .limit( 5 )
-    #   .sort(trade_id: 1)
-    #   .toArray (err,data)->
-    #     if err
-    #       console.log 'err', err
-    #       reject err
-
-    #     # console.log data
-
-    #     mapDispatch = (match)->
-    #       # console.log match
-    #       store.dispatch
-    #         type: 'ADD_MATCH'
-    #         match: match
-
-    #     map mapDispatch, data
-
-
-
   onError = (fail)->
     console.log 'fail', fail
     reject fail
 
 
-
-
-
   mongoConnection().then(onSuccess).catch(onError)
-
-
-
-
-
 
 
 _throttle = require 'lodash.throttle'

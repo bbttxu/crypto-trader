@@ -7,7 +7,7 @@ if the ratio of that discrepency, actual vs minumum, is greater than a randomly 
 ###
 
 handleFractionalSize = ( bid, minimumSize = 0.01, randomNumber = Math.random() )->
-  console.log '(', bid.size , '/' , minimumSize, ') >', randomNumber
+  console.log ( bid.size / minimumSize > randomNumber) , '(', bid.size / minimumSize, ') >', randomNumber
 
   ( bid.size / minimumSize ) > randomNumber
 
