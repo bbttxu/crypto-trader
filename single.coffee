@@ -1,10 +1,20 @@
 
 
 PRODUCT_ID = 'BTC-USD'
+# PRODUCT_ID = 'ETH-BTC'
 
-SIZING = 10
+SIZING = 100
+
+
+RSVP = require 'rsvp'
 
 log = require './lib/log'
+
+handleFractionalSize = require './lib/handleFractionalSize'
+
+gdax = require './lib/gdax-client'
+
+
 
 require('dotenv').config( silent: true )
 mongoConnection = require('./lib/mongoConnection')
@@ -34,6 +44,11 @@ cleanUpTrade = require './lib/cleanUpTrades'
   view
   merge
   set
+  mergeAll
+  findIndex
+  addIndex
+  sort
+  reject
 } = require 'ramda'
 
 
@@ -50,6 +65,53 @@ initalState =
   sell: {}
   buy: {}
   bid: {}
+  bids: []
+
+
+
+
+addBid = ( bid, cancelPlease )->
+  log 'bid'
+  log bid
+  log cancelPlease
+
+  log bid
+
+  onGood = ( foo )->
+    # console.log 'sell onGood'
+
+    message = foo.body
+
+    if message.message
+      console.log 'message.message', message.message
+
+    else
+      # console.log 'foo', foo.body
+      # log keys foo
+
+
+      # console.log 'zzz', merge( JSON.parse( foo.body ), bid )
+
+      store.dispatch
+        type: 'ADD_BID'
+        bid: merge( JSON.parse( foo.body ), bid )
+
+
+  onError = ( err )->
+    console.log 'sell onError'
+    console.log 'error', err, err.body
+
+  console.log 'start', bid.side,  'bid'
+
+  console.log '!!!', bid, '!!!'
+  gdax[bid.side]( bid ).then( onGood ).catch( onError )
+
+
+  console.log 'cancelPlease', cancelPlease
+
+
+decisioner = require './lib/decisioner'
+
 
 
 
@@ -80,27 +142,122 @@ consolidateRun = require './consolidateRun'
 
 averageOf = require './lib/averageOf'
 
+makeNewBid = ( bid, cancelPlease )->
+  if decisioner( bid )
+    console.log 'decisioned okay', bid.bid.size, bid.bid
+    if handleFractionalSize bid.bid
+      console.log 'passed fractional size', bid.bid.size, bid.bid
+
+      if bid.bid.size < 0.01
+        bid.bid.size = 0.01
+        # console.log 'min bid size met', bid.bid.size
+
+
+      addBid bid.bid
+
+
+  makeCancellation = ( cancelThisID )->
+    # for hashes
+    obj = {}
+    obj[ cancelThisID ] = gdax.cancelOrder( cancelThisID )
+    obj
+
+    # array
+    # gdax.cancelOrder( cancelThisID )
+
+
+  # console.log '!?!?!?', mergeAll map makeCancellation, cancelPlease
+
+  RSVP.hashSettled( mergeAll map makeCancellation, cancelPlease ).then( ( good )->
+
+
+    #
+    isFullfilled = ( outcome )->
+      true is outcome.value
+
+    fulfilled = filter isFullfilled, good
+
+    #
+    cancelBid = ( bid, id )->
+      console.log 'bid', bid
+
+      if true is bid.value
+
+        payload =
+          type: 'BID_CANCELLED'
+          id: id
+
+        # log payload
+
+        store.dispatch payload
+
+
+    forEachObjIndexed cancelBid, good
+
+
+
+  ).catch( (error)->
+    console.log 'really bad thing', error
+  )
+
+
 reducer = (state, action) ->
   if typeof state == 'undefined'
     return initalState
 
 
+  if 'BID_CANCELLED' is action.type
+    # console.log 'ppapasdf', action
+
+    # console.log findIndex propEq( 'id', action.id ), state.bids
+    state.bids = reject propEq( 'id', action.id ), state.bids
+    console.log 'BID_CANCELLED', action.id, state.bids
+
+
+
+
+
+
+
+
   if 'UPDATE_TOP' is action.type
     state.top = action.data
 
-    state.sellAmount = state.top.available / SIZING
 
   if 'UPDATE_BOTTOM' is action.type
     state.bottom = action.data
 
-    if state.top and state.sell and state.sell
+    # if state.top and state.sell and state.sell
 
-      state.buyAmount = state.bottom.available / state.sell.price / SIZING
+    # console.log '!!!!!'
+    # console.log keys state
+    # console.log state.bottom, state.bottom.available
+    # console.log state.sell, state.sell.price
+    # console.log '!!!!!'
+
+
+  state.sellAmount = state.top.available / SIZING
+
+
+
+  # console.log '!', state.bottom.available, 'state.sell.price', state.sell.price, SIZING
+
+
+
+  state.buyAmount = state.bottom.available / state.sell.price / SIZING
+
+  if 'ADD_BID' is action.type
+    # console.log 'ADD_BID'
+    console.log 'ADD_BID', JSON.stringify action.bid
+
+    state.bids.push action.bid
+
+    console.log 'ADD_BID'
+
 
 
   if 'ADD_RUN' is action.type
-    console.log 'add _ run'
-    # state.runs.push action.run
+    state.runs.push action.run
 
   if 'ADD_MATCH' is action.type
     # console.log 'ADD_MATCH', action.match
@@ -116,6 +273,11 @@ reducer = (state, action) ->
         # 'time',
         'timestamp'
       ], data
+
+
+    # console.log 'skinny', JSON.stringify skinny action.match
+
+    state[ action.match.side ] = merge state[ action.match.side ], pick [ 'price', 'sequence', 'timestamp' ], action.match
 
 
     unless isEmpty state.run
@@ -148,7 +310,11 @@ reducer = (state, action) ->
 
         # Don't use runs that are only one fill long
         if state.run.length > 1
-          state.runs.push consolidateRun state.run, PRODUCT_ID
+          console.log 'new run', JSON.stringify consolidateRun state.run, PRODUCT_ID
+
+
+          saveRun state.run
+          # state.runs.push consolidateRun state.run, PRODUCT_ID
 
         state.run = []
 
@@ -169,27 +335,28 @@ reducer = (state, action) ->
         price: bidPrice
         side: action.match.side
         product_id: PRODUCT_ID
+        size: state["#{action.match.side}Amount"]
 
 
-      lkfafdijwe = state[ ( skinny action.match ).side ]
+      lkfafdijwe = state[ action.match.side ]
+      # console.log action.match.side, lkfafdijwe, 'lkfafdijwe'
 
       iuwoiqe = merge lkfafdijwe, bid: bid
 
-
-      if 'sell' is ( skinny action.match ).side
+      if 'sell' is action.match.side
+        # console.log 'SELL SELL SELL', iuwoiqe, action.match
         state.sell = iuwoiqe
 
-      else
+      if 'buy' is action.match.side
+        # console.log 'BUY BUY BUY', iuwoiqe, action.match
         state.buy = iuwoiqe
-      #   state[ ( skinny action.match ).side ],
-      #   { bid: bid }
 
 
 
     action.match.timestamp = moment( action.match.time ).valueOf()
 
     if 'sell' is action.match.side
-      keys = [
+      matchKeys = [
         'price'
         'sequence'
         'time'
@@ -201,7 +368,7 @@ reducer = (state, action) ->
       state.sellPrice = state.sell.price
 
     if 'buy' is action.match.side
-      keys = [
+      matchKeys = [
         'price'
         'sequence'
         'time'
@@ -209,9 +376,15 @@ reducer = (state, action) ->
       ]
 
 
-      state.buy = merge state.buy, pick keys, action.match
+      state.buy = merge state.buy, pick matchKeys, action.match
       state.buyPrice = state.buy.price
 
+    unless importantValue
+
+      makeNewBid(
+        state[action.match.side],
+        pluck 'id', state.bids
+      )
 
   if state.top and state.sell
     state.topValue = state.sell.price * state.top.available
@@ -295,7 +468,42 @@ reducer = (state, action) ->
 
 store = createStore reducer, applyMiddleware(thunk.default)
 
-saveRun = require('./saveRun')
+saveRunToStorage = require './lib/saveRunToStorage'
+
+saveRun = ( run )->
+  consolidated = consolidateRun run, PRODUCT_ID
+
+  saveRunToStorage( consolidated ).then( (good)->
+    store.dispatch
+      type: 'ADD_RUN'
+      run: consolidated
+  ).catch( (err)->
+    console.log 'err', err
+  )
+
+getRunsFromStorage = require './lib/getRunsFromStorage'
+
+
+addRun = ( run, index )->
+  storeDispatch = ->
+    store.dispatch
+      type: 'ADD_RUN'
+      run: run
+
+  setTimeout storeDispatch, index * 100
+
+
+sortByAbsSize = ( a, b )->
+  Math.abs( prop 'd_price', b ) - Math.abs( prop 'd_price', a )
+
+
+getRunsFromStorage(
+  product_id: PRODUCT_ID
+).then( (result)->
+  addIndex( map ) addRun, sort sortByAbsSize, result
+).catch( (error)->
+  console.log error
+)
 
 
 
@@ -308,11 +516,6 @@ saveRun = require('./saveRun')
        \/   /_____/      \/                  \/
 ###
 
-RSVP = require 'rsvp'
-
-{
-  getAccounts
-} = require './lib/gdax-client'
 
 updateAccountTotals = ( product_id )->
   parts = product_id.split '-'
@@ -322,8 +525,9 @@ updateAccountTotals = ( product_id )->
 
 
   matchCurrency = ( currency )->
-    console.log 'matchCurrency', currency
+    # console.log 'matchCurrency', currency
     ( record )->
+      # console.log 'matchCurrency', currency, record
       currency is record.currency
 
 
@@ -335,9 +539,12 @@ updateAccountTotals = ( product_id )->
 
 
   new RSVP.Promise ( resolve, reject )->
-    getAccounts( product_id ).then ( result )->
+    gdax.getAccounts( product_id ).then ( result )->
+      # console.log 'aaaa'
       dispatchCurrency( 'UPDATE_TOP' ) head filter matchCurrency( topKey ), result
+      # console.log 'vvvv', bottomKey
       dispatchCurrency( 'UPDATE_BOTTOM' ) head filter matchCurrency( bottomKey ), result
+      # console.log 'zzzz'
 
 
 
@@ -362,12 +569,19 @@ productStream.subscribe "message:#{PRODUCT_ID}", ( hi )->
 start = ( product_id )->
 
   onSuccess = ( result )->
-    console.log 'start onSuccess', result
+    # console.log 'start onSuccess', result
 
   onError = ( error )->
     console.log 'start onError', error
 
-  updateAccountTotals( product_id ).then( onSuccess ).catch( onError )
+  init = ->
+    updateAccountTotals( product_id ).then( onSuccess ).catch( onError )
+
+
+  init()
+
+  setInterval init, 60 * 1000
+
 
 
 
@@ -442,15 +656,18 @@ updatedStore = ->
     # 'progress'
     # 'volume'
     # 'ratio'
-    # 'bottom'
+    'bottom'
     'sell'
     # 'topValue'
-    # 'top'
+    'top'
     'buy'
-    # 'buyPrice'
+    'buyPrice'
     # 'runs'
-    'tick'
+    # 'tick'
     # 'run'
+    # 'buyAmount'
+    # 'sellAmount'
+    'bids'
   ]
   # importantKeys = [ 'tick', 'prices', 'matches' ]
   # importantKeys = [ 'tick', 'prices', 'projections' ]
@@ -465,7 +682,7 @@ updatedStore = ->
     past = important
 
 
-store.subscribe _throttle updatedStore, 3000
+# store.subscribe _throttle updatedStore, 1000
 
 start( PRODUCT_ID )
 
