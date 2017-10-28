@@ -74,11 +74,6 @@ initalState =
 
 
 addBid = ( bid, cancelPlease )->
-  log 'bid'
-  log bid
-  log cancelPlease
-
-  log bid
 
   onGood = ( foo )->
     message = foo.body
@@ -96,13 +91,10 @@ addBid = ( bid, cancelPlease )->
     console.log 'sell onError'
     console.log 'error', err, err.body
 
-  console.log 'start', bid.side,  'bid'
+  console.log 'start', bid.side, 'bid', bid
 
-  console.log '!!!', bid, '!!!'
   gdax[bid.side]( bid ).then( onGood ).catch( onError )
 
-
-  console.log 'cancelPlease', cancelPlease
 
 
 decisioner = require './lib/decisioner'
@@ -133,9 +125,8 @@ averageOf = require './lib/averageOf'
 
 makeNewBid = ( bid, cancelPlease )->
   if decisioner( bid )
-    console.log 'decisioned okay', bid.bid.size, bid.bid
     if handleFractionalSize bid.bid
-      console.log 'passed fractional size', bid.bid.size, bid.bid
+      console.log 'passed fractional size', bid.bid.size
 
       if bid.bid.size < 0.01
         bid.bid.size = 0.01
@@ -164,10 +155,15 @@ makeNewBid = ( bid, cancelPlease )->
 
     #
     cancelBid = ( bid, id )->
-      console.log 'bid', bid, id
-
       if true is bid.value
+        payload =
+          type: 'BID_CANCELLED'
+          id: id
 
+
+        store.dispatch payload
+
+      if 'order not found' is bid.reason
         payload =
           type: 'BID_CANCELLED'
           id: id
@@ -193,7 +189,7 @@ reducer = (state, action) ->
   if 'HEARTBEAT' is action.type
     start = Date.now()
 
-    state.fills = sortBy prop( 'created_at' ), state.fills
+    state.fills = sortBy prop( 'trade_id' ), state.fills
 
     # do stuff here
     console.log 'HEARTBEAT', start, Date.now() - start
@@ -201,7 +197,7 @@ reducer = (state, action) ->
 
   if 'BID_CANCELLED' is action.type
     state.bids = reject propEq( 'id', action.id ), state.bids
-    console.log 'BID_CANCELLED', action.id, state.bids
+    console.log 'BID_CANCELLED', action.id, state.bids.length
 
 
 
@@ -340,11 +336,6 @@ reducer = (state, action) ->
       state.buyPrice = state.buy.price
 
     unless importantValue
-
-      console.log 'jakfljdlkafjlkdsjflsajdfljasl'
-      console.log goodSeaState state
-      console.log 'jakfljdlkafjlkdsjflsajdfljasl'
-
       if goodSeaState state
         makeNewBid(
           state[action.match.side],
@@ -483,7 +474,6 @@ productStream.subscribe "message:#{PRODUCT_ID}", ( hi )->
     store.dispatch
       type: 'ADD_MATCH'
       match: hi
-
 
 
 

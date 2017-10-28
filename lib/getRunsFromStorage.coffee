@@ -18,7 +18,6 @@ moment = require 'moment'
 #
 #
 getRunsFromStorage = ( search )->
-  console.log 'getRunsFromStorage', search
 
 
   defaults =
@@ -28,20 +27,16 @@ getRunsFromStorage = ( search )->
       $ne: 0
     d_time:
       $ne: 0
-    end:
-      $gt: moment().subtract( 1, 'week' ).valueOf()
+    # end:
+    #   $gt: moment().subtract( 1, 'week' ).valueOf()
 
-
+  console.log 'getRunsFromStorage', merge defaults, search
 
 
   #
   #
   new Promise ( resolve, reject )->
-
-
     callback = ( result )->
-      log result
-
       resolve result
 
     onError = ( error )->
