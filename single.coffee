@@ -66,6 +66,7 @@ initalState =
   buy: {}
   bid: {}
   bids: []
+  match: {}
 
 
 
@@ -161,7 +162,7 @@ makeNewBid = ( bid, cancelPlease )->
 
     #
     cancelBid = ( bid, id )->
-      console.log 'bid', bid
+      console.log 'bid', bid, id
 
       if true is bid.value
 
@@ -223,7 +224,15 @@ reducer = (state, action) ->
   if 'ADD_RUN' is action.type
     state.runs.push action.run
 
+
+
+
   if 'ADD_MATCH' is action.type
+
+    state.match = action.match
+
+    # keep around until goodSeaState uses .match only
+    state.side = action.match.side
 
     skinny = ( data )->
       data.timestamp = moment( data.time ).valueOf()
@@ -523,7 +532,7 @@ updatedStore = ->
     past = important
 
 
-# store.subscribe _throttle updatedStore, 1000
+# store.subscribe _throttle updatedStore, 10000
 
 start( PRODUCT_ID )
 
