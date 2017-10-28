@@ -3,10 +3,12 @@ should = require 'should'
 goodSeaState = require '../lib/goodSeaState'
 
 
-describe 'know a good sea state', ->
+describe 'know a good sea', ->
   it 'sell lower than buy does not happen', ->
     state = {
-      side: 'sell'
+      match: {
+        side: 'sell'
+      }
       sell: {
         d_time: 6475,
         d_price: 1.4752173913043605,
@@ -35,7 +37,9 @@ describe 'know a good sea state', ->
 
   it 'buy higher than sell does happen', ->
     state = {
-      side: 'buy'
+      match: {
+        side: 'buy'
+      }
       buy: {
         d_time: 6475,
         d_price: 1.4752173913043605,

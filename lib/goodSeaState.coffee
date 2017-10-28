@@ -7,16 +7,16 @@
 otherSide = require './otherSide'
 
 goodSeaState = ( state )->
-  future = parseFloat state[ state.side ].bid.price
+  future = parseFloat state[ state.match.side ].bid.price
 
   filterOtherSide = ( fill )->
-    fill.side is otherSide state.side
+    fill.side is otherSide state.match.side
 
   latest = prop 'price', last filter filterOtherSide, state.fills
 
   lossIsNegative = future - latest > 0
 
-  if 'buy' is state.side
+  if 'buy' is state.match.side
     return not lossIsNegative
 
   lossIsNegative
