@@ -188,6 +188,13 @@ reducer = (state, action) ->
     return initalState
 
 
+  if 'HEARTBEAT' is action.type
+    start = Date.now()
+
+    # do stuff here
+    console.log 'HEARTBEAT', start, Date.now() - start
+
+
   if 'BID_CANCELLED' is action.type
     state.bids = reject propEq( 'id', action.id ), state.bids
     console.log 'BID_CANCELLED', action.id, state.bids
@@ -518,6 +525,7 @@ updatedStore = ->
     # 'buyAmount'
     # 'sellAmount'
     'bids'
+    # 'fills'
   ]
   # importantKeys = [ 'tick', 'prices', 'matches' ]
   # importantKeys = [ 'tick', 'prices', 'projections' ]
@@ -536,3 +544,11 @@ updatedStore = ->
 
 start( PRODUCT_ID )
 
+
+
+pulse = ->
+  store.dispatch
+    type: 'HEARTBEAT'
+setTimeout (->
+  setInterval pulse, 60 * 1000
+), 60 * 1000
