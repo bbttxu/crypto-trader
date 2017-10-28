@@ -4,6 +4,7 @@ PRODUCT_ID = 'BTC-USD'
 # PRODUCT_ID = 'ETH-BTC'
 
 SIZING = 100
+SIZING = 40
 
 
 RSVP = require 'rsvp'
@@ -49,6 +50,7 @@ cleanUpTrade = require './lib/cleanUpTrades'
   addIndex
   sort
   reject
+  sortBy
 } = require 'ramda'
 
 
@@ -104,7 +106,7 @@ addBid = ( bid, cancelPlease )->
 
 
 decisioner = require './lib/decisioner'
-
+goodSeaState = require './lib/goodSeaState'
 
 
 
@@ -191,6 +193,8 @@ reducer = (state, action) ->
   if 'HEARTBEAT' is action.type
     start = Date.now()
 
+    state.fills = sortBy prop( 'created_at' ), state.fills
+
     # do stuff here
     console.log 'HEARTBEAT', start, Date.now() - start
 
@@ -231,6 +235,9 @@ reducer = (state, action) ->
   if 'ADD_RUN' is action.type
     state.runs.push action.run
 
+
+  if 'ADD_FILL' is action.type
+    state.fills.push action.fill
 
 
 
@@ -334,10 +341,15 @@ reducer = (state, action) ->
 
     unless importantValue
 
-      makeNewBid(
-        state[action.match.side],
-        pluck 'id', state.bids
-      )
+      console.log 'jakfljdlkafjlkdsjflsajdfljasl'
+      console.log goodSeaState state
+      console.log 'jakfljdlkafjlkdsjflsajdfljasl'
+
+      if goodSeaState state
+        makeNewBid(
+          state[action.match.side],
+          pluck 'id', state.bids
+        )
 
   if state.top and state.sell
     state.topValue = state.sell.price * state.top.available
@@ -542,7 +554,6 @@ updatedStore = ->
 
 # store.subscribe _throttle updatedStore, 10000
 
-start( PRODUCT_ID )
 
 
 
@@ -552,3 +563,62 @@ pulse = ->
 setTimeout (->
   setInterval pulse, 60 * 1000
 ), 60 * 1000
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+dispatchFill = ( fill )->
+  store.dispatch
+    type: 'ADD_FILL'
+    fill: fill
+
+getFills = require './lib/getFills'
+
+getFills( PRODUCT_ID ).then( ( good )->
+  console.log 'good', good.length
+  map dispatchFill, good
+  start( PRODUCT_ID )
+
+).catch( ( bad )->
+  console.log 'bad'
+)
+

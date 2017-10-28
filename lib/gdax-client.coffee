@@ -126,7 +126,7 @@ cancelOrder = ( order )->
         resolve true
 
       else
-        reject false
+        reject payload.message
 
 
     authedClient().cancelOrder order, callback

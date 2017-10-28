@@ -8,3 +8,6 @@ describe 'otherSide', ->
 
   it 'knows that a buy is not a sell', ->
     otherSide( 'buy' ).should.be.equal 'sell'
+
+  it 'knows to not care about something that is not a sell or buy', ->
+    should.not.exist otherSide( 'asdf' )
