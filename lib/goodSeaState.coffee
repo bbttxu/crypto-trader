@@ -7,6 +7,7 @@
 otherSide = require './otherSide'
 
 goodSeaState = ( state )->
+  # if state[ state.match.side ].bid
   future = parseFloat state[ state.match.side ].bid.price
 
   filterOtherSide = ( fill )->
@@ -20,6 +21,8 @@ goodSeaState = ( state )->
     return not lossIsNegative
 
   lossIsNegative
+
+  # return false unless state[ state.match.side ].bid
 
 
 module.exports = goodSeaState

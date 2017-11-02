@@ -1,7 +1,6 @@
+argv = require('minimist')(process.argv.slice(2))
+PRODUCT_ID = argv._[0]
 
-
-PRODUCT_ID = 'BTC-USD'
-# PRODUCT_ID = 'ETH-BTC'
 
 SIZING = 100
 SIZING = 40
@@ -70,8 +69,9 @@ initalState =
   bids: []
   match: {}
 
+showStatus = require './lib/showStatus'
 
-
+saveBid = require './lib/saveBid'
 
 addBid = ( bid, cancelPlease )->
 
@@ -86,6 +86,8 @@ addBid = ( bid, cancelPlease )->
         type: 'ADD_BID'
         bid: merge( JSON.parse( foo.body ), bid )
 
+    merge( JSON.parse( foo.body ), bid )
+
 
   onError = ( err )->
     console.log 'sell onError'
@@ -93,7 +95,7 @@ addBid = ( bid, cancelPlease )->
 
   console.log 'start', bid.side, 'bid', bid
 
-  gdax[bid.side]( bid ).then( onGood ).catch( onError )
+  gdax[bid.side]( bid ).then( onGood ).then( saveBid ).catch( onError )
 
 
 
@@ -189,10 +191,19 @@ reducer = (state, action) ->
   if 'HEARTBEAT' is action.type
     start = Date.now()
 
-    state.fills = sortBy prop( 'trade_id' ), state.fills
+    # do stuff here vvv
 
-    # do stuff here
-    console.log 'HEARTBEAT', start, Date.now() - start
+    state.fills = sortBy prop( 'trade_id' ), state.fills
+    console.log 'showStatus', showStatus state.fills
+
+    overADayOld = ( run )->
+      moment().subtract( 1, 'day' ).valueOf() > run.end
+
+    state.runs = reject overADayOld, state.runs
+
+    # do stuff here ^^^
+
+    console.log moment( start ).format(),'HEARTBEAT', Date.now() - start, 'ms'
 
 
   if 'BID_CANCELLED' is action.type
@@ -274,7 +285,7 @@ reducer = (state, action) ->
       unless importantValue
         # Don't use runs that are only one fill long
         if state.run.length > 1
-          console.log 'new run', JSON.stringify consolidateRun state.run, PRODUCT_ID
+          # console.log 'new run', JSON.stringify consolidateRun state.run, PRODUCT_ID
 
 
           saveRun state.run
@@ -397,33 +408,11 @@ saveRun = ( run )->
     store.dispatch
       type: 'ADD_RUN'
       run: consolidated
+
   ).catch( (err)->
     console.log 'err', err
   )
 
-getRunsFromStorage = require './lib/getRunsFromStorage'
-
-
-addRun = ( run, index )->
-  storeDispatch = ->
-    store.dispatch
-      type: 'ADD_RUN'
-      run: run
-
-  setTimeout storeDispatch, index * 100
-
-
-sortByAbsSize = ( a, b )->
-  Math.abs( prop 'd_price', b ) - Math.abs( prop 'd_price', a )
-
-
-getRunsFromStorage(
-  product_id: PRODUCT_ID
-).then( (result)->
-  addIndex( map ) addRun, sort sortByAbsSize, result
-).catch( (error)->
-  console.log error
-)
 
 
 
@@ -507,6 +496,8 @@ start = ( product_id )->
 
 _throttle = require 'lodash.throttle'
 
+
+
 past = undefined
 
 updatedStore = ->
@@ -515,18 +506,18 @@ updatedStore = ->
     # 'progress'
     # 'volume'
     # 'ratio'
-    'bottom'
+    # 'bottom'
     'sell'
     # 'topValue'
-    'top'
+    # 'top'
     'buy'
-    'buyPrice'
+    # 'buyPrice'
     # 'runs'
     # 'tick'
     # 'run'
     # 'buyAmount'
     # 'sellAmount'
-    'bids'
+    # 'bids'
     # 'fills'
   ]
   # importantKeys = [ 'tick', 'prices', 'matches' ]
@@ -541,8 +532,7 @@ updatedStore = ->
   unless past
     past = important
 
-
-# store.subscribe _throttle updatedStore, 10000
+# store.subscribe _throttle updatedStore, 1 * 1000
 
 
 
@@ -591,8 +581,22 @@ setTimeout (->
 
 
 
+getRunsFromStorage = require './lib/getRunsFromStorage'
+getFills = require './lib/getFills'
+getBids = require './lib/getBids'
 
 
+addRun = ( run, index )->
+  storeDispatch = ->
+    store.dispatch
+      type: 'ADD_RUN'
+      run: run
+
+  setTimeout storeDispatch, index * 100
+
+
+sortByAbsSize = ( a, b )->
+  Math.abs( prop 'd_price', b ) - Math.abs( prop 'd_price', a )
 
 
 
@@ -601,11 +605,18 @@ dispatchFill = ( fill )->
     type: 'ADD_FILL'
     fill: fill
 
-getFills = require './lib/getFills'
 
-getFills( PRODUCT_ID ).then( ( good )->
-  console.log 'good', good.length
-  map dispatchFill, good
+promises = {
+  fills: getFills( PRODUCT_ID ),
+  bids: getBids( PRODUCT_ID ),
+  runs: getRunsFromStorage( product_id: PRODUCT_ID )
+}
+
+RSVP.hash( promises ).then( ( good )->
+  console.log good.fills.length, good.bids.length
+  map dispatchFill, good.fills.concat good.bids
+  addIndex( map ) addRun, sort sortByAbsSize, good.runs
+
   start( PRODUCT_ID )
 
 ).catch( ( bad )->

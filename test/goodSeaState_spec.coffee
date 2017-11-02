@@ -2,7 +2,6 @@ should = require 'should'
 
 goodSeaState = require '../lib/goodSeaState'
 
-
 describe 'know a good sea', ->
   it 'sell higher than last buy', ->
     state = {
