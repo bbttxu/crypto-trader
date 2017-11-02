@@ -352,6 +352,8 @@ reducer = (state, action) ->
           state[action.match.side],
           pluck 'id', state.bids
         )
+      # else
+      #   console.log 'sea state not good', JSON.stringify state[action.match.side].bid
 
   if state.top and state.sell
     state.topValue = state.sell.price * state.top.available
