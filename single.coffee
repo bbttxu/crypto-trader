@@ -94,7 +94,7 @@ addBid = ( bid, cancelPlease )->
     console.log 'sell onError'
     console.log 'error', err, err.body
 
-  console.log 'start', bid.side, 'bid', bid
+  # console.log 'start', bid.side, 'bid', bid
 
   gdax[bid.side]( bid ).then( onGood ).then( saveBid ).catch( onError )
 
@@ -129,7 +129,7 @@ averageOf = require './lib/averageOf'
 makeNewBid = ( bid, cancelPlease )->
   if decisioner( bid )
     if handleFractionalSize bid.bid
-      console.log 'passed fractional size', bid.bid.size
+      # console.log 'passed fractional size', bid.bid.size
 
       if bid.bid.size < 0.01
         bid.bid.size = 0.01
@@ -211,7 +211,7 @@ reducer = (state, action) ->
     # WIP update bid in bids storage with cancelled status
     console.log 'BID_CANCELLED', action.id
     state.bids = reject propEq( 'id', action.id ), state.bids
-    console.log state.bids.length, pluck 'id', state.bids
+    console.log state.bids.length, JSON.stringify pluck 'id', state.bids
 
 
 
