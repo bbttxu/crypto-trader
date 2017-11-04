@@ -3,7 +3,6 @@ PRODUCT_ID = argv._[0]
 
 
 SIZING = 100
-SIZING = 40
 
 
 RSVP = require 'rsvp'
@@ -50,6 +49,7 @@ cleanUpTrade = require './lib/cleanUpTrades'
   sort
   reject
   sortBy
+  contains
 } = require 'ramda'
 
 
@@ -72,6 +72,7 @@ initalState =
 showStatus = require './lib/showStatus'
 
 saveBid = require './lib/saveBid'
+updateBid = require './lib/updateBid'
 
 addBid = ( bid, cancelPlease )->
 
@@ -207,8 +208,10 @@ reducer = (state, action) ->
 
 
   if 'BID_CANCELLED' is action.type
+    # WIP update bid in bids storage with cancelled status
+    console.log 'BID_CANCELLED', action.id
     state.bids = reject propEq( 'id', action.id ), state.bids
-    console.log 'BID_CANCELLED', action.id, state.bids.length
+    console.log state.bids.length, pluck 'id', state.bids
 
 
 
@@ -245,6 +248,16 @@ reducer = (state, action) ->
 
   if 'ADD_FILL' is action.type
     state.fills.push action.fill
+
+
+  if 'MATCH_FILLED' is action.type
+    # console.log 'MATCH_FILLED', JSON.stringify action.match
+    if contains action.match.order_id, ( pluck 'id', state.bids )
+      updateBid( action.match.order_id, action.match ).then( ( result )->
+        log result
+      ).catch( ( err)->
+        console.log 'match filled error after updating the bid with the filled info', err
+      )
 
 
 
@@ -464,6 +477,12 @@ productStream.subscribe "message:#{PRODUCT_ID}", ( hi )->
   if 'match' is hi.type
     store.dispatch
       type: 'ADD_MATCH'
+      match: hi
+
+
+  if 'done' is hi.type and 'filled' is hi.reason
+    store.dispatch
+      type: 'MATCH_FILLED'
       match: hi
 
 
