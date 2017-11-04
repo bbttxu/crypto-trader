@@ -243,7 +243,8 @@ reducer = (state, action) ->
 
 
   if 'ADD_RUN' is action.type
-    state.runs.push action.run
+    unless 0 is action.run.d_price or 0 is action.run.d_time
+      state.runs.push action.run
 
 
   if 'ADD_FILL' is action.type
@@ -393,7 +394,7 @@ reducer = (state, action) ->
 
     response =
       d_time: averageOf( 'd_time' )( runs )
-      d_price: averageOf( 'd_price' )( runs )
+      d_price: parseFloat( ( averageOf( 'd_price' )( runs ) ).toFixed 4 )
       d_volume: averageOf( 'volume' )( runs )
       n: n
       n_runs: n_runs

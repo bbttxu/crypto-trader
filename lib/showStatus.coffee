@@ -1,3 +1,5 @@
+approximate = require 'approximate-number'
+
 {
   groupBy
   prop
@@ -28,8 +30,15 @@ getPrice = ( fill )->
 getPrices = ( side )->
   map getPrice, values side
 
+annotate = ( details )->
+  details.balance = approximate details.buy + details.sell, prefix: '$', capital: true, round: true
+
+  details
 
 showStatus = ( fills )->
-  map sum, map getPrices, groupBy prop( 'side' ), fills
+  details = annotate map sum, map getPrices, groupBy prop( 'side' ), fills
+  "#{details.balance}; sell: $#{parseInt(details.sell)}, buy: $#{parseInt(details.buy)}"
+
+
 
 module.exports = showStatus
