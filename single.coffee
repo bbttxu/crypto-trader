@@ -76,6 +76,9 @@ updateBid = require './lib/updateBid'
 
 addBid = ( bid, cancelPlease )->
 
+  # TODO make an optional flag so we can listen and record, but not trade
+  return 1
+
   onGood = ( foo )->
     message = foo.body
 
@@ -235,11 +238,7 @@ reducer = (state, action) ->
 
   if 'ADD_BID' is action.type
     console.log 'ADD_BID', JSON.stringify action.bid
-
     state.bids.push action.bid
-
-    console.log 'ADD_BID'
-
 
 
   if 'ADD_RUN' is action.type
