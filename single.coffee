@@ -50,6 +50,10 @@ cleanUpTrade = require './lib/cleanUpTrades'
   reject
   sortBy
   contains
+  countBy
+  identity
+  clamp
+  values
 } = require 'ramda'
 
 
@@ -68,6 +72,8 @@ initalState =
   bid: {}
   bids: []
   match: {}
+  sellFactor: 0
+  buyFactor: 0
 
 showStatus = require './lib/showStatus'
 
@@ -77,7 +83,7 @@ updateBid = require './lib/updateBid'
 addBid = ( bid, cancelPlease )->
 
   # TODO make an optional flag so we can listen and record, but not trade
-  return 1
+  # return 1
 
   onGood = ( foo )->
     message = foo.body
@@ -210,6 +216,12 @@ reducer = (state, action) ->
     console.log moment( start ).format(),'HEARTBEAT', Date.now() - start, 'ms'
 
 
+  if 'UPDATE_FACTORS' is action.type
+    state.sellFactor = action.factors.sellFactor
+    state.buyFactor = action.factors.buyFactor
+
+    # log state
+
   if 'BID_CANCELLED' is action.type
     # WIP update bid in bids storage with cancelled status
     console.log 'BID_CANCELLED', action.id
@@ -231,10 +243,12 @@ reducer = (state, action) ->
     state.bottom = action.data
 
 
-  state.sellAmount = state.top.available / SIZING
+  state.sellAmount = ( state.top.available / SIZING ) * state.sellFactor
+
+  state.buyAmount = ( state.bottom.available / state.sell.price / SIZING ) * parseFloat( state.buyFactor )
 
 
-  state.buyAmount = state.bottom.available / state.sell.price / SIZING
+
 
   if 'ADD_BID' is action.type
     console.log 'ADD_BID', JSON.stringify action.bid
@@ -318,8 +332,9 @@ reducer = (state, action) ->
         price: bidPrice
         side: action.match.side
         product_id: PRODUCT_ID
-        size: state["#{action.match.side}Amount"]
-
+        size: (
+          state["#{action.match.side}Amount"]
+        )
 
       lkfafdijwe = state[ action.match.side ]
 
@@ -643,4 +658,80 @@ RSVP.hash( promises ).then( ( good )->
 ).catch( ( bad )->
   console.log 'bad'
 )
+
+
+
+{
+  get
+} = require 'axios'
+
+
+# https://docs.gdax.com/#get-historic-rates
+tooOld = ( candle )->
+  candle[0] < moment().subtract( 1, 'day' ).unix()
+
+# https://docs.gdax.com/#get-historic-rates
+latestIsGreaterThanOpen = ( candle )->
+  candle[3] < candle[4]
+
+clamper = ( value )->
+  partial = parseFloat( clamp( 0, value, 1 ).toFixed( 3 ) )
+  parseFloat( partial * partial ).toFixed 3
+
+# https://docs.gdax.com/#get-historic-rates
+getRates = ->
+
+  get(
+    "https://api.gdax.com/products/#{PRODUCT_ID}/candles",
+    {
+      params: {
+        granularity: 60
+      }
+    }
+  ).then(
+    ( result )->
+      counts = countBy(
+        identity,
+        map(
+          latestIsGreaterThanOpen,
+          reject(
+            tooOld,
+            result.data
+          )
+        )
+      )
+
+
+
+      # counts.n = sum values counts
+
+
+      # counts.sell = ( counts.true / counts.n )
+      # counts.buy = ( counts.false / counts.n )
+
+      counts.sellFactor = clamper( counts.true / counts.false )
+
+      counts.buyFactor = clamper( counts.false / counts.true )
+
+      console.log counts
+
+      store.dispatch
+        type: 'UPDATE_FACTORS'
+        factors:
+          sellFactor: clamper( counts.true / counts.false )
+          buyFactor: clamper( counts.false / counts.true )
+
+
+  ).catch(
+    ( error )->
+      console.log 'candles error', error
+  )
+
+setInterval(
+  getRates,
+  60 * 1000
+)
+getRates()
+
+
 

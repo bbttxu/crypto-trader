@@ -1,3 +1,48 @@
+argv = require('minimist')(process.argv.slice(2))
+PRODUCT_ID = argv._[0]
+
+{
+  stat
+} = require './lib/gdax-client'
+
+{
+  map
+  mapObjIndexed
+  values
+} = require 'ramda'
+
+RSVP = require 'rsvp'
+
+saveStat = require './lib/saveStat'
+
+makeStat = ( stat, product_id )->
+  stat.product_id = product_id
+  stat
+
+
+updateStats = ->
+  stat( [ PRODUCT_ID ] ).then(
+    ( result )->
+
+      resultStats = values mapObjIndexed makeStat, result
+
+      RSVP.all( map saveStat, resultStats ).then(
+        ( results )->
+          console.log results
+      ).catch(
+        ( error )->
+          console.log 'ERROR', error
+      )
+
+
+  ).catch(
+    ( err )->
+      console.log 'err', err
+  )
+
+setInterval updateStats, 60 * 1000
+updateStats()
+
 # config = require './config'
 
 # R = require 'ramda'
