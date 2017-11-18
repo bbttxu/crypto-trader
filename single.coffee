@@ -1,6 +1,9 @@
+require( 'dotenv' ).config( silent: true )
 argv = require('minimist')(process.argv.slice(2))
-PRODUCT_ID = argv._[0]
+PRODUCT_ID = process.env.PRODUCT_ID ||  argv._[0]
 
+unless PRODUCT_ID
+  console.log 'need a product id!'
 
 SIZING = 100
 
