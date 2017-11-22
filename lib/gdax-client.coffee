@@ -4,6 +4,10 @@ RSVP = require 'rsvp'
 R = require 'ramda'
 moment = require 'moment'
 
+# Some
+{
+  get
+} = require 'axios'
 
 ###
                __  .__               .____________ .__  .__               __
@@ -99,6 +103,15 @@ stats = ( currencies = [] )->
 
     RSVP.all( allCurrencyStats ).then( resolveIssues ).catch( rejectPromise )
 
+#
+# single stat for single product_id
+stat = ( product_id, params = granularity: 60 )->
+  get(
+    "https://api.gdax.com/products/#{product_id}/candles",
+    { params: params }
+  )
+
+
 getAccounts = ( currency )->
   console.log currency
   new RSVP.Promise ( resolve, reject )->
@@ -183,7 +196,11 @@ _/ __ \\  \/  /\____ \ /  _ \_  __ \   __\/  ___/
 module.exports =
   cancelAllOrders: cancelAllOrders
   getProduct24HrStats: getProduct24HrStats
+
+  # multiple or single
   stats: stats
+  stat: stat
+
   getAccounts: getAccounts
 
   cancelOrder: cancelOrder
