@@ -217,7 +217,6 @@ reducer = (state, action) ->
 
 
   if 'UPDATE_FACTORS' is action.type
-    console.log action.factors
     state.sellFactor = action.factors.sellFactor
     state.buyFactor = action.factors.buyFactor
 
