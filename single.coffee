@@ -53,9 +53,6 @@ cleanUpTrade = require './lib/cleanUpTrades'
   reject
   sortBy
   contains
-  countBy
-  identity
-  clamp
   values
 } = require 'ramda'
 
@@ -664,66 +661,23 @@ RSVP.hash( promises ).then( ( good )->
 
 
 
-{
-  get
-} = require 'axios'
+###
+use candles to gauge where things are trending
+###
 
-
-# https://docs.gdax.com/#get-historic-rates
-tooOld = ( candle )->
-  candle[0] < moment().subtract( 1, 'day' ).unix()
+inTheWind = require './lib/inTheWind'
 
 # https://docs.gdax.com/#get-historic-rates
-latestIsGreaterThanOpen = ( candle )->
-  candle[3] < candle[4]
-
-clamper = ( value )->
-  partial = parseFloat( clamp( 0, value, 1 ).toFixed( 3 ) )
-  parseFloat( partial * partial ).toFixed 3
-
-# https://docs.gdax.com/#get-historic-rates
-getRates = ->
-
-  get(
-    "https://api.gdax.com/products/#{PRODUCT_ID}/candles",
-    {
-      params: {
-        granularity: 60
-      }
-    }
+normaJean = ->
+  gdax.stat(
+    PRODUCT_ID
   ).then(
-    ( result )->
-      counts = countBy(
-        identity,
-        map(
-          latestIsGreaterThanOpen,
-          reject(
-            tooOld,
-            result.data
-          )
-        )
-      )
-
-
-
-      # counts.n = sum values counts
-
-
-      # counts.sell = ( counts.true / counts.n )
-      # counts.buy = ( counts.false / counts.n )
-
-      counts.sellFactor = clamper( counts.true / counts.false )
-
-      counts.buyFactor = clamper( counts.false / counts.true )
-
-      console.log counts
-
+    inTheWind
+  ).then(
+    ( factors )->
       store.dispatch
         type: 'UPDATE_FACTORS'
-        factors:
-          sellFactor: clamper( counts.true / counts.false )
-          buyFactor: clamper( counts.false / counts.true )
-
+        factors: factors
 
   ).catch(
     ( error )->
@@ -731,10 +685,10 @@ getRates = ->
   )
 
 setInterval(
-  getRates,
+  normaJean,
   60 * 1000
 )
-getRates()
+normaJean()
 
 
 
