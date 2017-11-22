@@ -1,7 +1,12 @@
 require('dotenv').config({silent: true})
 Gdax = require 'gdax'
 RSVP = require 'rsvp'
-R = require 'ramda'
+
+# Func program lib
+{
+  map
+} = require 'ramda'
+
 moment = require 'moment'
 
 # Some
@@ -63,7 +68,7 @@ cancelAllOrders = ( currencies = [] )->
           else
             resolve results.body
 
-    cancelAllCurrencyOrders = R.map promiseCancelCurrencyOrder, currencies
+    cancelAllCurrencyOrders = map promiseCancelCurrencyOrder, currencies
 
     rejectPromise = ( promise )->
       reject promise
@@ -93,7 +98,7 @@ getProduct24HrStats = ( product )->
 stats = ( currencies = [] )->
   new RSVP.Promise ( resolve, reject )->
 
-    allCurrencyStats = R.map getProduct24HrStats, currencies
+    allCurrencyStats = map getProduct24HrStats, currencies
 
     rejectPromise = ( promise )->
       reject promise
