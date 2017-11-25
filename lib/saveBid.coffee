@@ -1,29 +1,24 @@
-require('dotenv').config( silent: true )
-
-# mongo = require('mongodb').MongoClient
 {
   Promise
 } = require 'rsvp'
 
-moment = require 'moment'
-
 mongoConnection = require './mongoConnection'
 
-saveBid = ( bid )->
+saveBidToStorage = ( bid )->
 
   #
   #
-  new Promise (resolve, reject)->
+  new Promise ( resolve, reject )->
 
     #
     #
-    mongoConnection().then (db)->
-      reject err if err
-
+    mongoConnection().then ( db )->
       db.collection( 'bids' ).insert bid, ( err, whiz )->
-        reject err if err
-        console.log 'jkahjd', bid, whiz
+        if err
+          console.log 'pidids err', err
+          reject err
+
         resolve whiz.ops[0]
 
 
-module.exports = saveBid
+module.exports = saveBidToStorage
