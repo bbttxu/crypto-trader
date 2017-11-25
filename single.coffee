@@ -209,7 +209,7 @@ reducer = (state, action) ->
     overADayOld = ( run )->
       moment().subtract( 1, 'day' ).valueOf() > run.end
 
-    state.runs = reject overADayOld, state.runs
+    state.runs = sortBy prop( 'start' ), reject overADayOld, state.runs
 
     # do stuff here ^^^
 
@@ -406,6 +406,13 @@ reducer = (state, action) ->
     n = sum pluck 'n', runs
     n_runs = runs.length
 
+    # prices = pluck 'd_price', runs
+
+    # extremes = [
+    #   parseFloat( Math.min.apply( this, prices ).toFixed( 4 ) )
+    #   parseFloat( Math.max.apply( this, prices ).toFixed( 4 ) )
+    # ]
+
     response =
       d_time: averageOf( 'd_time' )( runs )
       d_price: parseFloat( ( averageOf( 'd_price' )( runs ) ).toFixed 4 )
@@ -437,7 +444,7 @@ saveRun = ( run )->
   saveRunToStorage( consolidated ).then( (good)->
     store.dispatch
       type: 'ADD_RUN'
-      run: consolidated
+      run: good
 
   ).catch( (err)->
     console.log 'err', err
@@ -488,7 +495,7 @@ Stream = require './lib/stream'
 
 productStream = Stream PRODUCT_ID
 
-productStream.subscribe "message:#{PRODUCT_ID}", ( hi )->
+productStream.subscribe "*", ( hi )->
   if 'match' is hi.type
     store.dispatch
       type: 'ADD_MATCH'
@@ -624,6 +631,7 @@ getBids = require './lib/getBids'
 
 addRun = ( run, index )->
   storeDispatch = ->
+
     store.dispatch
       type: 'ADD_RUN'
       run: run
