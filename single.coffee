@@ -53,9 +53,6 @@ cleanUpTrade = require './lib/cleanUpTrades'
   reject
   sortBy
   contains
-  countBy
-  identity
-  clamp
   values
 } = require 'ramda'
 
@@ -212,7 +209,7 @@ reducer = (state, action) ->
     overADayOld = ( run )->
       moment().subtract( 1, 'day' ).valueOf() > run.end
 
-    state.runs = reject overADayOld, state.runs
+    state.runs = sortBy prop( 'start' ), reject overADayOld, state.runs
 
     # do stuff here ^^^
 
@@ -409,6 +406,13 @@ reducer = (state, action) ->
     n = sum pluck 'n', runs
     n_runs = runs.length
 
+    # prices = pluck 'd_price', runs
+
+    # extremes = [
+    #   parseFloat( Math.min.apply( this, prices ).toFixed( 4 ) )
+    #   parseFloat( Math.max.apply( this, prices ).toFixed( 4 ) )
+    # ]
+
     response =
       d_time: averageOf( 'd_time' )( runs )
       d_price: parseFloat( ( averageOf( 'd_price' )( runs ) ).toFixed 4 )
@@ -440,7 +444,7 @@ saveRun = ( run )->
   saveRunToStorage( consolidated ).then( (good)->
     store.dispatch
       type: 'ADD_RUN'
-      run: consolidated
+      run: good
 
   ).catch( (err)->
     console.log 'err', err
@@ -491,7 +495,7 @@ Stream = require './lib/stream'
 
 productStream = Stream PRODUCT_ID
 
-productStream.subscribe "message:#{PRODUCT_ID}", ( hi )->
+productStream.subscribe "*", ( hi )->
   if 'match' is hi.type
     store.dispatch
       type: 'ADD_MATCH'
@@ -627,6 +631,7 @@ getBids = require './lib/getBids'
 
 addRun = ( run, index )->
   storeDispatch = ->
+
     store.dispatch
       type: 'ADD_RUN'
       run: run
@@ -664,66 +669,23 @@ RSVP.hash( promises ).then( ( good )->
 
 
 
-{
-  get
-} = require 'axios'
+###
+use candles to gauge where things are trending
+###
 
-
-# https://docs.gdax.com/#get-historic-rates
-tooOld = ( candle )->
-  candle[0] < moment().subtract( 1, 'day' ).unix()
+inTheWind = require './lib/inTheWind'
 
 # https://docs.gdax.com/#get-historic-rates
-latestIsGreaterThanOpen = ( candle )->
-  candle[3] < candle[4]
-
-clamper = ( value )->
-  partial = parseFloat( clamp( 0, value, 1 ).toFixed( 3 ) )
-  parseFloat( partial * partial ).toFixed 3
-
-# https://docs.gdax.com/#get-historic-rates
-getRates = ->
-
-  get(
-    "https://api.gdax.com/products/#{PRODUCT_ID}/candles",
-    {
-      params: {
-        granularity: 60
-      }
-    }
+normaJean = ->
+  gdax.stat(
+    PRODUCT_ID
   ).then(
-    ( result )->
-      counts = countBy(
-        identity,
-        map(
-          latestIsGreaterThanOpen,
-          reject(
-            tooOld,
-            result.data
-          )
-        )
-      )
-
-
-
-      # counts.n = sum values counts
-
-
-      # counts.sell = ( counts.true / counts.n )
-      # counts.buy = ( counts.false / counts.n )
-
-      counts.sellFactor = clamper( counts.true / counts.false )
-
-      counts.buyFactor = clamper( counts.false / counts.true )
-
-      console.log counts
-
+    inTheWind
+  ).then(
+    ( factors )->
       store.dispatch
         type: 'UPDATE_FACTORS'
-        factors:
-          sellFactor: clamper( counts.true / counts.false )
-          buyFactor: clamper( counts.false / counts.true )
-
+        factors: factors
 
   ).catch(
     ( error )->
@@ -731,10 +693,10 @@ getRates = ->
   )
 
 setInterval(
-  getRates,
+  normaJean,
   60 * 1000
 )
-getRates()
+normaJean()
 
 
 

@@ -1,9 +1,18 @@
 require('dotenv').config({silent: true})
 Gdax = require 'gdax'
 RSVP = require 'rsvp'
-R = require 'ramda'
+
+# Func program lib
+{
+  map
+} = require 'ramda'
+
 moment = require 'moment'
 
+# Some
+{
+  get
+} = require 'axios'
 
 ###
                __  .__               .____________ .__  .__               __
@@ -59,7 +68,7 @@ cancelAllOrders = ( currencies = [] )->
           else
             resolve results.body
 
-    cancelAllCurrencyOrders = R.map promiseCancelCurrencyOrder, currencies
+    cancelAllCurrencyOrders = map promiseCancelCurrencyOrder, currencies
 
     rejectPromise = ( promise )->
       reject promise
@@ -89,7 +98,7 @@ getProduct24HrStats = ( product )->
 stats = ( currencies = [] )->
   new RSVP.Promise ( resolve, reject )->
 
-    allCurrencyStats = R.map getProduct24HrStats, currencies
+    allCurrencyStats = map getProduct24HrStats, currencies
 
     rejectPromise = ( promise )->
       reject promise
@@ -98,6 +107,15 @@ stats = ( currencies = [] )->
       resolve issues
 
     RSVP.all( allCurrencyStats ).then( resolveIssues ).catch( rejectPromise )
+
+#
+# single stat for single product_id
+stat = ( product_id, params = granularity: 60 )->
+  get(
+    "https://api.gdax.com/products/#{product_id}/candles",
+    { params: params }
+  )
+
 
 getAccounts = ( currency )->
   console.log currency
@@ -183,7 +201,11 @@ _/ __ \\  \/  /\____ \ /  _ \_  __ \   __\/  ___/
 module.exports =
   cancelAllOrders: cancelAllOrders
   getProduct24HrStats: getProduct24HrStats
+
+  # multiple or single
   stats: stats
+  stat: stat
+
   getAccounts: getAccounts
 
   cancelOrder: cancelOrder

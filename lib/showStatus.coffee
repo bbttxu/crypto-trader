@@ -36,8 +36,13 @@ annotate = ( details )->
   details
 
 showStatus = ( fills )->
+  if 0 is fills.length
+    return "Zero Fills"
+
+  base = fills[0].product_id.split( '-' )[1]
+
   details = annotate map sum, map getPrices, groupBy prop( 'side' ), fills
-  "#{details.balance}; sell: $#{parseInt(details.sell)}, buy: $#{parseInt(details.buy)}"
+  "#{details.balance}#{base}; sell: #{parseInt(details.sell)}, buy: #{parseInt(details.buy)}"
 
 
 
