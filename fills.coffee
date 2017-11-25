@@ -1,5 +1,3 @@
-console.log 'fills'
-
 config = require './config'
 
 saveFills = require('./save2')(config)
