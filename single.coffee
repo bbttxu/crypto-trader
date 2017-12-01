@@ -54,6 +54,7 @@ cleanUpTrade = require './lib/cleanUpTrades'
   sortBy
   contains
   values
+  uniq
 } = require 'ramda'
 
 
@@ -71,13 +72,14 @@ initalState =
   buy: {}
   bid: {}
   bids: []
+  bid_ids: []
   match: {}
   sellFactor: 0
   buyFactor: 0
 
 showStatus = require './lib/showStatus'
 
-saveBid = require './lib/saveBid'
+saveBidToStorage = require './lib/saveBidToStorage'
 updateBid = require './lib/updateBid'
 
 addBid = ( bid, cancelPlease )->
@@ -100,12 +102,18 @@ addBid = ( bid, cancelPlease )->
 
 
   onError = ( err )->
-    console.log 'sell onError'
+    console.log 'bid.side', bid.side, 'onError'
     console.log 'error', err, err.body
 
   # console.log 'start', bid.side, 'bid', bid
 
-  gdax[bid.side]( bid ).then( onGood ).then( saveBid ).catch( onError )
+  gdax[ bid.side ](
+    bid
+  ).then(
+    onGood
+  ).catch(
+    onError
+  )
 
 
 
@@ -155,7 +163,8 @@ makeNewBid = ( bid, cancelPlease )->
 
 
 
-
+  # since we're catching cancellations on the stream, we
+  # don't really care of the outcome
   RSVP.hashSettled( mergeAll map makeCancellation, cancelPlease ).then( ( good )->
 
 
@@ -165,26 +174,29 @@ makeNewBid = ( bid, cancelPlease )->
 
     fulfilled = filter isFullfilled, good
 
+
     #
-    cancelBid = ( bid, id )->
-      if true is bid.value
-        payload =
-          type: 'BID_CANCELLED'
-          id: id
+    # cancelBid = ( bid, id )->
+    #   if true is bid.value
+    #     payload =
+    #       type: 'BID_CANCELLED'
+    #       id: id
+    #       bid: bid
 
 
-        store.dispatch payload
+    #     store.dispatch payload
 
-      if 'order not found' is bid.reason
-        payload =
-          type: 'BID_CANCELLED'
-          id: id
-
-
-        store.dispatch payload
+    #   if 'order not found' is bid.reason
+    #     payload =
+    #       type: 'BID_CANCELLED'
+    #       id: id
+    #       bid: bid
 
 
-    forEachObjIndexed cancelBid, good
+    #     store.dispatch payload
+
+
+    # forEachObjIndexed cancelBid, good
 
 
 
@@ -220,20 +232,6 @@ reducer = (state, action) ->
     state.sellFactor = action.factors.sellFactor
     state.buyFactor = action.factors.buyFactor
 
-    # log state
-
-  if 'BID_CANCELLED' is action.type
-    # WIP update bid in bids storage with cancelled status
-    console.log 'BID_CANCELLED', action.id
-    state.bids = reject propEq( 'id', action.id ), state.bids
-    console.log state.bids.length, JSON.stringify pluck 'id', state.bids
-
-
-
-
-
-
-
 
   if 'UPDATE_TOP' is action.type
     state.top = action.data
@@ -251,8 +249,22 @@ reducer = (state, action) ->
 
 
   if 'ADD_BID' is action.type
-    console.log 'ADD_BID', JSON.stringify action.bid
+    console.log 'ADD_BID', JSON.stringify(
+      pick(
+        [
+          'product_id',
+          'side',
+          'price',
+          'size',
+          'id',
+          'client_oid'
+        ],
+        action.bid
+      )
+    )
+
     state.bids.push action.bid
+    state.bid_ids = pluck 'id', state.bids
 
 
   if 'ADD_RUN' is action.type
@@ -264,14 +276,48 @@ reducer = (state, action) ->
     state.fills.push action.fill
 
 
+  if 'BID_CANCELLED' is action.type
+    # console.log 'BID_CANCELLED', JSON.stringify  action.bid
+
+    index = findIndex propEq( 'id', action.bid.order_id ), state.bids
+
+    if index > -1
+      updatedBid = merge state.bids[ index ], action.bid
+
+      state.bids = reject propEq( 'id', action.bid.order_id ), state.bids
+
+      state.bids.push updatedBid
+
+      state.bid_ids = pluck 'id', state.bids
+
+      saveBidToStorage updatedBid
+
+
+
+
   if 'MATCH_FILLED' is action.type
     # console.log 'MATCH_FILLED', JSON.stringify action.match
-    if contains action.match.order_id, ( pluck 'id', state.bids )
-      updateBid( action.match.order_id, action.match ).then( ( result )->
-        log result
-      ).catch( ( err)->
-        console.log 'match filled error after updating the bid with the filled info', err
-      )
+
+    index = findIndex propEq( 'id', action.match.order_id ), state.bids
+
+    if index > -1
+      updatedBid = merge state.bids[ index ], action.match
+
+      state.bids = reject propEq( 'id', action.match.order_id ), state.bids
+
+      state.bids.push updatedBid
+
+      state.bid_ids = pluck 'id', state.bids
+
+      saveBidToStorage updatedBid
+
+
+      # console.log merge state.bids[ index ], action.match
+      # saveBidToStorage merge state.bids[ index ], action.match
+
+
+
+    # state.bids = reject propEq( 'id', action.match.order_id ), state.bids
 
 
 
@@ -323,10 +369,16 @@ reducer = (state, action) ->
     if isEmpty state.run
       state.run = [ skinny action.match ]
 
+      # console.log(
+      #   parseFloat( ( skinny action.match ).price ),
+      #   2.0 * parseFloat( state[ ( skinny action.match ).side ].d_price )
+      # )
 
       bidPrice =
         parseFloat( ( skinny action.match ).price ) +
         2.0 * parseFloat( state[ ( skinny action.match ).side ].d_price )
+
+      # console.log bidPrice
 
       bid = cleanUpTrade
         price: bidPrice
@@ -496,10 +548,20 @@ Stream = require './lib/stream'
 productStream = Stream PRODUCT_ID
 
 productStream.subscribe "*", ( hi )->
+
+  # console.log hi
+
   if 'match' is hi.type
     store.dispatch
       type: 'ADD_MATCH'
       match: hi
+
+
+  if 'done' is hi.type and 'canceled' is hi.reason
+    # console.log hi
+    store.dispatch
+      type: 'BID_CANCELLED'
+      bid: hi
 
 
   if 'done' is hi.type and 'filled' is hi.reason
@@ -652,7 +714,7 @@ dispatchFill = ( fill )->
 
 promises = {
   fills: getFills( PRODUCT_ID ),
-  bids: getBids( PRODUCT_ID ),
+  bids: getBids( PRODUCT_ID, reason: 'filled' ),
   runs: getRunsFromStorage( product_id: PRODUCT_ID )
 }
 
@@ -683,6 +745,7 @@ normaJean = ->
     inTheWind
   ).then(
     ( factors )->
+      console.log factors
       store.dispatch
         type: 'UPDATE_FACTORS'
         factors: factors

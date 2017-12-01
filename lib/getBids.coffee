@@ -2,7 +2,11 @@ RSVP = require 'rsvp'
 
 mongoConnection = require('../lib/mongoConnection')
 
-getBids = (product)->
+{
+  merge
+} = require 'ramda'
+
+getBids = ( product, query = {} )->
   new RSVP.Promise (resolve, reject)->
     mongoConnection().then (db)->
       collection = db.collection 'bids'
@@ -17,7 +21,15 @@ getBids = (product)->
       search =
         product_id: product
 
-      collection.find(search).sort(trade_id: 1).toArray().then(callback).catch(onError)
+      collection.find(
+        merge search, query
+      ).sort(
+        trade_id: 1
+      ).toArray().then(
+        callback
+      ).catch(
+        onError
+      )
 
 
 module.exports = getBids
