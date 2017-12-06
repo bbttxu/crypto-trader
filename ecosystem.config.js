@@ -23,8 +23,8 @@ const applyRandomReload = ( app )=> {
     {
       restart_delay: Math.round(
         (
-          45 + (
-            Math.random() * 30
+          60 + (
+            Math.random() * 60
           )
         )
       ) * 1000,
