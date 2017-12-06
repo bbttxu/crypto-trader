@@ -67,7 +67,7 @@ module.exports = {
             'ETH-USD',
             'LTC-USD',
             'ETH-BTC',
-            'LTC-USD'
+            'LTC-BTC'
           ]
         )
       )
