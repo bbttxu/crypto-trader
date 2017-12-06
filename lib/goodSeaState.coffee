@@ -12,12 +12,16 @@ goodSeaState = ( state )->
   # return if there are no fills shown
   return false if isEmpty state.fills
 
-  future = parseFloat state[ state.match.side ].bid.price
-
   filterOtherSide = ( fill )->
     fill.side is otherSide state.match.side
 
-  latest = prop 'price', last filter filterOtherSide, state.fills
+  theOtherSide = filter filterOtherSide, state.fills
+
+  return false if isEmpty theOtherSide
+
+  future = parseFloat state[ state.match.side ].bid.price
+
+  latest = prop 'price', last theOtherSide
 
   lossIsNegative = ( future - latest ) > 0
 
