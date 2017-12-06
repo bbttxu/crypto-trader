@@ -44,7 +44,7 @@ promiseToUpdateCurrency = ( product_id )->
           .sort( created_at: -1 )
           .toArray (err,data)->
             if err
-              console.log 'err', err
+              console.log 'save2 err', err
               reject err
 
             resolve pluck 'order_id', data
