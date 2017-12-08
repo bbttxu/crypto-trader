@@ -763,3 +763,16 @@ normaJean()
 
 
 
+
+
+
+process.on 'SIGINT', ->
+
+  timeout = ->
+    console.log 'graceful kill', PRODUCT_ID
+    process.exit err ? 1 : 0
+
+
+
+  console.log 'graceful timeout', PRODUCT_ID
+  setTimeout timeout, 1000

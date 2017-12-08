@@ -10,7 +10,7 @@ const defaults = {
   interpreter: './node_modules/coffee-script/bin/coffee',
   watch: false,
   max_restarts: 10,
-  max_memory_restart: '150M'
+  max_memory_restart: '180M'
 }
 
 const setDefaults = ( app )=> {
@@ -32,6 +32,15 @@ const applyRandomReload = ( app )=> {
   )
 }
 
+const applyHourlyCron = ( app, index )=> {
+  return merge(
+    app,
+    {
+      cron: parseInt(60*Math.random()) + " * * * *"
+    }
+  )
+}
+
 const setupProduct = ( product )=> {
   return {
     name: product,
@@ -46,32 +55,36 @@ module.exports = {
    * Application configuration section
    * http://pm2.keymetrics.io/docs/usage/application-declaration/
    */
-  apps: concat(
-    [
-      // First application
-      {
-        name: "Fills",
-        script: "fills.coffee",
-        interpreter: './node_modules/coffee-script/bin/coffee',
-        watch: true
-      }
-    ],
-    map(
-      setDefaults,
+  apps: map(
+    applyHourlyCron,
       map(
         applyRandomReload,
-        map(
-          setupProduct,
+        concat(
           [
-            'BTC-USD',
-            'ETH-USD',
-            'LTC-USD',
-            'ETH-BTC',
-            'LTC-BTC'
-          ]
+            // First application
+            {
+              name: "Fills",
+              script: "fills.coffee",
+              interpreter: './node_modules/coffee-script/bin/coffee',
+              watch: true
+            }
+          ],
+          map(
+            setDefaults,
+            map(
+              setupProduct,
+              [
+                'BTC-USD',
+                'ETH-USD',
+                'LTC-USD',
+                'ETH-BTC',
+                'LTC-BTC'
+              ]
+            )
+          )
         )
       )
     )
-  ),
+  ,
   deploy : {}
 }
