@@ -715,7 +715,8 @@ dispatchFill = ( fill )->
 promises = {
   fills: getFills( PRODUCT_ID ),
   bids: getBids( PRODUCT_ID, reason: 'filled' ),
-  runs: getRunsFromStorage( product_id: PRODUCT_ID )
+  runs: getRunsFromStorage( product_id: PRODUCT_ID ),
+  cancelAllOrders: gdax.cancelAllOrders [ PRODUCT_ID ]
 }
 
 RSVP.hash( promises ).then( ( good )->
