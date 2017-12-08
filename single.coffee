@@ -768,12 +768,12 @@ normaJean()
 
 
 process.on 'SIGINT', ->
+  gdax.cancelAllOrders [ PRODUCT_ID ]
+  console.log 'graceful timeout', PRODUCT_ID
 
   timeout = ->
+    gdax.cancelAllOrders [ PRODUCT_ID ]
     console.log 'graceful kill', PRODUCT_ID
     process.exit err ? 1 : 0
 
-
-
-  console.log 'graceful timeout', PRODUCT_ID
   setTimeout timeout, 1000
