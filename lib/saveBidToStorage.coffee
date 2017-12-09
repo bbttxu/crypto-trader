@@ -2,7 +2,8 @@
   Promise
 } = require 'rsvp'
 
-mongoConnection = require './mongoConnection'
+mongoDb = require './mongoDb'
+# mongoConnection = require './mongoConnection'
 
 saveBidToStorage = ( bid )->
 
@@ -12,8 +13,9 @@ saveBidToStorage = ( bid )->
 
     #
     #
-    mongoConnection().then ( db )->
-      db.collection( 'bids' ).insert bid, ( err, whiz )->
+    mongoDb( 'bids' ).then ( db )->
+
+      db.insert bid, ( err, whiz )->
         if err
           console.log 'pidids err', err
           reject err
