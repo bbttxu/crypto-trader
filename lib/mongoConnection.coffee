@@ -29,9 +29,7 @@ module.exports = ( name = 'default' )->
   new RSVP.Promise (resolve, reject)->
     ++i
 
-    console.log 'check persistent connection', i
     if 0 is modulo i, 100
-      console.log 'close persistent connection', i
       persistedMongoConnection.close()
       persistedMongoConnection = undefined
 

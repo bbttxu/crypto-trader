@@ -10,7 +10,7 @@ const defaults = {
   interpreter: './node_modules/coffee-script/bin/coffee',
   watch: false,
   max_restarts: 10,
-  max_memory_restart: '180M'
+  max_memory_restart: '500M'
 }
 
 const setDefaults = ( app )=> {
