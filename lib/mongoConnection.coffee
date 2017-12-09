@@ -1,20 +1,42 @@
 require('dotenv').config( silent: true )
 
+###
+.____    ._____.                      .__
+|    |   |__\_ |______________ _______|__| ____   ______
+|    |   |  || __ \_  __ \__  \\_  __ \  |/ __ \ /  ___/
+|    |___|  || \_\ \  | \// __ \|  | \/  \  ___/ \___ \
+|_______ \__||___  /__|  (____  /__|  |__|\___  >____  >
+        \/       \/           \/              \/     \/
+###
+
 RSVP = require 'rsvp'
 mongo = require('mongodb').MongoClient
 
-memoize = require 'lodash.memoize'
+{
+  modulo
+} = require 'ramda'
 
-# persistedMongoConnection = undefined
+
+i = 1
+
+persistedMongoConnection = undefined
+
 
 #
 #
-
 module.exports = ( name = 'default' )->
+
   new RSVP.Promise (resolve, reject)->
+    ++i
+
+    console.log 'check persistent connection', i
+    if 0 is modulo i, 100
+      console.log 'close persistent connection', i
+      persistedMongoConnection.close()
+      persistedMongoConnection = undefined
 
     # return persisted connection if available
-    # resolve persistedMongoConnection if persistedMongoConnection
+    resolve persistedMongoConnection if persistedMongoConnection
 
     # otherwise make connection
     mongo.connect process.env.MONGO_URL, (err, connection)->
