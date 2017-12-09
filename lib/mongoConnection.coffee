@@ -3,16 +3,18 @@ require('dotenv').config( silent: true )
 RSVP = require 'rsvp'
 mongo = require('mongodb').MongoClient
 
-persistedMongoConnection = undefined
+memoize = require 'lodash.memoize'
+
+# persistedMongoConnection = undefined
 
 #
 #
 
-module.exports = ->
+module.exports = ( name = 'default' )->
   new RSVP.Promise (resolve, reject)->
 
     # return persisted connection if available
-    resolve persistedMongoConnection if persistedMongoConnection
+    # resolve persistedMongoConnection if persistedMongoConnection
 
     # otherwise make connection
     mongo.connect process.env.MONGO_URL, (err, connection)->
@@ -22,4 +24,4 @@ module.exports = ->
       persistedMongoConnection = connection
 
       # resolve connection
-      resolve persistedMongoConnection
+      resolve connection
