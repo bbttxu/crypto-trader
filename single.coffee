@@ -249,19 +249,19 @@ reducer = (state, action) ->
 
 
   if 'ADD_BID' is action.type
-    console.log 'ADD_BID', JSON.stringify(
-      pick(
-        [
-          'product_id',
-          'side',
-          'price',
-          'size',
-          'id',
-          'client_oid'
-        ],
-        action.bid
-      )
+    bid = pick(
+      [
+        'id',
+        'product_id',
+        'price',
+        'size',
+        'side'
+      ],
+      action.bid
     )
+
+
+    console.log 'ADD_BID', bid.id, bid.product_id, bid.price, bid.size, bid.side
 
     state.bids.push action.bid
     state.bid_ids = pluck 'id', state.bids
@@ -746,7 +746,6 @@ normaJean = ->
     inTheWind
   ).then(
     ( factors )->
-      console.log factors
       store.dispatch
         type: 'UPDATE_FACTORS'
         factors: factors
