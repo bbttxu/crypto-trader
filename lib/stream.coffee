@@ -21,16 +21,17 @@ module.exports = (product = 'BTC-USD')->
     websocket = new (Gdax.WebsocketClient)(product, null, authentication)
 
     websocket.on 'open', ->
-      console.log "OPEN #{product} WEBSOCKET!!!"
+      console.log "OPENED #{product} WEBSOCKET!!!"
 
     websocket.on 'close', ->
-      console.log "CLOSE #{product} WEBSOCKET!!!"
+      console.log "CLOSED #{product} WEBSOCKET!!!"
 
       # if socket dies, restart after a short period of time
       setTimeout start, 10000
 
     websocket.on 'message', (message)->
       # publish message to the channel
+      # console.log message
       channel.publish "message:#{product}", message
 
   # start the websocket
