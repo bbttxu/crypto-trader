@@ -3,7 +3,7 @@ should = require 'should'
 goodSeaState = require '../lib/gooderSeaState'
 
 describe 'know gooder seas', ->
-  it 'sell higher than last buy', ->
+  it 'DO sell higher than last buy', ->
     testBids = [
       id: 1
       side: 'buy'
@@ -23,7 +23,7 @@ describe 'know gooder seas', ->
     decision = goodSeaState testBids, testBid
     decision.should.be.eql true
 
-  it 'buy lower than last sell', ->
+  it 'DO buy lower than last sell', ->
     testBids = [
       id: 1
       side: 'sell'
@@ -43,7 +43,7 @@ describe 'know gooder seas', ->
     decision.should.be.eql true
 
 describe 'know a bad sea', ->
-  it 'do not sell lower than last buy', ->
+  it 'do NOT sell lower than last buy', ->
     testBids = [
       id: 1
       side: 'buy'
@@ -63,7 +63,7 @@ describe 'know a bad sea', ->
     decision = goodSeaState testBids, testBid
     decision.should.be.eql false
 
-  it 'do not buy higher than last sell', ->
+  it 'do NOT buy higher than last sell', ->
   it 'buy lower than last sell', ->
     testBids = [
       id: 1
