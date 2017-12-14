@@ -118,7 +118,7 @@ stat = ( product_id, params = granularity: 60 )->
 
 
 getAccounts = ( currency )->
-  console.log currency
+  # console.log currency
   new RSVP.Promise ( resolve, reject )->
     callback = (err, json)->
       reject err if err
