@@ -10,7 +10,7 @@
   "scripts": {
     "start": "coffee index.coffee",
     "test": "mocha && istanbul report text-summary lcov",
-    "dev": "mocha -w",
+    "dev": "mocha -b -w",
     "single": "coffee single.coffee",
     "trade": "pm2 start ecosystem.config.js",
     "stop": "pm2 stop ecosystem.config.js",
