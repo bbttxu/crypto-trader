@@ -1,5 +1,12 @@
 require('dotenv').config( silent: true )
 
+RESET_CALLS = 50
+
+i = 1
+
+persistedMongoConnection = undefined
+
+
 ###
 .____    ._____.                      .__
 |    |   |__\_ |______________ _______|__| ____   ______
@@ -14,23 +21,39 @@ mongo = require('mongodb').MongoClient
 
 {
   modulo
+  equals
+  __
 } = require 'ramda'
 
 
-i = 1
+###
+___________                   __  .__
+\_   _____/_ __  ____   _____/  |_|__| ____   ____   ______
+ |    __)|  |  \/    \_/ ___\   __\  |/  _ \ /    \ /  ___/
+ |     \ |  |  /   |  \  \___|  | |  (  <_> )   |  \\___ \
+ \___  / |____/|___|  /\___  >__| |__|\____/|___|  /____  >
+     \/             \/     \/                    \/     \/
+###
 
-persistedMongoConnection = undefined
-
+shouldResetOnCounter = ( index )->
+  equals(
+    0,
+    modulo(
+      index,
+      RESET_CALLS
+    )
+  )
 
 #
 #
-module.exports = ( name = 'default' )->
+mongoConnection = ( name = 'default' )->
 
   new RSVP.Promise (resolve, reject)->
     ++i
 
-    if 0 is modulo i, 100
-      persistedMongoConnection.close()
+    if shouldResetOnCounter i
+      console.log 'RESET MONGODB CONNECTION', RESET_CALLS, i
+      persistedMongoConnection.close() if persistedMongoConnection
       persistedMongoConnection = undefined
 
     # return persisted connection if available
@@ -45,3 +68,14 @@ module.exports = ( name = 'default' )->
 
       # resolve connection
       resolve connection
+
+###
+___________                             __
+\_   _____/__  _________   ____________/  |_  ______
+ |    __)_\  \/  /\____ \ /  _ \_  __ \   __\/  ___/
+ |        \>    < |  |_> >  <_> )  | \/|  |  \___ \
+/_______  /__/\_ \|   __/ \____/|__|   |__| /____  >
+        \/      \/|__|                           \/
+###
+
+module.exports = mongoConnection

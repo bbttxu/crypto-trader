@@ -118,7 +118,8 @@ addBid = ( bid, cancelPlease )->
 
 
 decisioner = require './lib/decisioner'
-goodSeaState = require './lib/goodSeaState'
+# goodSeaState = require './lib/goodSeaState'
+gooderSeaState = require './lib/gooderSeaState'
 
 
 
@@ -261,7 +262,6 @@ reducer = (state, action) ->
     )
 
 
-    console.log 'ADD_BID', bid.id, bid.product_id, bid.price, bid.size, bid.side
 
     state.bids.push action.bid
     state.bid_ids = pluck 'id', state.bids
@@ -269,6 +269,7 @@ reducer = (state, action) ->
 
   if 'ADD_RUN' is action.type
     unless 0 is action.run.d_price or 0 is action.run.d_time
+      console.log 'ADD_RUN', state.runs.length, moment( action.run.end ).fromNow()
       state.runs.push action.run
 
 
@@ -277,11 +278,11 @@ reducer = (state, action) ->
 
 
   if 'BID_CANCELLED' is action.type
-    # console.log 'BID_CANCELLED', JSON.stringify  action.bid
 
     index = findIndex propEq( 'id', action.bid.order_id ), state.bids
 
     if index > -1
+      # console.log 'BID_CANCELLED', JSON.stringify  action.bid
       updatedBid = merge state.bids[ index ], action.bid
 
       state.bids = reject propEq( 'id', action.bid.order_id ), state.bids
@@ -427,7 +428,9 @@ reducer = (state, action) ->
       state.buyPrice = state.buy.price
 
     unless importantValue
-      if goodSeaState state
+      # console.log state[action.match.side]
+
+      if gooderSeaState state.bids, state[ action.match.side ].bid
         makeNewBid(
           state[action.match.side],
           pluck 'id', state.bids
@@ -549,7 +552,7 @@ productStream = Stream PRODUCT_ID
 
 productStream.subscribe "*", ( hi )->
 
-  # console.log hi
+  # console.log JSON.stringify hi
 
   if 'match' is hi.type
     store.dispatch
@@ -698,7 +701,7 @@ addRun = ( run, index )->
       type: 'ADD_RUN'
       run: run
 
-  setTimeout storeDispatch, index * 100
+  setTimeout storeDispatch, index * 50
 
 
 sortByAbsSize = ( a, b )->
@@ -723,6 +726,15 @@ RSVP.hash( promises ).then( ( good )->
   console.log good.fills.length, good.bids.length
   map dispatchFill, good.fills.concat good.bids
   addIndex( map ) addRun, sort sortByAbsSize, good.runs
+
+  map(
+    ( bid )->
+      store.dispatch
+        type: 'ADD_BID'
+        bid: bid
+    ,
+    good.bids
+  )
 
   start( PRODUCT_ID )
 
