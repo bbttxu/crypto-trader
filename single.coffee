@@ -224,6 +224,11 @@ reducer = (state, action) ->
 
     state.runs = sortBy prop( 'start' ), reject overADayOld, state.runs
 
+    overADayOldBids = ( bid )->
+      moment().subtract( 1, 'day' ) > moment( bid.created_at )
+
+    state.bids = reject overADayOldBids, state.bids
+
     # do stuff here ^^^
 
     console.log moment( start ).format(),'HEARTBEAT', Date.now() - start, 'ms'
