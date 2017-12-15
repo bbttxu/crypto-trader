@@ -269,7 +269,7 @@ reducer = (state, action) ->
 
   if 'ADD_RUN' is action.type
     unless 0 is action.run.d_price or 0 is action.run.d_time
-      console.log 'ADD_RUN', state.runs.length, moment( action.run.end ).fromNow()
+      # console.log 'ADD_RUN', state.runs.length, moment( action.run.end ).fromNow()
       state.runs.push action.run
 
 
