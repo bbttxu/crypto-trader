@@ -72,6 +72,10 @@ getSideSum = map ( side )->
 gooderSeaState = ( bids, bid )->
   # console.log JSON.stringify bid
 
+  if isEmpty bids
+    console.log 'no bids; trade away'
+    return true
+
   unless bid
     console.log 'BAD SEA STATE', bid
     return false
