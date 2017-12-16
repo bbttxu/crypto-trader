@@ -96,6 +96,7 @@ gooderSeaState = ( bids, bid )->
       bids
     )
   )
+
   if (outcome[ otherSide bid.side ]) and (not isEmpty outcome[ otherSide bid.side ])
     if 'sell' is bid.side
       return true if outcome[ otherSide bid.side ].price < parseFloat bid.price
@@ -123,7 +124,7 @@ gooderSeaState = ( bids, bid )->
       )
       return false
 
-  console.log 'BAD SEA STATE', 'unknown', bids, bid
+  console.log 'BAD SEA STATE', 'fell through', bid, outcome
   false
 
 
