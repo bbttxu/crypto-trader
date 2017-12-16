@@ -104,12 +104,12 @@ gooderSeaState = ( bids, bid )->
     if 'sell' is bid.side
 
       # console.log outcome[ otherSide bid.side ].price, bid.price
-      if outcome[ otherSide bid.side ].price < bid.price
+      if outcome[ otherSide bid.side ].price < parseFloat bid.price
         # console.log 'GOOD SEA STATE 3', outcome[ otherSide bid.side ].price, bid.price
         return true
 
       else
-        console.log "proposed SELL price #{ pricing.btc( parseFloat bid.price ) } is less than 24HR BUY #{ pricing.btc( outcome[ otherSide bid.side ].price )}"
+        # console.log "proposed SELL price #{ pricing.btc( parseFloat bid.price ) } is less than 24HR BUY #{ pricing.btc( outcome[ otherSide bid.side ].price )}"
         return false
 
     if 'buy' is bid.side
