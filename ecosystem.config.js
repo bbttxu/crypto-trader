@@ -2,7 +2,8 @@
 const {
   map,
   merge,
-  concat
+  concat,
+  addIndex
 } = require( 'ramda' );
 
 const defaults = {
@@ -10,7 +11,7 @@ const defaults = {
   interpreter: './node_modules/coffee-script/bin/coffee',
   watch: false,
   max_restarts: 10,
-  max_memory_restart: '500M'
+  max_memory_restart: '1000M'
 }
 
 const setDefaults = ( app )=> {
@@ -23,8 +24,8 @@ const applyRandomReload = ( app )=> {
     {
       restart_delay: Math.round(
         (
-          60 + (
-            Math.random() * 60
+          90 + (
+            Math.random() * 90
           )
         )
       ) * 1000,
@@ -36,7 +37,7 @@ const applyHourlyCron = ( app, index )=> {
   return merge(
     app,
     {
-      cron: parseInt(60*Math.random()) + " * * * *"
+      cron: ( 59 - index ) + " * * * *"
     }
   )
 }
@@ -55,7 +56,7 @@ module.exports = {
    * Application configuration section
    * http://pm2.keymetrics.io/docs/usage/application-declaration/
    */
-  apps: map(
+  apps: addIndex( map )(
     applyHourlyCron,
       map(
         applyRandomReload,
