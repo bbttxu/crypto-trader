@@ -128,14 +128,14 @@ getAccounts = ( currency )->
     authedClient().getAccounts callback
 
 cancelOrder = ( order )->
-  new RSVP.Promise (resolve, reject)->
+  new RSVP.Promise (resolve, rejectPromise )->
     callback = (err, data)->
       if err
         console.log 'err cancelOrder', err, order
-        reject false
+        rejectPromise false
 
       unless data
-        reject false
+        rejectPromise false
 
       payload = JSON.parse data.body
 
@@ -144,7 +144,7 @@ cancelOrder = ( order )->
         resolve true
 
       else
-        reject payload.message
+        rejectPromise payload.message
 
 
     authedClient().cancelOrder order, callback
@@ -176,6 +176,7 @@ getFills = (product = product_id)->
       if err
         data = JSON.parse err.body
         console.log 'err getFills', data, order
+        reject err.body
 
       resolve JSON.parse data.body
 

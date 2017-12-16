@@ -72,6 +72,10 @@ getSideSum = map ( side )->
 gooderSeaState = ( bids, bid )->
   # console.log JSON.stringify bid
 
+  if isEmpty bids
+    console.log 'no bids; trade away'
+    return true
+
   unless bid
     console.log 'BAD SEA STATE', bid
     return false
@@ -81,7 +85,6 @@ gooderSeaState = ( bids, bid )->
     console.log 'NO BID SEA STATE', 'no bid.side', bid
     return false
 
-  # console.log bid
 
   outcome = getSideSum groupBySide map(
     pick ['id', 'side', 'size', 'price', 'created_at']
@@ -93,32 +96,34 @@ gooderSeaState = ( bids, bid )->
       bids
     )
   )
-
-  # console.log 'outcome', outcome, 'outcome'
-
   if (outcome[ otherSide bid.side ]) and (not isEmpty outcome[ otherSide bid.side ])
     if 'sell' is bid.side
+      return true if outcome[ otherSide bid.side ].price < parseFloat bid.price
 
-      # console.log outcome[ otherSide bid.side ].price, bid.price
-      if outcome[ otherSide bid.side ].price < bid.price
-        # console.log 'GOOD SEA STATE 3', outcome[ otherSide bid.side ].price, bid.price
-        return true
-
-      else
-        console.log "proposed SELL price #{ pricing.btc( parseFloat bid.price ) } is less than 24HR BUY #{ pricing.btc( outcome[ otherSide bid.side ].price )}"
-        return false
+      console.log(
+        [
+          "proposed SELL price",
+          pricing.btc( parseFloat bid.price )
+          "is less than 24HR BUY"
+          pricing.btc( outcome[ otherSide bid.side ].price )
+        ].join ' '
+      )
+      return false
 
     if 'buy' is bid.side
-      if outcome[ otherSide bid.side ].price > parseFloat bid.price
-        # console.log 'GOOD SEA STATE 4', bid
-        # console.log outcome[ otherSide bid.side ].price, '>', parseFloat bid.price
-        return true
+      return true if outcome[ otherSide bid.side ].price > parseFloat bid.price
 
-      else
-        console.log "proposed BUY price #{ pricing.btc( parseFloat bid.price ) } is greater than 24HR SELL #{ pricing.btc( outcome[ otherSide bid.side ].price )}"
-        return false
+      console.log(
+        [
+          "proposed BUY price"
+          pricing.btc( parseFloat bid.price )
+          "is greater than 24HR SELL"
+          pricing.btc( outcome[ otherSide bid.side ].price )
+        ].join ' '
+      )
+      return false
 
-  console.log 'BAD SEA STATE', 'unknown'
+  console.log 'BAD SEA STATE', 'unknown', bids, bid
   false
 
 
