@@ -22,8 +22,9 @@ getBids = ( product, query = {} )->
 
       search =
         product_id: product
-        created_at:
-          $gt: moment().subtract( 24, 'hours' ).toDate()
+        time:
+          $gt: moment().subtract( 24, 'hours' ).toISOString()
+
 
 
       collection.find(

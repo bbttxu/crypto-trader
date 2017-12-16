@@ -145,15 +145,14 @@ consolidateRun = require './consolidateRun'
 averageOf = require './lib/averageOf'
 
 makeNewBid = ( bid, cancelPlease )->
-  if decisioner( bid )
-    if handleFractionalSize bid.bid
-      # console.log 'passed fractional size', bid.bid.size
+  if handleFractionalSize bid
+    console.log 'passed fractional size', bid.size
 
-      if bid.bid.size < 0.01
-        bid.bid.size = 0.01
+    if bid.size < 0.01
+      bid.size = 0.01
 
 
-      addBid bid.bid
+    addBid bid
 
 
   makeCancellation = ( cancelThisID )->
@@ -274,7 +273,7 @@ reducer = (state, action) ->
 
   if 'ADD_RUN' is action.type
     unless 0 is action.run.d_price or 0 is action.run.d_time
-      # console.log 'ADD_RUN', state.runs.length, moment( action.run.end ).fromNow()
+      console.log 'ADD_RUN', state.runs.length, moment( action.run.end ).fromNow()
       state.runs.push action.run
 
 
@@ -287,7 +286,7 @@ reducer = (state, action) ->
     index = findIndex propEq( 'id', action.bid.order_id ), state.bids
 
     if index > -1
-      # console.log 'BID_CANCELLED', JSON.stringify  action.bid
+      console.log 'BID_CANCELLED', action.bid.order_id
       updatedBid = merge state.bids[ index ], action.bid
 
       state.bids = reject propEq( 'id', action.bid.order_id ), state.bids
@@ -307,6 +306,7 @@ reducer = (state, action) ->
     index = findIndex propEq( 'id', action.match.order_id ), state.bids
 
     if index > -1
+      console.log 'MATCH_FILLED', JSON.stringify  action.match
       updatedBid = merge state.bids[ index ], action.match
 
       state.bids = reject propEq( 'id', action.match.order_id ), state.bids
@@ -437,11 +437,10 @@ reducer = (state, action) ->
 
       if gooderSeaState state.bids, state[ action.match.side ].bid
         makeNewBid(
-          state[action.match.side],
+          state[ action.match.side ].bid,
           pluck 'id', state.bids
         )
-      # else
-      #   console.log 'sea state not good', JSON.stringify state[action.match.side].bid
+
 
   if state.top and state.sell
     state.topValue = state.sell.price * state.top.available
@@ -507,7 +506,7 @@ saveRun = ( run )->
       run: good
 
   ).catch( (err)->
-    console.log 'single err', err
+    console.log 'saveRun saveRunToStorage err', err, run
   )
 
 
@@ -699,14 +698,14 @@ getFills = require './lib/getFills'
 getBids = require './lib/getBids'
 
 
-addRun = ( run, index )->
+addRun = ( run, index = 1 )->
   storeDispatch = ->
 
     store.dispatch
       type: 'ADD_RUN'
       run: run
 
-  setTimeout storeDispatch, index * 50
+  setTimeout storeDispatch, index * 100
 
 
 sortByAbsSize = ( a, b )->

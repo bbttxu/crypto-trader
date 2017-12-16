@@ -85,7 +85,6 @@ gooderSeaState = ( bids, bid )->
     console.log 'NO BID SEA STATE', 'no bid.side', bid
     return false
 
-  # console.log bid
 
   outcome = getSideSum groupBySide map(
     pick ['id', 'side', 'size', 'price', 'created_at']
@@ -119,10 +118,10 @@ gooderSeaState = ( bids, bid )->
         return true
 
       else
-        console.log "proposed BUY price #{ pricing.btc( parseFloat bid.price ) } is greater than 24HR SELL #{ pricing.btc( outcome[ otherSide bid.side ].price )}"
+        # console.log "proposed BUY price #{ pricing.btc( parseFloat bid.price ) } is greater than 24HR SELL #{ pricing.btc( outcome[ otherSide bid.side ].price )}"
         return false
 
-  console.log 'BAD SEA STATE', 'unknown'
+  # console.log 'BAD SEA STATE', 'unknown', # bids, bid
   false
 
 

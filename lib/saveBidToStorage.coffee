@@ -5,7 +5,7 @@
 mongoConnection = require './mongoConnection'
 
 saveBidToStorage = ( bid )->
-  console.log 'saveBidToStorage', bid
+  console.log 'saveBidToStorage', bid.id
   #
   #
   new Promise ( resolve, reject )->
@@ -19,7 +19,9 @@ saveBidToStorage = ( bid )->
           console.log 'pidids err', err
           reject err
 
-        console.log whiz.ops[0]
+        console.log 'savedBidToStorage', bid.id
+        # console.log whiz.ops[0]
+
         resolve whiz.ops[0]
 
 
