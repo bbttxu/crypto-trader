@@ -6,6 +6,8 @@ mongoConnection = require('../lib/mongoConnection')
   merge
 } = require 'ramda'
 
+moment = require 'moment'
+
 getBids = ( product, query = {} )->
   new RSVP.Promise (resolve, reject)->
     mongoConnection().then (db)->
@@ -20,6 +22,9 @@ getBids = ( product, query = {} )->
 
       search =
         product_id: product
+        created_at:
+          $gt: moment().subtract( 24, 'hours' ).toDate()
+
 
       collection.find(
         merge search, query
