@@ -55,6 +55,7 @@ cleanUpTrade = require './lib/cleanUpTrades'
   contains
   values
   uniq
+  isNil
 } = require 'ramda'
 
 
@@ -433,12 +434,17 @@ reducer = (state, action) ->
       state.buyPrice = state.buy.price
 
     unless importantValue
-      # console.log state[action.match.side]
+      openBids = filter(
+        ( bid )->
+          isNil prop 'reason', bid
+        ,
+        state.bids
+      )
 
       if gooderSeaState state.bids, state[ action.match.side ].bid
         makeNewBid(
           state[ action.match.side ].bid,
-          pluck 'id', state.bids
+          pluck 'id', openBids
         )
 
 

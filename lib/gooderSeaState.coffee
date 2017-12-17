@@ -97,6 +97,10 @@ gooderSeaState = ( bids, bid )->
     )
   )
 
+  unless outcome[ otherSide bid.side ]
+    console.log 'no boundaries for', otherSide bid.side
+    return true
+
   if (outcome[ otherSide bid.side ]) and (not isEmpty outcome[ otherSide bid.side ])
     if 'sell' is bid.side
       return true if outcome[ otherSide bid.side ].price < parseFloat bid.price
