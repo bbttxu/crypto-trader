@@ -1,73 +1,73 @@
-intervaler = require '../lib/intervaler'
+# intervaler = require '../lib/intervaler'
 
-should = require 'should'
+# should = require 'should'
 
-# Globals
-intervals = [
-  86
-  864
-  8640
-]
-
-
-#
-describe 'intervaler', ->
-
-  #
-  it 'matches less than first', ->
-
-    a = intervaler( intervals )
-
-    expected = 86
-
-    result = a( 83, 86 )
-
-    result.should.be.equal expected
+# # Globals
+# intervals = [
+#   86
+#   864
+#   8640
+# ]
 
 
-  #
-  it 'matches next than first if equal to first', ->
+# #
+# describe 'intervaler', ->
 
-    a = intervaler( intervals )
+#   #
+#   it 'matches less than first', ->
 
-    expected = 86
+#     a = intervaler( intervals )
 
-    result = a( 0, 85 )
+#     expected = 86
 
-    result.should.be.equal expected
+#     result = a( 83, 86 )
 
-
-  #
-  it 'matches second than first if equal to first', ->
-
-    a = intervaler( intervals )
-
-    expected = 864
-
-    result = a( 0, 864 )
-
-    result.should.be.equal expected
+#     result.should.be.equal expected
 
 
-  #
-  it 'matches second than first if equal to first', ->
+#   #
+#   it 'matches next than first if equal to first', ->
 
-    a = intervaler( intervals )
+#     a = intervaler( intervals )
 
-    expected = 8640
+#     expected = 86
 
-    result = a( 900, 8640 )
+#     result = a( 0, 85 )
 
-    result.should.be.equal expected
+#     result.should.be.equal expected
 
 
-  #
-  it 'returns undefined if outside', ->
+#   #
+#   it 'matches second than first if equal to first', ->
 
-    a = intervaler( intervals )
+#     a = intervaler( intervals )
 
-    expected = 8640
+#     expected = 864
 
-    result = a( 900, 86400 )
+#     result = a( 0, 864 )
 
-    should.not.exist( result )
+#     result.should.be.equal expected
+
+
+#   #
+#   it 'matches second than first if equal to first', ->
+
+#     a = intervaler( intervals )
+
+#     expected = 8640
+
+#     result = a( 900, 8640 )
+
+#     result.should.be.equal expected
+
+
+#   #
+#   it 'returns undefined if outside', ->
+
+#     a = intervaler( intervals )
+
+#     expected = 8640
+
+#     result = a( 900, 86400 )
+
+#     should.not.exist( result )

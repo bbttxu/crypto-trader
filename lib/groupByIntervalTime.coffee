@@ -1,10 +1,10 @@
-R = require 'ramda'
-moment = require 'moment'
+# R = require 'ramda'
+# moment = require 'moment'
 
-module.exports = ( interval )->
-  timeSeries = ( doc )->
-    time = moment( doc.time ).unix()
-    Math.ceil( time / interval )
+# module.exports = ( interval )->
+#   timeSeries = ( doc )->
+#     time = moment( doc.time ).unix()
+#     Math.ceil( time / interval )
 
-  ( docs )->
-    R.groupBy timeSeries, docs
+#   ( docs )->
+#     R.groupBy timeSeries, docs

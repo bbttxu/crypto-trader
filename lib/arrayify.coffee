@@ -1,20 +1,20 @@
-#
-# take an array
-# take another array
-# return original array with all values appended to the first
+# #
+# # take an array
+# # take another array
+# # return original array with all values appended to the first
 
-{
-  map
-  unnest
-} = require 'ramda'
+# {
+#   map
+#   unnest
+# } = require 'ramda'
 
-arrayify = ( base )->
+# arrayify = ( base )->
 
-  cupcake = ( sprinkle )->
-    base.concat sprinkle
+#   cupcake = ( sprinkle )->
+#     base.concat sprinkle
 
-  ( sprinkles )->
-    map cupcake, sprinkles
+#   ( sprinkles )->
+#     map cupcake, sprinkles
 
 
-module.exports = arrayify
+# module.exports = arrayify

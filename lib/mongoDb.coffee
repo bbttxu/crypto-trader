@@ -1,21 +1,21 @@
-{
-  Promise
-} = require 'rsvp'
+# {
+#   Promise
+# } = require 'rsvp'
 
-mongoConnection = require './mongoConnection'
+# mongoConnection = require './mongoConnection'
 
-memoize = require 'lodash.memoize'
+# memoize = require 'lodash.memoize'
 
-mongoDb = ( database )->
+# mongoDb = ( database )->
 
-  #
-  #
-  new Promise ( resolve, reject )->
+#   #
+#   #
+#   new Promise ( resolve, reject )->
 
-    #
-    #
-    mongoConnection().then ( db )->
+#     #
+#     #
+#     mongoConnection().then ( db )->
 
-      resolve db.collection( database )
+#       resolve db.collection( database )
 
-module.exports = memoize mongoDb
+# module.exports = memoize mongoDb

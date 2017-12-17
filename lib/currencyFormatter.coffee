@@ -1,12 +1,12 @@
-pricing = require './pricing'
+# pricing = require './pricing'
 
-currencies =
-  usd: '$'
-  btc: 'Ƀ'
+# currencies =
+#   usd: '$'
+#   btc: 'Ƀ'
 
-module.exports = (product)->
-  currency = (product.split('-')[1]).toLowerCase()
-  currencyValue = pricing[currency]
+# module.exports = (product)->
+#   currency = (product.split('-')[1]).toLowerCase()
+#   currencyValue = pricing[currency]
 
-  (value)->
-    "#{currencies[currency]}#{currencyValue(value)}"
+#   (value)->
+#     "#{currencies[currency]}#{currencyValue(value)}"

@@ -1,17 +1,17 @@
-checkObsoleteTrade = ( trade, price )->
+# checkObsoleteTrade = ( trade, price )->
 
-  tradePrice = parseFloat( trade.price )
+#   tradePrice = parseFloat( trade.price )
 
-  newPrice = parseFloat( price )
+#   newPrice = parseFloat( price )
 
-  if trade.side is 'sell'
-    if tradePrice > newPrice
-      return false
+#   if trade.side is 'sell'
+#     if tradePrice > newPrice
+#       return false
 
-  if trade.side is 'buy'
-    if tradePrice < newPrice
-      return false
+#   if trade.side is 'buy'
+#     if tradePrice < newPrice
+#       return false
 
-  true
+#   true
 
-module.exports = checkObsoleteTrade
+# module.exports = checkObsoleteTrade

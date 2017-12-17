@@ -1,27 +1,27 @@
-require('dotenv').config( silent: true )
+# require('dotenv').config( silent: true )
 
-mongoConnection = require('../lib/mongoConnection')
+# mongoConnection = require('../lib/mongoConnection')
 
-RSVP = require 'rsvp'
+# RSVP = require 'rsvp'
 
-getFills = (product)->
-  mongoConnection().then (db)->
-    collection = db.collection 'matches'
+# getFills = (product)->
+#   mongoConnection().then (db)->
+#     collection = db.collection 'matches'
 
-    onError = (err)->
-      # db.close()
-      console.log 'dataMatches.err', err
-      reject err
+#     onError = (err)->
+#       # db.close()
+#       console.log 'dataMatches.err', err
+#       reject err
 
-    callback = (results)->
-      # db.close()
+#     callback = (results)->
+#       # db.close()
 
-      resolve results
+#       resolve results
 
-    search =
-      product_id: product
+#     search =
+#       product_id: product
 
-    collection.find(search).sort(trade_id: 1).toArray().then(callback).catch(onError)
+#     collection.find(search).sort(trade_id: 1).toArray().then(callback).catch(onError)
 
 
-module.exports = getFills
+# module.exports = getFills

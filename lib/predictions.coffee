@@ -1,59 +1,59 @@
-regression = require 'regression'
-R = require 'ramda'
-moment = require 'moment'
+# regression = require 'regression'
+# R = require 'ramda'
+# moment = require 'moment'
 
-matchesToCartesian = require './matchesToCartesian'
-pricing = require './pricing'
+# matchesToCartesian = require './matchesToCartesian'
+# pricing = require './pricing'
 
-linearLast = ( docs, future, base )->
+# linearLast = ( docs, future, base )->
 
-  last = R.last docs
+#   last = R.last docs
 
-  unless last
-    return {}
+#   unless last
+#     return {}
 
-  coords = matchesToCartesian( docs, true )
+#   coords = matchesToCartesian( docs, true )
 
-  coords.push [ future, null ]
+#   coords.push [ future, null ]
 
-  equation = regression( 'linear', coords )
+#   equation = regression( 'linear', coords )
 
-  R.last( equation.points )[1]
-
-
-module.exports = ( side, future, key )->
-  base = key.split( '-' )[1].toLowerCase()
-
-  ( results )->
-
-    last = R.last results
-
-    isMyGoodSide = (value)->
-
-      if 'sell' is side
-        return ( value > last.price )
-
-      if 'buy' is side
-        return ( value < last.price )
+#   R.last( equation.points )[1]
 
 
-    equations = {}
+# module.exports = ( side, future, key )->
+#   base = key.split( '-' )[1].toLowerCase()
 
-    equations.n = results.length
+#   ( results )->
 
-    return equations if results.length <= 3
+#     last = R.last results
 
-    linearLastResults = linearLast( results, future, base )
+#     isMyGoodSide = (value)->
 
-    if linearLastResults and isMyGoodSide(linearLastResults) and not isNaN( linearLastResults )
-      equations.linear = linearLastResults
-    else
-      return a =
-        n: results.length
+#       if 'sell' is side
+#         return ( value > last.price )
+
+#       if 'buy' is side
+#         return ( value < last.price )
 
 
-    equations.future = future
+#     equations = {}
 
-    equations.current = pricing[base] last.price
+#     equations.n = results.length
 
-    equations
+#     return equations if results.length <= 3
+
+#     linearLastResults = linearLast( results, future, base )
+
+#     if linearLastResults and isMyGoodSide(linearLastResults) and not isNaN( linearLastResults )
+#       equations.linear = linearLastResults
+#     else
+#       return a =
+#         n: results.length
+
+
+#     equations.future = future
+
+#     equations.current = pricing[base] last.price
+
+#     equations
