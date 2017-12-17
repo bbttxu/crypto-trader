@@ -1,49 +1,49 @@
-# approximate = require 'approximate-number'
+approximate = require 'approximate-number'
 
-# {
-#   groupBy
-#   prop
-#   map
-#   sum
-#   values
-#   multiply
-#   pluck
-# } = require 'ramda'
-
-
-# getPrice = ( fill )->
-#   price = multiply(
-#     parseFloat(
-#       prop( 'size' )( fill )
-#     ),
-#     parseFloat(
-#       prop( 'price' )( fill )
-#     )
-#   )
-
-#   if fill.side is 'buy'
-#     price = multiply -1, price
-
-#   price
+{
+  groupBy
+  prop
+  map
+  sum
+  values
+  multiply
+  pluck
+} = require 'ramda'
 
 
-# getPrices = ( side )->
-#   map getPrice, values side
+getPrice = ( fill )->
+  price = multiply(
+    parseFloat(
+      prop( 'size' )( fill )
+    ),
+    parseFloat(
+      prop( 'price' )( fill )
+    )
+  )
 
-# annotate = ( details )->
-#   details.balance = approximate details.buy + details.sell, prefix: '$', capital: true, round: true
+  if fill.side is 'buy'
+    price = multiply -1, price
 
-#   details
-
-# showStatus = ( fills )->
-#   if 0 is fills.length
-#     return "Zero Fills"
-
-#   base = fills[0].product_id.split( '-' )[1]
-
-#   details = annotate map sum, map getPrices, groupBy prop( 'side' ), fills
-#   "#{details.balance}#{base}; sell: #{parseInt(details.sell)}, buy: #{parseInt(details.buy)}"
+  price
 
 
+getPrices = ( side )->
+  map getPrice, values side
 
-# module.exports = showStatus
+annotate = ( details )->
+  details.balance = approximate details.buy + details.sell, prefix: '$', capital: true, round: true
+
+  details
+
+showStatus = ( fills )->
+  if 0 is fills.length
+    return "Zero Fills"
+
+  base = fills[0].product_id.split( '-' )[1]
+
+  details = annotate map sum, map getPrices, groupBy prop( 'side' ), fills
+  "#{details.balance}#{base}; sell: #{parseInt(details.sell)}, buy: #{parseInt(details.buy)}"
+
+
+
+module.exports = showStatus

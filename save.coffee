@@ -1,48 +1,48 @@
-R = require 'ramda'
-moment = require 'moment'
+# R = require 'ramda'
+# moment = require 'moment'
 
-gdax = require './lib/gdax-client'
-saveFill = require './lib/saveFill'
+# gdax = require './lib/gdax-client'
+# saveFill = require './lib/saveFill'
 
-config = require './config'
-
-
-INTERVAL = 100
+# config = require './config'
 
 
-throttledDispatchFill = (match, index = 0)->
-  wereGood = (result)->
-
-    since = moment( match.created_at ).fromNow( true )
-    if result is true
-      console.log '$', since
-    else
-      console.log '+', since
-
-  orNot = (result)->
-    console.log 'orNot', result
-    exit(3)
+# INTERVAL = 100
 
 
-  sendThrottledDispatchFill = ->
+# throttledDispatchFill = (match, index = 0)->
+#   wereGood = (result)->
 
-    saveFill( match ).then( wereGood ).catch(orNot)
+#     since = moment( match.created_at ).fromNow( true )
+#     if result is true
+#       console.log '$', since
+#     else
+#       console.log '+', since
 
-  setTimeout sendThrottledDispatchFill, ( ( index * INTERVAL ) + ( Math.random() * INTERVAL ) )
-
-
-saveFills = ( fills )->
-  # console.log fills
-  mapIndexed = R.addIndex R.map
-  mapIndexed throttledDispatchFill, fills
-
-cantSaveFills = ( fills )->
-  console.log 'cantSaveFills', fills
+#   orNot = (result)->
+#     console.log 'orNot', result
+#     exit(3)
 
 
-getCurrencyFills = ( product_id )->
-  gdax.getFills( product_id ).then( saveFills ).catch( cantSaveFills )
+#   sendThrottledDispatchFill = ->
+
+#     saveFill( match ).then( wereGood ).catch(orNot)
+
+#   setTimeout sendThrottledDispatchFill, ( ( index * INTERVAL ) + ( Math.random() * INTERVAL ) )
 
 
-module.exports = ->
-  R.map getCurrencyFills, R.keys config.currencies
+# saveFills = ( fills )->
+#   # console.log fills
+#   mapIndexed = R.addIndex R.map
+#   mapIndexed throttledDispatchFill, fills
+
+# cantSaveFills = ( fills )->
+#   console.log 'cantSaveFills', fills
+
+
+# getCurrencyFills = ( product_id )->
+#   gdax.getFills( product_id ).then( saveFills ).catch( cantSaveFills )
+
+
+# module.exports = ->
+#   R.map getCurrencyFills, R.keys config.currencies
