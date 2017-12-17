@@ -5,7 +5,7 @@ moment = require 'moment'
 # x-value is unix time seconds
 # y-value is price
 docToCartesian = (doc)->
-  x = moment( doc.time ).unix()
+  x = doc.timestamp
   y = parseFloat doc.price
   [ x, y ]
 

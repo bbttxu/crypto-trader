@@ -28,7 +28,13 @@ initalState =
   prices: {}
   predictions: {}
   proposals: []
-  matches: []
+
+  # store recent matches by interval
+  matches: {}
+
+  projections: {}
+
+
   stats: {}
   sent: []
   orders: []
@@ -75,38 +81,126 @@ reducers = (state, action) ->
     state.advice = stategy action.stats
 
 
+  if action.type is 'ADD_MATCH'
+    # console.log action, 'ADD_ORDER'
+
+
+    lens = R.lensPath [ 'matches', action.product_id, action.side, action.interval ]
+
+
+    view = R.view lens, state
+
+    if view
+      state = R.set lens, view.concat( action.match ), state
+
+
+    unless view
+
+      # ensure product
+      unless state['matches'][action.product_id]
+        state['matches'][action.product_id] = {}
+
+      unless state['matches'][action.product_id][action.side]
+        state['matches'][action.product_id][action.side] = {}
+
+      unless state['matches'][action.product_id][action.side][action.interval]
+        state['matches'][action.product_id][action.side][action.interval] = [ action.match ]
+
+
+  if action.type is 'REMOVE_MATCH'
+    lens = R.lensPath [ 'matches', action.product_id, action.side, action.interval ]
+    view = R.view lens, state
+
+    index = R.findIndex ( R.propEq 'sequence', action.match.sequence ), view
+
+    if index >= 0
+      state.matches[ action.product_id ][ action.side ][ action.interval ].splice( index, 1 )
+
+
   if action.type is 'ORDER_MATCHED'
 
-    # Store local unix timestamp to model
-    action.match.local = state.now.valueOf()
 
-    key = [ action.match.product_id, action.match.side ].join( '-' ).toUpperCase()
+    lens = R.lensPath [ 'matches', action.product_id, action.side, action.interval ]
 
-    latestPrice = state.prices[key]
-    thisPrice = R.pick [ 'trade_id', 'price'], action.match
 
-    unless latestPrice
-      state.prices[key] = thisPrice
+    view = R.view lens, state
 
-    # Only update if trade_id is greater than current
-    if latestPrice and thisPrice.trade_id > latestPrice.trade_id
+    if view
+      state = R.set lens, view.concat( action.match ), state
 
-      state.prices[key] = thisPrice
+    unless view
 
-      state.positions = positionDetermine state.currencies, state.prices
+      # ensure product
+      unless state['matches'][action.product_id]
+        state['matches'][action.product_id] = {}
 
-    # Find any proposals that are no longer relevant
-    # e.g. price is out-of-date and would incur a fee
-    existingTradeCriteria = (foo)->
-      action.match.side is foo.side and action.match.product_id is foo.product_id
+      unless state['matches'][action.product_id][action.side]
+        state['matches'][action.product_id][action.side] = {}
 
-    index = R.findIndex(existingTradeCriteria)(state.proposals)
+      unless state['matches'][action.product_id][action.side][action.interval]
+        state['matches'][action.product_id][action.side][action.interval] = [ action.match ]
 
-    if index > 0
-      if checkObsoleteTrade state.proposals[index], action.match.price
-        state.proposals.splice index, 1
 
-    state.matches.push action.match
+  # if action.type is 'UPDATE_PROJECTION'
+
+  #   # console.log action, 'abc'
+
+  #   path = [ 'projections', action.product_id, action.side, action.interval ]
+  #   lens = R.lensPath path
+
+
+  #   view = R.view lens, state
+
+  #   if view
+  #     state = R.set lens, action.projection, state
+
+  #     console.log path, R.view lens, state
+
+
+  #   unless view
+
+  #     # ensure product
+  #     unless state['projections'][action.product_id]
+  #       state['projections'][action.product_id] = {}
+
+  #     unless state['projections'][action.product_id][action.side]
+  #       state['projections'][action.product_id][action.side] = {}
+
+  #     unless state['projections'][action.product_id][action.side][action.interval]
+  #       state['projections'][action.product_id][action.side][action.interval] = [ action.match ]
+
+
+    # console.log 'aaa', state.matches
+    # # Store local unix timestamp to model
+    # action.match.local = state.now.valueOf()
+
+    # key = [ action.match.product_id, action.match.side ].join( '-' ).toUpperCase()
+
+    # latestPrice = state.prices[key]
+    # thisPrice = R.pick [ 'trade_id', 'price'], action.match
+
+    # unless latestPrice
+    #   state.prices[key] = thisPrice
+
+    # # Only update if trade_id is greater than current
+    # if latestPrice and thisPrice.trade_id > latestPrice.trade_id
+
+    #   state.prices[key] = thisPrice
+
+    #   state.positions = positionDetermine state.currencies, state.prices
+
+    # # Find any proposals that are no longer relevant
+    # # e.g. price is out-of-date and would incur a fee
+    # existingTradeCriteria = (foo)->
+    #   action.match.side is foo.side and action.match.product_id is foo.product_id
+
+    # index = R.findIndex(existingTradeCriteria)(state.proposals)
+
+    # if index > 0
+    #   if checkObsoleteTrade state.proposals[index], action.match.price
+    #     state.proposals.splice index, 1
+
+    # state.matches.push action.match
 
   if action.type is 'UPDATE_ACCOUNT'
     state.currencies[action.currency.currency] = R.pick ['hold', 'balance'], action.currency

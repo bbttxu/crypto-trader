@@ -1,9 +1,18 @@
 require('dotenv').config({silent: true})
 Gdax = require 'gdax'
 RSVP = require 'rsvp'
-R = require 'ramda'
+
+# Func program lib
+{
+  map
+} = require 'ramda'
+
 moment = require 'moment'
 
+# Some
+{
+  get
+} = require 'axios'
 
 ###
                __  .__               .____________ .__  .__               __
@@ -59,7 +68,7 @@ cancelAllOrders = ( currencies = [] )->
           else
             resolve results.body
 
-    cancelAllCurrencyOrders = R.map promiseCancelCurrencyOrder, currencies
+    cancelAllCurrencyOrders = map promiseCancelCurrencyOrder, currencies
 
     rejectPromise = ( promise )->
       reject promise
@@ -89,19 +98,27 @@ getProduct24HrStats = ( product )->
 stats = ( currencies = [] )->
   new RSVP.Promise ( resolve, reject )->
 
-    allCurrencyStats = R.map getProduct24HrStats, currencies
+    allCurrencyStats = map getProduct24HrStats, currencies
 
     rejectPromise = ( promise )->
       reject promise
 
     resolveIssues = ( issues )->
-      # console.log 'resolveIssues', issues
       resolve issues
 
     RSVP.all( allCurrencyStats ).then( resolveIssues ).catch( rejectPromise )
 
+#
+# single stat for single product_id
+stat = ( product_id, params = granularity: 60 )->
+  get(
+    "https://api.gdax.com/products/#{product_id}/candles",
+    { params: params }
+  )
+
+
 getAccounts = ( currency )->
-  console.log currency
+  # console.log currency
   new RSVP.Promise ( resolve, reject )->
     callback = (err, json)->
       reject err if err
@@ -111,14 +128,14 @@ getAccounts = ( currency )->
     authedClient().getAccounts callback
 
 cancelOrder = ( order )->
-  new RSVP.Promise (resolve, reject)->
+  new RSVP.Promise (resolve, rejectPromise )->
     callback = (err, data)->
       if err
         console.log 'err cancelOrder', err, order
-        reject false
+        rejectPromise false
 
       unless data
-        reject false
+        rejectPromise false
 
       payload = JSON.parse data.body
 
@@ -127,7 +144,7 @@ cancelOrder = ( order )->
         resolve true
 
       else
-        reject false
+        rejectPromise payload.message
 
 
     authedClient().cancelOrder order, callback
@@ -159,6 +176,7 @@ getFills = (product = product_id)->
       if err
         data = JSON.parse err.body
         console.log 'err getFills', data, order
+        reject err.body
 
       resolve JSON.parse data.body
 
@@ -184,7 +202,11 @@ _/ __ \\  \/  /\____ \ /  _ \_  __ \   __\/  ___/
 module.exports =
   cancelAllOrders: cancelAllOrders
   getProduct24HrStats: getProduct24HrStats
+
+  # multiple or single
   stats: stats
+  stat: stat
+
   getAccounts: getAccounts
 
   cancelOrder: cancelOrder
