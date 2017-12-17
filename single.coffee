@@ -444,7 +444,7 @@ reducer = (state, action) ->
       if gooderSeaState state.bids, state[ action.match.side ].bid
         makeNewBid(
           state[ action.match.side ].bid,
-          pluck 'ids', openBids
+          pluck 'id', openBids
         )
 
 
