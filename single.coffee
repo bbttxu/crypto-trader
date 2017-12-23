@@ -1,6 +1,7 @@
 require( 'dotenv' ).config( silent: true )
 argv = require('minimist')(process.argv.slice(2))
 PRODUCT_ID = process.env.PRODUCT_ID ||  argv._[0]
+DELAY = process.env.DELAY || 3
 
 unless PRODUCT_ID
   console.log 'need a product id!'
@@ -725,33 +726,36 @@ dispatchFill = ( fill )->
     fill: fill
 
 
-promises = {
-  fills: getFills( PRODUCT_ID ),
-  bids: getBids( PRODUCT_ID, reason: 'filled' ),
-  runs: getRunsFromStorage( product_id: PRODUCT_ID ),
-  cancelAllOrders: gdax.cancelAllOrders [ PRODUCT_ID ]
-}
+adfdsafafdsa = ->
 
-RSVP.hash( promises ).then( ( good )->
-  console.log good.fills.length, good.bids.length
-  map dispatchFill, good.fills.concat good.bids
-  addIndex( map ) addRun, sort sortByAbsSize, good.runs
+  promises = {
+    fills: getFills( PRODUCT_ID ),
+    bids: getBids( PRODUCT_ID, reason: 'filled' ),
+    runs: getRunsFromStorage( product_id: PRODUCT_ID ),
+    cancelAllOrders: gdax.cancelAllOrders [ PRODUCT_ID ]
+  }
 
-  map(
-    ( bid )->
-      store.dispatch
-        type: 'ADD_BID'
-        bid: bid
-    ,
-    good.bids
+  RSVP.hash( promises ).then( ( good )->
+    console.log good.fills.length, good.bids.length
+    map dispatchFill, good.fills.concat good.bids
+    addIndex( map ) addRun, sort sortByAbsSize, good.runs
+
+    map(
+      ( bid )->
+        store.dispatch
+          type: 'ADD_BID'
+          bid: bid
+      ,
+      good.bids
+    )
+
+    start( PRODUCT_ID )
+
+  ).catch( ( bad )->
+    console.log 'bad'
   )
 
-  start( PRODUCT_ID )
-
-).catch( ( bad )->
-  console.log 'bad'
-)
-
+setTimeout adfdsafafdsa, ( process.env.DELAY * 1000 )
 
 
 ###

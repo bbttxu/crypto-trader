@@ -2,6 +2,7 @@
 const {
   map,
   merge,
+  mergeDeepLeft,
   concat,
   addIndex
 } = require( 'ramda' );
@@ -42,6 +43,17 @@ const applyHourlyCron = ( app, index )=> {
   )
 }
 
+const applyDelayedStart = ( app, index )=> {
+  return mergeDeepLeft(
+    app,
+    {
+      env: {
+        DELAY: ( index * 6 )
+      }
+    }
+  )
+}
+
 const setupProduct = ( product )=> {
   return {
     name: product,
@@ -58,30 +70,33 @@ module.exports = {
    */
   apps: addIndex( map )(
     applyHourlyCron,
-      map(
-        applyRandomReload,
-        concat(
-          [
-            // First application
-            {
-              name: "Fills",
-              script: "fills.coffee",
-              interpreter: './node_modules/coffee-script/bin/coffee',
-              watch: true
-            }
-          ],
-          map(
-            setDefaults,
+      addIndex( map )(
+        applyDelayedStart,
+        map(
+          applyRandomReload,
+          concat(
+            [
+              // First application
+              {
+                name: "Fills",
+                script: "fills.coffee",
+                interpreter: './node_modules/coffee-script/bin/coffee',
+                watch: true
+              }
+            ],
             map(
-              setupProduct,
-              [
-                'BTC-USD',
-                'ETH-USD',
-                'LTC-USD',
-                'BCH-USD',
-                'ETH-BTC',
-                'LTC-BTC'
-              ]
+              setDefaults,
+              map(
+                setupProduct,
+                [
+                  'BTC-USD',
+                  'ETH-USD',
+                  'LTC-USD',
+                  'BCH-USD',
+                  'ETH-BTC',
+                  'LTC-BTC'
+                ]
+              )
             )
           )
         )
