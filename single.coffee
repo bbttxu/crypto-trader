@@ -147,7 +147,7 @@ averageOf = require './lib/averageOf'
 
 makeNewBid = ( bid, cancelPlease )->
   if handleFractionalSize bid
-    console.log 'passed fractional size', bid.size
+    # console.log 'passed fractional size', bid.size
 
     if bid.size < 0.01
       bid.size = 0.01
