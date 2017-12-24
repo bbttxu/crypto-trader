@@ -103,7 +103,17 @@ gooderSeaState = ( bids, bid )->
 
   if (outcome[ otherSide bid.side ]) and (not isEmpty outcome[ otherSide bid.side ])
     if 'sell' is bid.side
-      return true if outcome[ otherSide bid.side ].price < parseFloat bid.price
+      if outcome[ otherSide bid.side ].price < parseFloat bid.price
+        console.log(
+          [
+            "+ SELL price",
+            pricing.btc( parseFloat bid.price )
+            "is greater than 24HR BUY"
+            pricing.btc( outcome[ otherSide bid.side ].price )
+          ].join ' '
+        )
+        return true
+
 
       console.log(
         [
@@ -116,7 +126,18 @@ gooderSeaState = ( bids, bid )->
       return false
 
     if 'buy' is bid.side
-      return true if outcome[ otherSide bid.side ].price > parseFloat bid.price
+      if outcome[ otherSide bid.side ].price > parseFloat bid.price
+        console.log(
+          [
+            "+ BUY price"
+            pricing.btc( parseFloat bid.price )
+            "is less than 24HR SELL"
+            pricing.btc( outcome[ otherSide bid.side ].price )
+          ].join ' '
+        )
+
+        return true
+
 
       console.log(
         [
