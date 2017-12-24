@@ -37,7 +37,7 @@ const applyHourlyCron = ( app, index )=> {
   return merge(
     app,
     {
-      cron: ( 59 - index ) + " * * * *"
+      cron_restart: ( 59 - index ) + " * * * *"
     }
   )
 }
