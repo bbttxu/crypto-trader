@@ -1,6 +1,7 @@
 require( 'dotenv' ).config( silent: true )
 argv = require('minimist')(process.argv.slice(2))
 PRODUCT_ID = process.env.PRODUCT_ID ||  argv._[0]
+DELAY = process.env.DELAY || 3
 
 unless PRODUCT_ID
   console.log 'need a product id!'
@@ -147,7 +148,7 @@ averageOf = require './lib/averageOf'
 
 makeNewBid = ( bid, cancelPlease )->
   if handleFractionalSize bid
-    console.log 'passed fractional size', bid.size
+    # console.log 'passed fractional size', bid.size
 
     if bid.size < 0.01
       bid.size = 0.01
@@ -274,7 +275,7 @@ reducer = (state, action) ->
 
   if 'ADD_RUN' is action.type
     unless 0 is action.run.d_price or 0 is action.run.d_time
-      console.log 'ADD_RUN', state.runs.length, moment( action.run.end ).fromNow()
+      # console.log 'ADD_RUN', state.runs.length, moment( action.run.end ).fromNow()
       state.runs.push action.run
 
 
@@ -711,7 +712,7 @@ addRun = ( run, index = 1 )->
       type: 'ADD_RUN'
       run: run
 
-  setTimeout storeDispatch, index * 100
+  setTimeout storeDispatch, index * 1000
 
 
 sortByAbsSize = ( a, b )->
@@ -725,33 +726,36 @@ dispatchFill = ( fill )->
     fill: fill
 
 
-promises = {
-  fills: getFills( PRODUCT_ID ),
-  bids: getBids( PRODUCT_ID, reason: 'filled' ),
-  runs: getRunsFromStorage( product_id: PRODUCT_ID ),
-  cancelAllOrders: gdax.cancelAllOrders [ PRODUCT_ID ]
-}
+adfdsafafdsa = ->
 
-RSVP.hash( promises ).then( ( good )->
-  console.log good.fills.length, good.bids.length
-  map dispatchFill, good.fills.concat good.bids
-  addIndex( map ) addRun, sort sortByAbsSize, good.runs
+  promises = {
+    fills: getFills( PRODUCT_ID ),
+    bids: getBids( PRODUCT_ID, reason: 'filled' ),
+    runs: getRunsFromStorage( product_id: PRODUCT_ID ),
+    cancelAllOrders: gdax.cancelAllOrders [ PRODUCT_ID ]
+  }
 
-  map(
-    ( bid )->
-      store.dispatch
-        type: 'ADD_BID'
-        bid: bid
-    ,
-    good.bids
+  RSVP.hash( promises ).then( ( good )->
+    console.log good.fills.length, good.bids.length
+    map dispatchFill, good.fills.concat good.bids
+    addIndex( map ) addRun, sort sortByAbsSize, good.runs
+
+    map(
+      ( bid )->
+        store.dispatch
+          type: 'ADD_BID'
+          bid: bid
+      ,
+      good.bids
+    )
+
+    start( PRODUCT_ID )
+
+  ).catch( ( bad )->
+    console.log 'bad'
   )
 
-  start( PRODUCT_ID )
-
-).catch( ( bad )->
-  console.log 'bad'
-)
-
+setTimeout adfdsafafdsa, ( process.env.DELAY * 1000 )
 
 
 ###

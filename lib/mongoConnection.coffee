@@ -1,6 +1,6 @@
 require('dotenv').config( silent: true )
 
-RESET_CALLS = 50
+RESET_CALLS = 100
 
 i = 1
 
