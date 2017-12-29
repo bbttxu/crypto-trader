@@ -9,7 +9,7 @@ const {
 
 const defaults = {
   script: "single.coffee",
-  interpreter: './node_modules/coffee-script/bin/coffee',
+  interpreter: './node_modules/coffeescript/bin/coffee',
   watch: false,
   max_restarts: 10,
   max_memory_restart: '1000M'
@@ -80,7 +80,7 @@ module.exports = {
               {
                 name: "Fills",
                 script: "fills.coffee",
-                interpreter: './node_modules/coffee-script/bin/coffee',
+                interpreter: './node_modules/coffeescript/bin/coffee',
                 watch: true
               }
             ],
