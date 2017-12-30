@@ -9,6 +9,10 @@ unless PRODUCT_ID
 SIZING = 100
 
 
+kue = require 'kue'
+
+queue = kue.createQueue()
+
 RSVP = require 'rsvp'
 
 log = require './lib/log'
@@ -81,7 +85,16 @@ initalState =
 
 showStatus = require './lib/showStatus'
 
-saveBidToStorage = require './lib/saveBidToStorage'
+saveBidToStorage = ( bid ) ->
+  queue.create(
+    'SAVE_BID_TO_STORAGE',
+    bid
+  ).attempts(
+    3
+  ).backoff(
+    { type:'exponential' }
+  ).save()
+
 updateBid = require './lib/updateBid'
 
 addBid = ( bid, cancelPlease )->
@@ -288,7 +301,7 @@ reducer = (state, action) ->
     index = findIndex propEq( 'id', action.bid.order_id ), state.bids
 
     if index > -1
-      console.log 'BID_CANCELLED', action.bid.order_id
+      # console.log 'BID_CANCELLED', action.bid.order_id, action.bid
       updatedBid = merge state.bids[ index ], action.bid
 
       state.bids = reject propEq( 'id', action.bid.order_id ), state.bids

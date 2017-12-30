@@ -34,6 +34,7 @@
     "gdax": "0.4.2",
     "istanbul": "0.4.5",
     "knuth-shuffle": "1.0.8",
+    "kue": "^0.11.6",
     "lodash.memoize": "^4.1.2",
     "lodash.throttle": "4.1.1",
     "minimist": "^1.2.0",
