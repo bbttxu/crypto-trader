@@ -26,7 +26,7 @@ ___________                   __  .__
 ###
 
 saveBidToStorage = ( bid, callback )->
-  console.log 'SAVE_BID_TO_STORAGE saving', bid.data.id
+  console.log 'SAVE_BID_TO_STORAGE saving', bid.data.product_id, bid.data.reason, bid.data.id
   mongoDb( 'bids' ).then(
     ( db )->
       db.insert bid.data, ( err, whiz )->
@@ -34,7 +34,7 @@ saveBidToStorage = ( bid, callback )->
           console.log 'pidids err', err
           throw err
 
-        console.log 'SAVE_BID_TO_STORAGE  saved', whiz.ops[0].id, ++saveCounter
+        console.log 'SAVE_BID_TO_STORAGE  saved', whiz.ops[0].product_id, whiz.ops[0].reason, whiz.ops[0].id, ++saveCounter
         setTimeout callback, 1000
   )
 
