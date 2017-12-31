@@ -1,5 +1,3 @@
-saveCounter = 0
-
 ###
 .____    ._____.                      .__
 |    |   |__\_ |______________ _______|__| ____   ______
@@ -9,35 +7,9 @@ saveCounter = 0
         \/       \/           \/              \/     \/
 ###
 
-kue = require 'kue'
-
-mongoDb = require './lib/mongoDb'
-
-queue = kue.createQueue()
-
 saveRunToStorage = require './workers/saveRunToStorage'
 
-###
-___________                   __  .__
-\_   _____/_ __  ____   _____/  |_|__| ____   ____   ______
- |    __)|  |  \/    \_/ ___\   __\  |/  _ \ /    \ /  ___/
- |     \ |  |  /   |  \  \___|  | |  (  <_> )   |  \\___ \
- \___  / |____/|___|  /\___  >__| |__|\____/|___|  /____  >
-     \/             \/     \/                    \/     \/
-###
-
-saveBidToStorage = ( bid, callback )->
-  # console.log 'SAVE_BID_TO_STORAGE saving', bid.data.product_id, bid.data.reason, bid.data.id
-  mongoDb( 'bids' ).then(
-    ( db )->
-      db.insert bid.data, ( err, whiz )->
-        if err
-          console.log 'pidids err', err
-          throw err
-
-        console.log 'SAVE_BID_TO_STORAGE saved', whiz.ops[0].product_id, whiz.ops[0].reason, whiz.ops[0].id, ++saveCounter
-        setTimeout callback, 1000
-  )
+saveBidToStorage = require './workers/saveBidToStorage'
 
 
 ###
@@ -49,12 +21,6 @@ saveBidToStorage = ( bid, callback )->
         \/   \/          \/       \/                   \/        \/     \/
 ###
 
-queue.process(
-  'SAVE_BID_TO_STORAGE',
-  saveBidToStorage
-)
-
 saveRunToStorage.process()
 
-queue.on 'error', ( error )->
-  console.log error
+saveBidToStorage.process()
