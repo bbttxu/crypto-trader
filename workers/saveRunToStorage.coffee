@@ -1,4 +1,7 @@
+JOB = 'SAVE_RUN_TO_STORAGE'
+
 saveCounter = 0
+
 
 ###
 .____    ._____.                      .__
@@ -11,11 +14,10 @@ saveCounter = 0
 
 kue = require 'kue'
 
-mongoDb = require './lib/mongoDb'
+mongoDb = require '../lib/mongoDb'
 
 queue = kue.createQueue()
 
-saveRunToStorage = require './workers/saveRunToStorage'
 
 ###
 ___________                   __  .__
@@ -26,18 +28,39 @@ ___________                   __  .__
      \/             \/     \/                    \/     \/
 ###
 
-saveBidToStorage = ( bid, callback )->
-  # console.log 'SAVE_BID_TO_STORAGE saving', bid.data.product_id, bid.data.reason, bid.data.id
-  mongoDb( 'bids' ).then(
+addRunToQueue = ( run )->
+  queue.create(
+    JOB,
+    run
+  ).attempts(
+    5
+  ).backoff(
+    { type: 'exponential' }
+  ).save()
+
+
+saveRunToStorage = ( run, callback )->
+  mongoDb( 'runs' ).then(
     ( db )->
-      db.insert bid.data, ( err, whiz )->
+      db.insert run.data, ( err, whiz )->
         if err
-          console.log 'pidids err', err
+          console.log 'jrndv err runs', err
           throw err
 
-        console.log 'SAVE_BID_TO_STORAGE saved', whiz.ops[0].product_id, whiz.ops[0].reason, whiz.ops[0].id, ++saveCounter
+        console.log JOB, 'saved', whiz.ops[0].product_id, ++saveCounter
         setTimeout callback, 1000
   )
+
+
+process = ->
+  queue.process(
+    JOB,
+    saveRunToStorage
+  )
+
+
+queue.on 'error', ( error )->
+  console.log JOB, 'ERROR', error
 
 
 ###
@@ -49,12 +72,6 @@ saveBidToStorage = ( bid, callback )->
         \/   \/          \/       \/                   \/        \/     \/
 ###
 
-queue.process(
-  'SAVE_BID_TO_STORAGE',
-  saveBidToStorage
-)
-
-saveRunToStorage.process()
-
-queue.on 'error', ( error )->
-  console.log error
+module.exports =
+  addRunToQueue: addRunToQueue
+  process: process

@@ -515,21 +515,15 @@ reducer = (state, action) ->
 
 store = createStore reducer, applyMiddleware(thunk.default)
 
-saveRunToStorage = require './lib/saveRunToStorage'
+{
+  addRunToQueue
+} = require './workers/saveRunToStorage'
 
 saveRun = ( run )->
   consolidated = consolidateRun run, PRODUCT_ID
 
-  saveRunToStorage( consolidated ).then( (good)->
-    store.dispatch
-      type: 'ADD_RUN'
-      run: good
-
-  ).catch( (err)->
-    console.log 'saveRun saveRunToStorage err', err, run
-  )
-
-
+  new Promise ( resolve, rejectPromise )->
+    addRunToQueue( consolidated )
 
 
 ###
