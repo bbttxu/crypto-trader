@@ -14,6 +14,9 @@ moment = require 'moment'
   get
 } = require 'axios'
 
+
+exit = require './exit'
+
 ###
                __  .__               .____________ .__  .__               __
 _____   __ ___/  |_|  |__   ____   __| _/\_   ___ \|  | |__| ____   _____/  |_
@@ -44,7 +47,8 @@ authedClient = ->
 clientReject = ( err )->
   console.log 'gdax client by error clientReject', err
 
-  reinitAuthedClient()
+
+  exit()
 
 
 
