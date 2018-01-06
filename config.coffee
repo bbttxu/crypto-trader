@@ -29,6 +29,10 @@ module.exports =
       sell: {}
       buy: {}
 
+    'BCH-USD':
+      sell: {}
+      buy: {}
+
 
   intervals: [
     86

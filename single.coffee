@@ -1,12 +1,17 @@
 require( 'dotenv' ).config( silent: true )
 argv = require('minimist')(process.argv.slice(2))
 PRODUCT_ID = process.env.PRODUCT_ID ||  argv._[0]
+DELAY = process.env.DELAY || 3
 
 unless PRODUCT_ID
   console.log 'need a product id!'
 
 SIZING = 100
 
+
+kue = require 'kue'
+
+queue = kue.createQueue()
 
 RSVP = require 'rsvp'
 
@@ -77,10 +82,20 @@ initalState =
   match: {}
   sellFactor: 0
   buyFactor: 0
+  stats: {}
 
 showStatus = require './lib/showStatus'
 
-saveBidToStorage = require './lib/saveBidToStorage'
+saveBidToStorage = ( bid ) ->
+  queue.create(
+    'SAVE_BID_TO_STORAGE',
+    bid
+  ).attempts(
+    3
+  ).backoff(
+    { type:'exponential' }
+  ).save()
+
 updateBid = require './lib/updateBid'
 
 addBid = ( bid, cancelPlease )->
@@ -147,7 +162,7 @@ averageOf = require './lib/averageOf'
 
 makeNewBid = ( bid, cancelPlease )->
   if handleFractionalSize bid
-    console.log 'passed fractional size', bid.size
+    # console.log 'passed fractional size', bid.size
 
     if bid.size < 0.01
       bid.size = 0.01
@@ -234,6 +249,9 @@ reducer = (state, action) ->
     console.log moment( start ).format(),'HEARTBEAT', Date.now() - start, 'ms'
 
 
+  if 'UPDATE_STATS' is action.type
+    state.stats = action.stats
+
   if 'UPDATE_FACTORS' is action.type
     state.sellFactor = action.factors.sellFactor
     state.buyFactor = action.factors.buyFactor
@@ -274,7 +292,7 @@ reducer = (state, action) ->
 
   if 'ADD_RUN' is action.type
     unless 0 is action.run.d_price or 0 is action.run.d_time
-      console.log 'ADD_RUN', state.runs.length, moment( action.run.end ).fromNow()
+      # console.log 'ADD_RUN', state.runs.length, moment( action.run.end ).fromNow()
       state.runs.push action.run
 
 
@@ -287,7 +305,7 @@ reducer = (state, action) ->
     index = findIndex propEq( 'id', action.bid.order_id ), state.bids
 
     if index > -1
-      console.log 'BID_CANCELLED', action.bid.order_id
+      # console.log 'BID_CANCELLED', action.bid.order_id, action.bid
       updatedBid = merge state.bids[ index ], action.bid
 
       state.bids = reject propEq( 'id', action.bid.order_id ), state.bids
@@ -394,6 +412,7 @@ reducer = (state, action) ->
         size: (
           state["#{action.match.side}Amount"]
         )
+        stats: state.stats
 
       lkfafdijwe = state[ action.match.side ]
 
@@ -501,21 +520,15 @@ reducer = (state, action) ->
 
 store = createStore reducer, applyMiddleware(thunk.default)
 
-saveRunToStorage = require './lib/saveRunToStorage'
+{
+  addRunToQueue
+} = require './workers/saveRunToStorage'
 
 saveRun = ( run )->
   consolidated = consolidateRun run, PRODUCT_ID
 
-  saveRunToStorage( consolidated ).then( (good)->
-    store.dispatch
-      type: 'ADD_RUN'
-      run: good
-
-  ).catch( (err)->
-    console.log 'saveRun saveRunToStorage err', err, run
-  )
-
-
+  new Promise ( resolve, rejectPromise )->
+    addRunToQueue( consolidated )
 
 
 ###
@@ -711,7 +724,7 @@ addRun = ( run, index = 1 )->
       type: 'ADD_RUN'
       run: run
 
-  setTimeout storeDispatch, index * 100
+  setTimeout storeDispatch, index * 1000
 
 
 sortByAbsSize = ( a, b )->
@@ -725,33 +738,36 @@ dispatchFill = ( fill )->
     fill: fill
 
 
-promises = {
-  fills: getFills( PRODUCT_ID ),
-  bids: getBids( PRODUCT_ID, reason: 'filled' ),
-  runs: getRunsFromStorage( product_id: PRODUCT_ID ),
-  cancelAllOrders: gdax.cancelAllOrders [ PRODUCT_ID ]
-}
+adfdsafafdsa = ->
 
-RSVP.hash( promises ).then( ( good )->
-  console.log good.fills.length, good.bids.length
-  map dispatchFill, good.fills.concat good.bids
-  addIndex( map ) addRun, sort sortByAbsSize, good.runs
+  promises = {
+    fills: getFills( PRODUCT_ID ),
+    bids: getBids( PRODUCT_ID, reason: 'filled' ),
+    runs: getRunsFromStorage( product_id: PRODUCT_ID ),
+    cancelAllOrders: gdax.cancelAllOrders [ PRODUCT_ID ]
+  }
 
-  map(
-    ( bid )->
-      store.dispatch
-        type: 'ADD_BID'
-        bid: bid
-    ,
-    good.bids
+  RSVP.hash( promises ).then( ( good )->
+    console.log good.fills.length, good.bids.length
+    map dispatchFill, good.fills.concat good.bids
+    addIndex( map ) addRun, sort sortByAbsSize, good.runs
+
+    map(
+      ( bid )->
+        store.dispatch
+          type: 'ADD_BID'
+          bid: bid
+      ,
+      good.bids
+    )
+
+    start( PRODUCT_ID )
+
+  ).catch( ( bad )->
+    console.log 'bad'
   )
 
-  start( PRODUCT_ID )
-
-).catch( ( bad )->
-  console.log 'bad'
-)
-
+setTimeout adfdsafafdsa, ( process.env.DELAY * 1000 )
 
 
 ###
@@ -783,6 +799,31 @@ setInterval(
 )
 normaJean()
 
+
+
+###
+            .___  .___           __          __             __           ___.   .__    .___
+_____     __| _/__| _/   _______/  |______ _/  |_  ______ _/  |_  ____   \_ |__ |__| __| _/______
+\__  \   / __ |/ __ |   /  ___/\   __\__  \\   __\/  ___/ \   __\/  _ \   | __ \|  |/ __ |/  ___/
+ / __ \_/ /_/ / /_/ |   \___ \  |  |  / __ \|  |  \___ \   |  | (  <_> )  | \_\ \  / /_/ |\___ \
+(____  /\____ \____ |  /____  > |__| (____  /__| /____  >  |__|  \____/   |___  /__\____ /____  >
+     \/      \/    \/       \/            \/          \/                      \/        \/    \/
+###
+
+getStats = require './lib/getStats'
+
+updateStats = ->
+  getStats(
+    PRODUCT_ID
+  ).then(
+    ( stats )->
+      store.dispatch
+        type: 'UPDATE_STATS'
+        stats: stats
+  )
+
+setInterval updateStats, 30 * 1000
+updateStats()
 
 
 

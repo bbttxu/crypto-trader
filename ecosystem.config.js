@@ -2,13 +2,14 @@
 const {
   map,
   merge,
+  mergeDeepLeft,
   concat,
   addIndex
 } = require( 'ramda' );
 
 const defaults = {
   script: "single.coffee",
-  interpreter: './node_modules/coffee-script/bin/coffee',
+  interpreter: './node_modules/coffeescript/bin/coffee',
   watch: false,
   max_restarts: 10,
   max_memory_restart: '1000M'
@@ -37,7 +38,18 @@ const applyHourlyCron = ( app, index )=> {
   return merge(
     app,
     {
-      cron: ( 59 - index ) + " * * * *"
+      cron_restart: ( 59 - index ) + " * * * *"
+    }
+  )
+}
+
+const applyDelayedStart = ( app, index )=> {
+  return mergeDeepLeft(
+    app,
+    {
+      env: {
+        DELAY: ( index * 6 )
+      }
     }
   )
 }
@@ -58,29 +70,40 @@ module.exports = {
    */
   apps: addIndex( map )(
     applyHourlyCron,
-      map(
-        applyRandomReload,
-        concat(
-          [
-            // First application
-            {
-              name: "Fills",
-              script: "fills.coffee",
-              interpreter: './node_modules/coffee-script/bin/coffee',
-              watch: true
-            }
-          ],
-          map(
-            setDefaults,
+      addIndex( map )(
+        applyDelayedStart,
+        map(
+          applyRandomReload,
+          concat(
+            [
+              // First application
+              {
+                name: "Fills",
+                script: "fills.coffee",
+                interpreter: './node_modules/coffeescript/bin/coffee',
+                watch: true
+              },
+              // First application
+              {
+                name: "Worker",
+                script: "worker.coffee",
+                interpreter: './node_modules/coffeescript/bin/coffee',
+                watch: true
+              }
+            ],
             map(
-              setupProduct,
-              [
-                'BTC-USD',
-                'ETH-USD',
-                'LTC-USD',
-                'ETH-BTC',
-                'LTC-BTC'
-              ]
+              setDefaults,
+              map(
+                setupProduct,
+                [
+                  'BTC-USD',
+                  'ETH-USD',
+                  'LTC-USD',
+                  'BCH-USD',
+                  'ETH-BTC',
+                  'LTC-BTC'
+                ]
+              )
             )
           )
         )
