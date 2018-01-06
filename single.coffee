@@ -82,6 +82,7 @@ initalState =
   match: {}
   sellFactor: 0
   buyFactor: 0
+  stats: {}
 
 showStatus = require './lib/showStatus'
 
@@ -248,6 +249,9 @@ reducer = (state, action) ->
     console.log moment( start ).format(),'HEARTBEAT', Date.now() - start, 'ms'
 
 
+  if 'UPDATE_STATS' is action.type
+    state.stats = action.stats
+
   if 'UPDATE_FACTORS' is action.type
     state.sellFactor = action.factors.sellFactor
     state.buyFactor = action.factors.buyFactor
@@ -408,6 +412,7 @@ reducer = (state, action) ->
         size: (
           state["#{action.match.side}Amount"]
         )
+        stats: state.stats
 
       lkfafdijwe = state[ action.match.side ]
 
@@ -794,6 +799,31 @@ setInterval(
 )
 normaJean()
 
+
+
+###
+            .___  .___           __          __             __           ___.   .__    .___
+_____     __| _/__| _/   _______/  |______ _/  |_  ______ _/  |_  ____   \_ |__ |__| __| _/______
+\__  \   / __ |/ __ |   /  ___/\   __\__  \\   __\/  ___/ \   __\/  _ \   | __ \|  |/ __ |/  ___/
+ / __ \_/ /_/ / /_/ |   \___ \  |  |  / __ \|  |  \___ \   |  | (  <_> )  | \_\ \  / /_/ |\___ \
+(____  /\____ \____ |  /____  > |__| (____  /__| /____  >  |__|  \____/   |___  /__\____ /____  >
+     \/      \/    \/       \/            \/          \/                      \/        \/    \/
+###
+
+getStats = require './lib/getStats'
+
+updateStats = ->
+  getStats(
+    PRODUCT_ID
+  ).then(
+    ( stats )->
+      store.dispatch
+        type: 'UPDATE_STATS'
+        stats: stats
+  )
+
+setInterval updateStats, 30 * 1000
+updateStats()
 
 
 
