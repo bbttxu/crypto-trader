@@ -20,7 +20,9 @@ tooOld = ( candle )->
 
 # https://docs.gdax.com/#get-historic-rates
 latestIsGreaterThanOpen = ( candle )->
-  candle[3] < candle[4]
+  return 'up' if candle[3] < candle[4]
+  return 'down' if candle[3] > candle[4]
+  return 'even'
 
 clamper = ( value )->
   partial = parseFloat( clamp( 0, value, 1 ).toFixed( 2 ) )
