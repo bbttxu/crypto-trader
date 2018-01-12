@@ -6,7 +6,7 @@ DELAY = process.env.DELAY || 3
 unless PRODUCT_ID
   console.log 'need a product id!'
 
-SIZING = 100
+SIZING = 60
 
 
 kue = require 'kue'
@@ -134,8 +134,8 @@ addBid = ( bid, cancelPlease )->
 
 
 decisioner = require './lib/decisioner'
-# goodSeaState = require './lib/goodSeaState'
 gooderSeaState = require './lib/gooderSeaState'
+dailyTide = require './lib/dailyTide'
 
 
 
@@ -460,11 +460,14 @@ reducer = (state, action) ->
         state.bids
       )
 
-      if gooderSeaState state.bids, state[ action.match.side ].bid
-        makeNewBid(
-          state[ action.match.side ].bid,
-          pluck 'id', openBids
-        )
+      good24HourTrend = dailyTide( state.stats, state[ action.match.side ].bid )
+
+      if good24HourTrend
+        if gooderSeaState( state.bids, state[ action.match.side ].bid )
+          makeNewBid(
+            state[ action.match.side ].bid,
+            pluck 'id', openBids
+          )
 
 
   if state.top and state.sell
