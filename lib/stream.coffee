@@ -1,41 +1,41 @@
-require('dotenv').config { silent: true }
+# require('dotenv').config { silent: true }
 
-Postal = require 'postal'
+# Postal = require 'postal'
 
-Gdax = require 'gdax'
+# Gdax = require 'gdax'
 
-restart = require './restartProcess'
+# restart = require './restartProcess'
 
-authentication =
-  secret: process.env.API_SECRET
-  key: process.env.API_KEY
-  passphrase: process.env.API_PASSPHRASE
+# authentication =
+#   secret: process.env.API_SECRET
+#   key: process.env.API_KEY
+#   passphrase: process.env.API_PASSPHRASE
 
-module.exports = (product = 'BTC-USD')->
+# module.exports = (product = 'BTC-USD')->
 
-  # pub/sub channel for long-term communication
-  channel = Postal.channel 'websocket'
+#   # pub/sub channel for long-term communication
+#   channel = Postal.channel 'websocket'
 
-  # Init a websocket to receive data for a particular product
-  start = ->
-    websocket = new (Gdax.WebsocketClient)(product, null, authentication)
+#   # Init a websocket to receive data for a particular product
+#   start = ->
+#     websocket = new (Gdax.WebsocketClient)(product, null, authentication)
 
-    websocket.on 'open', ->
-      console.log "OPENED #{product} WEBSOCKET!!!"
+#     websocket.on 'open', ->
+#       console.log "OPENED #{product} WEBSOCKET!!!"
 
-    websocket.on 'close', ->
-      console.log "CLOSED #{product} WEBSOCKET!!!"
+#     websocket.on 'close', ->
+#       console.log "CLOSED #{product} WEBSOCKET!!!"
 
-      # if socket dies, restart after a short period of time
-      setTimeout start, 10000
+#       # if socket dies, restart after a short period of time
+#       setTimeout start, 10000
 
-    websocket.on 'message', (message)->
-      # publish message to the channel
-      # console.log message
-      channel.publish "message:#{product}", message
+#     websocket.on 'message', (message)->
+#       # publish message to the channel
+#       # console.log message
+#       channel.publish "message:#{product}", message
 
-  # start the websocket
-  start()
+#   # start the websocket
+#   start()
 
-  # return the pub/sub channel
-  channel
+#   # return the pub/sub channel
+#   channel

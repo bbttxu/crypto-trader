@@ -570,15 +570,13 @@ updateAccountTotals = ( product_id )->
 
 
 
+Redis = require 'ioredis'
+redis = new Redis()
 
+redis.subscribe PRODUCT_ID
 
-Stream = require './lib/stream'
-
-productStream = Stream PRODUCT_ID
-
-productStream.subscribe "*", ( hi )->
-
-  # console.log JSON.stringify hi
+redis.on 'message', ( channel, hi )->
+  hi = JSON.parse hi
 
   if 'match' is hi.type
     store.dispatch
@@ -587,7 +585,6 @@ productStream.subscribe "*", ( hi )->
 
 
   if 'done' is hi.type and 'canceled' is hi.reason
-    # console.log hi
     store.dispatch
       type: 'BID_CANCELLED'
       bid: hi
