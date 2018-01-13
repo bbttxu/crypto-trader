@@ -34,22 +34,16 @@ ___________                   __  .__
 ###
 
 
+halfLifeAmount = require './halfLifeAmount'
+
 groupBySide = groupBy prop 'side'
 
-deValue = ( bid )->
+deValue = map ( bid )->
   now = moment().unix()
 
-  return bid unless bid.created_at
+  delta = Math.abs( now - moment( bid.created_at ).unix() )
 
-  andThen = moment( bid.created_at ).unix()
-
-  DATE = 86400
-
-  decay = ( DATE - ( now - andThen ) )/ DATE
-
-  decayedSize = ( clamp 0, 1, decay * ( parseFloat bid.size ) ).toFixed 4
-
-  bid.size = decayedSize
+  bid.size = halfLifeAmount original, 86400, delta
 
   bid
 
