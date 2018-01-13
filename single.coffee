@@ -240,7 +240,7 @@ reducer = (state, action) ->
     state.runs = sortBy prop( 'start' ), reject overADayOld, state.runs
 
     overADayOldBids = ( bid )->
-      moment().subtract( 1, 'day' ) > moment( bid.time )
+      moment().subtract( 7, 'days' ) > moment( bid.time )
 
     state.bids = reject overADayOldBids, state.bids
 
