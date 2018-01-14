@@ -5,6 +5,7 @@ RSVP = require 'rsvp'
 # Func program lib
 {
   map
+  keys
 } = require 'ramda'
 
 moment = require 'moment'
@@ -126,8 +127,8 @@ getAccounts = ( currency )->
   new RSVP.Promise ( resolve, rejectPromise )->
     callback = (err, json)->
       rejectPromise err if err
-
-      resolve JSON.parse( json.body or [] )
+      console.log json.toJSON().body, json.toJSON().statusCode, 'getAccounts'
+      resolve JSON.parse( json.toJSON().body )
 
     authedClient().getAccounts callback
 
