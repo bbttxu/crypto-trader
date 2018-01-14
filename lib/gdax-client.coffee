@@ -127,8 +127,11 @@ getAccounts = ( currency )->
   new RSVP.Promise ( resolve, rejectPromise )->
     callback = (err, json)->
       rejectPromise err if err
-      console.log json.toJSON().body, json.toJSON().statusCode, 'getAccounts'
-      resolve JSON.parse( json.toJSON().body )
+      if json
+        console.log json.toJSON().body, json.toJSON().statusCode, 'getAccounts'
+        resolve JSON.parse( json.toJSON().body )
+
+      resolve []
 
     authedClient().getAccounts callback
 
