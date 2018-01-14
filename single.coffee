@@ -403,7 +403,6 @@ reducer = (state, action) ->
         parseFloat( ( skinny action.match ).price ) +
         2.0 * parseFloat( state[ ( skinny action.match ).side ].d_price )
 
-      # console.log bidPrice
 
       bid = cleanUpTrade
         price: bidPrice
@@ -757,7 +756,7 @@ candleChannel.subscribe "factors:#{PRODUCT_ID}"
 candleChannel.on 'message', ( channel, factors )->
   store.dispatch
     type: 'UPDATE_FACTORS'
-    factors: factors
+    factors: JSON.parse factors
 
 
 ###
