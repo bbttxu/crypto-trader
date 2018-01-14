@@ -123,11 +123,11 @@ stat = ( product_id, params = granularity: 60 )->
 
 getAccounts = ( currency )->
   # console.log currency
-  new RSVP.Promise ( resolve, reject )->
+  new RSVP.Promise ( resolve, rejectPromise )->
     callback = (err, json)->
-      reject err if err
+      rejectPromise err if err
 
-      resolve JSON.parse json.body
+      resolve JSON.parse( json.body or [] )
 
     authedClient().getAccounts callback
 
