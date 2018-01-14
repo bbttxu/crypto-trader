@@ -13,7 +13,11 @@ Redis = require 'ioredis'
 exit = require './lib/exit'
 
 {
+  isEmpty
+  forEach
+  pick
   keys
+  map
 } = require 'ramda'
 
 pub = new Redis()
@@ -32,4 +36,30 @@ websocket.on 'close', ->
   exit( -1 )
 
 websocket.on 'message', (message)->
-  pub.publish message.product_id, JSON.stringify message
+  pub.publish "feed:#{message.product_id}", JSON.stringify message
+
+
+
+accountChannel = new Redis()
+
+{
+  getAccounts
+} = require './lib/gdax-client'
+
+accounts = []
+
+updateAccountinfo = ->
+  getAccounts().then(
+    ( results )->
+      if not isEmpty results
+        accounts = results
+  )
+
+updateAccountinfo()
+setInterval updateAccountinfo, 30 * 1000
+
+publishAccountInfo = ->
+  accountChannel.publish "accounts", JSON.stringify map pick( ['currency', 'available', 'hold', 'balance'] ), accounts
+
+publishAccountInfo()
+setInterval publishAccountInfo, 6 * 1000
