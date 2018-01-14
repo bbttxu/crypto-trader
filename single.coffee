@@ -750,31 +750,14 @@ setTimeout adfdsafafdsa, ( process.env.DELAY * 1000 )
 use candles to gauge where things are trending
 ###
 
-inTheWind = require './lib/inTheWind'
+candleChannel = new Redis()
 
-# https://docs.gdax.com/#get-historic-rates
-normaJean = ->
-  gdax.stat(
-    PRODUCT_ID
-  ).then(
-    inTheWind
-  ).then(
-    ( factors )->
-      store.dispatch
-        type: 'UPDATE_FACTORS'
-        factors: factors
+candleChannel.subscribe "factors:#{PRODUCT_ID}"
 
-  ).catch(
-    ( error )->
-      console.log 'candles error', error
-  )
-
-setInterval(
-  normaJean,
-  60 * 1000
-)
-normaJean()
-
+candleChannel.on 'message', ( channel, factors )->
+  store.dispatch
+    type: 'UPDATE_FACTORS'
+    factors: factors
 
 
 ###

@@ -18,6 +18,7 @@ exit = require './lib/exit'
   pick
   keys
   map
+  addIndex
 } = require 'ramda'
 
 pub = new Redis()
@@ -44,6 +45,7 @@ accountChannel = new Redis()
 
 {
   getAccounts
+  stat
 } = require './lib/gdax-client'
 
 accounts = []
@@ -63,3 +65,44 @@ publishAccountInfo = ->
 
 publishAccountInfo()
 setInterval publishAccountInfo, 6 * 1000
+
+
+
+candlesChannel = new Redis()
+
+
+
+###
+use candles to gauge where things are trending
+###
+
+inTheWind = require './lib/inTheWind'
+
+# https://docs.gdax.com/#get-historic-rates
+normaJean = ( product_id, index = 1 )->
+  doIt = ->
+    stat(
+      product_id
+    ).then(
+      inTheWind
+    ).then(
+      ( factors )->
+        candlesChannel.publish "factors:#{product_id}", JSON.stringify factors
+
+    ).catch(
+      ( error )->
+        console.log 'candles error', error
+    )
+
+  setTimeout doIt, index * 1000
+
+
+getCandles = ->
+  addIndex( forEach ) normaJean, currencies
+
+
+setInterval(
+  getCandles,
+  30 * 1000
+)
+getCandles()
