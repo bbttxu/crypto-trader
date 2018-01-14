@@ -128,7 +128,6 @@ getAccounts = ( currency )->
     callback = (err, json)->
       rejectPromise err if err
       if json
-        console.log json.toJSON().body, json.toJSON().statusCode, 'getAccounts'
         resolve JSON.parse( json.toJSON().body )
 
       resolve []
