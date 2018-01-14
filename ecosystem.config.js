@@ -78,17 +78,21 @@ module.exports = {
             [
               // First application
               {
+                name: "stream",
+                script: "stream.coffee",
+                interpreter: './node_modules/coffeescript/bin/coffee'
+              },
+              // First application
+              {
                 name: "Fills",
                 script: "fills.coffee",
-                interpreter: './node_modules/coffeescript/bin/coffee',
-                watch: true
+                interpreter: './node_modules/coffeescript/bin/coffee'
               },
               // First application
               {
                 name: "Worker",
                 script: "worker.coffee",
-                interpreter: './node_modules/coffeescript/bin/coffee',
-                watch: true
+                interpreter: './node_modules/coffeescript/bin/coffee'
               }
             ],
             map(
