@@ -48,7 +48,7 @@ saveBidToStorage = ( bid, callback )->
           throw err
 
         console.log 'SAVE_BID_TO_STORAGE saved', whiz.ops[0].product_id, whiz.ops[0].reason, whiz.ops[0].id, ++counter
-        setTimeout callback, 1000
+        setTimeout callback, 100
   )
 
 

@@ -48,7 +48,7 @@ saveRunToStorage = ( run, callback )->
           throw err
 
         console.log JOB, 'saved', whiz.ops[0].product_id, ++saveCounter
-        setTimeout callback, 1000
+        setTimeout callback, 100
   )
 
 

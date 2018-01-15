@@ -6,7 +6,7 @@ DELAY = process.env.DELAY || 3
 unless PRODUCT_ID
   console.log 'need a product id!'
 
-SIZING = 100
+SIZING = 60
 
 
 kue = require 'kue'
@@ -134,8 +134,8 @@ addBid = ( bid, cancelPlease )->
 
 
 decisioner = require './lib/decisioner'
-# goodSeaState = require './lib/goodSeaState'
 gooderSeaState = require './lib/gooderSeaState'
+dailyTide = require './lib/dailyTide'
 
 
 
@@ -240,7 +240,7 @@ reducer = (state, action) ->
     state.runs = sortBy prop( 'start' ), reject overADayOld, state.runs
 
     overADayOldBids = ( bid )->
-      moment().subtract( 1, 'day' ) > moment( bid.time )
+      moment().subtract( 7, 'days' ) > moment( bid.time )
 
     state.bids = reject overADayOldBids, state.bids
 
@@ -403,7 +403,6 @@ reducer = (state, action) ->
         parseFloat( ( skinny action.match ).price ) +
         2.0 * parseFloat( state[ ( skinny action.match ).side ].d_price )
 
-      # console.log bidPrice
 
       bid = cleanUpTrade
         price: bidPrice
@@ -460,11 +459,14 @@ reducer = (state, action) ->
         state.bids
       )
 
-      if gooderSeaState state.bids, state[ action.match.side ].bid
-        makeNewBid(
-          state[ action.match.side ].bid,
-          pluck 'id', openBids
-        )
+      good24HourTrend = dailyTide( state.stats, state[ action.match.side ].bid )
+
+      if good24HourTrend
+        if gooderSeaState( state.bids, state[ action.match.side ].bid )
+          makeNewBid(
+            state[ action.match.side ].bid,
+            pluck 'id', openBids
+          )
 
 
   if state.top and state.sell
@@ -541,41 +543,13 @@ saveRun = ( run )->
 ###
 
 
-updateAccountTotals = ( product_id )->
-  parts = product_id.split '-'
+Redis = require 'ioredis'
+feedChannel = new Redis()
 
-  topKey = parts[0]
-  bottomKey = parts[1]
+feedChannel.subscribe "feed:#{PRODUCT_ID}"
 
-
-  matchCurrency = ( currency )->
-    ( record )->
-      currency is record.currency
-
-
-  dispatchCurrency = ( currency )->
-    ( record )->
-      store.dispatch
-        type: currency
-        data: record
-
-
-  new RSVP.Promise ( resolve, reject )->
-    gdax.getAccounts( product_id ).then ( result )->
-      dispatchCurrency( 'UPDATE_TOP' ) head filter matchCurrency( topKey ), result
-      dispatchCurrency( 'UPDATE_BOTTOM' ) head filter matchCurrency( bottomKey ), result
-
-
-
-
-
-Stream = require './lib/stream'
-
-productStream = Stream PRODUCT_ID
-
-productStream.subscribe "*", ( hi )->
-
-  # console.log JSON.stringify hi
+feedChannel.on 'message', ( channel, hi )->
+  hi = JSON.parse hi
 
   if 'match' is hi.type
     store.dispatch
@@ -584,7 +558,6 @@ productStream.subscribe "*", ( hi )->
 
 
   if 'done' is hi.type and 'canceled' is hi.reason
-    # console.log hi
     store.dispatch
       type: 'BID_CANCELLED'
       bid: hi
@@ -598,31 +571,33 @@ productStream.subscribe "*", ( hi )->
 
 
 
+parts = PRODUCT_ID.split '-'
+
+topKey = parts[0]
+bottomKey = parts[1]
+
+matchCurrency = ( currency )->
+  ( record )->
+    currency is record.currency
 
 
-start = ( product_id )->
-
-  onSuccess = ( result )->
-    # console.log 'start onSuccess', result
-
-  onError = ( error )->
-    console.log 'start onError', error
-
-  init = ->
-    updateAccountTotals( product_id ).then( onSuccess ).catch( onError )
+dispatchCurrency = ( currency )->
+  ( record )->
+    store.dispatch
+      type: currency
+      data: record
 
 
-  init()
+accountChannel = new Redis()
 
-  setInterval init, 60 * 1000
+accountChannel.subscribe "accounts"
 
+accountChannel.on 'message', ( channel, jsonString )->
+  accounts = JSON.parse jsonString
 
-  onError = (fail)->
-    console.log 'fail', fail
-    reject fail
+  dispatchCurrency( 'UPDATE_TOP' ) head filter matchCurrency( topKey ), accounts
+  dispatchCurrency( 'UPDATE_BOTTOM' ) head filter matchCurrency( bottomKey ), accounts
 
-
-  mongoConnection().then(onSuccess).catch(onError)
 
 
 _throttle = require 'lodash.throttle'
@@ -774,31 +749,14 @@ setTimeout adfdsafafdsa, ( process.env.DELAY * 1000 )
 use candles to gauge where things are trending
 ###
 
-inTheWind = require './lib/inTheWind'
+candleChannel = new Redis()
 
-# https://docs.gdax.com/#get-historic-rates
-normaJean = ->
-  gdax.stat(
-    PRODUCT_ID
-  ).then(
-    inTheWind
-  ).then(
-    ( factors )->
-      store.dispatch
-        type: 'UPDATE_FACTORS'
-        factors: factors
+candleChannel.subscribe "factors:#{PRODUCT_ID}"
 
-  ).catch(
-    ( error )->
-      console.log 'candles error', error
-  )
-
-setInterval(
-  normaJean,
-  60 * 1000
-)
-normaJean()
-
+candleChannel.on 'message', ( channel, factors )->
+  store.dispatch
+    type: 'UPDATE_FACTORS'
+    factors: JSON.parse factors
 
 
 ###
