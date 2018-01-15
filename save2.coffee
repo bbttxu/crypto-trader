@@ -44,7 +44,7 @@ promiseToUpdateCurrency = ( product_id )->
           .sort( created_at: -1 )
           .toArray (err,data)->
             if err
-              console.log 'err', err
+              console.log 'save2 err', err
               reject err
 
             resolve pluck 'order_id', data
@@ -67,8 +67,6 @@ promiseToUpdateCurrency = ( product_id )->
 
 
 save = ( config ) ->
-  console.log 'config', config
-
   currencies = keys config.currencies
 
   ->
@@ -116,7 +114,8 @@ save = ( config ) ->
 
       map saveThisFill, leftovers
 
-      console.log leftovers.length, 'saved'
+      unless 0 is leftovers.length
+        console.log leftovers.length, 'saved'
       # console.log uniq flatten matches
 
 

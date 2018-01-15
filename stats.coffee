@@ -46,7 +46,7 @@ updateStats = ->
 
   ).catch(
     ( err )->
-      console.log 'err', err
+      console.log 'stats err', err
   )
 
 setInterval updateStats, 60 * 1000

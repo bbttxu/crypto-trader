@@ -5,6 +5,7 @@ RSVP = require 'rsvp'
 # Func program lib
 {
   map
+  keys
 } = require 'ramda'
 
 moment = require 'moment'
@@ -13,6 +14,9 @@ moment = require 'moment'
 {
   get
 } = require 'axios'
+
+
+exit = require './exit'
 
 ###
                __  .__               .____________ .__  .__               __
@@ -44,7 +48,8 @@ authedClient = ->
 clientReject = ( err )->
   console.log 'gdax client by error clientReject', err
 
-  reinitAuthedClient()
+
+  exit()
 
 
 
@@ -118,24 +123,26 @@ stat = ( product_id, params = granularity: 60 )->
 
 
 getAccounts = ( currency )->
-  console.log currency
-  new RSVP.Promise ( resolve, reject )->
+  # console.log currency
+  new RSVP.Promise ( resolve, rejectPromise )->
     callback = (err, json)->
-      reject err if err
+      rejectPromise err if err
+      if json
+        resolve JSON.parse( json.toJSON().body )
 
-      resolve JSON.parse json.body
+      resolve []
 
     authedClient().getAccounts callback
 
 cancelOrder = ( order )->
-  new RSVP.Promise (resolve, reject)->
+  new RSVP.Promise (resolve, rejectPromise )->
     callback = (err, data)->
       if err
         console.log 'err cancelOrder', err, order
-        reject false
+        rejectPromise false
 
       unless data
-        reject false
+        rejectPromise false
 
       payload = JSON.parse data.body
 
@@ -144,7 +151,7 @@ cancelOrder = ( order )->
         resolve true
 
       else
-        reject payload.message
+        rejectPromise payload.message
 
 
     authedClient().cancelOrder order, callback
@@ -176,6 +183,7 @@ getFills = (product = product_id)->
       if err
         data = JSON.parse err.body
         console.log 'err getFills', data, order
+        reject err.body
 
       resolve JSON.parse data.body
 

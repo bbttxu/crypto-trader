@@ -1,12 +1,17 @@
 require( 'dotenv' ).config( silent: true )
 argv = require('minimist')(process.argv.slice(2))
 PRODUCT_ID = process.env.PRODUCT_ID ||  argv._[0]
+DELAY = process.env.DELAY || 3
 
 unless PRODUCT_ID
   console.log 'need a product id!'
 
-SIZING = 100
+SIZING = 60
 
+
+kue = require 'kue'
+
+queue = kue.createQueue()
 
 RSVP = require 'rsvp'
 
@@ -54,6 +59,8 @@ cleanUpTrade = require './lib/cleanUpTrades'
   sortBy
   contains
   values
+  uniq
+  isNil
 } = require 'ramda'
 
 
@@ -71,13 +78,24 @@ initalState =
   buy: {}
   bid: {}
   bids: []
+  bid_ids: []
   match: {}
   sellFactor: 0
   buyFactor: 0
+  stats: {}
 
 showStatus = require './lib/showStatus'
 
-saveBid = require './lib/saveBid'
+saveBidToStorage = ( bid ) ->
+  queue.create(
+    'SAVE_BID_TO_STORAGE',
+    bid
+  ).attempts(
+    3
+  ).backoff(
+    { type:'exponential' }
+  ).save()
+
 updateBid = require './lib/updateBid'
 
 addBid = ( bid, cancelPlease )->
@@ -100,17 +118,24 @@ addBid = ( bid, cancelPlease )->
 
 
   onError = ( err )->
-    console.log 'sell onError'
+    console.log 'bid.side', bid.side, 'onError'
     console.log 'error', err, err.body
 
   # console.log 'start', bid.side, 'bid', bid
 
-  gdax[bid.side]( bid ).then( onGood ).then( saveBid ).catch( onError )
+  gdax[ bid.side ](
+    bid
+  ).then(
+    onGood
+  ).catch(
+    onError
+  )
 
 
 
 decisioner = require './lib/decisioner'
-goodSeaState = require './lib/goodSeaState'
+gooderSeaState = require './lib/gooderSeaState'
+dailyTide = require './lib/dailyTide'
 
 
 
@@ -136,15 +161,14 @@ consolidateRun = require './consolidateRun'
 averageOf = require './lib/averageOf'
 
 makeNewBid = ( bid, cancelPlease )->
-  if decisioner( bid )
-    if handleFractionalSize bid.bid
-      # console.log 'passed fractional size', bid.bid.size
+  if handleFractionalSize bid
+    # console.log 'passed fractional size', bid.size
 
-      if bid.bid.size < 0.01
-        bid.bid.size = 0.01
+    if bid.size < 0.01
+      bid.size = 0.01
 
 
-      addBid bid.bid
+    addBid bid
 
 
   makeCancellation = ( cancelThisID )->
@@ -155,7 +179,8 @@ makeNewBid = ( bid, cancelPlease )->
 
 
 
-
+  # since we're catching cancellations on the stream, we
+  # don't really care of the outcome
   RSVP.hashSettled( mergeAll map makeCancellation, cancelPlease ).then( ( good )->
 
 
@@ -165,26 +190,29 @@ makeNewBid = ( bid, cancelPlease )->
 
     fulfilled = filter isFullfilled, good
 
+
     #
-    cancelBid = ( bid, id )->
-      if true is bid.value
-        payload =
-          type: 'BID_CANCELLED'
-          id: id
+    # cancelBid = ( bid, id )->
+    #   if true is bid.value
+    #     payload =
+    #       type: 'BID_CANCELLED'
+    #       id: id
+    #       bid: bid
 
 
-        store.dispatch payload
+    #     store.dispatch payload
 
-      if 'order not found' is bid.reason
-        payload =
-          type: 'BID_CANCELLED'
-          id: id
-
-
-        store.dispatch payload
+    #   if 'order not found' is bid.reason
+    #     payload =
+    #       type: 'BID_CANCELLED'
+    #       id: id
+    #       bid: bid
 
 
-    forEachObjIndexed cancelBid, good
+    #     store.dispatch payload
+
+
+    # forEachObjIndexed cancelBid, good
 
 
 
@@ -209,30 +237,24 @@ reducer = (state, action) ->
     overADayOld = ( run )->
       moment().subtract( 1, 'day' ).valueOf() > run.end
 
-    state.runs = reject overADayOld, state.runs
+    state.runs = sortBy prop( 'start' ), reject overADayOld, state.runs
+
+    overADayOldBids = ( bid )->
+      moment().subtract( 7, 'days' ) > moment( bid.time )
+
+    state.bids = reject overADayOldBids, state.bids
 
     # do stuff here ^^^
 
     console.log moment( start ).format(),'HEARTBEAT', Date.now() - start, 'ms'
 
 
+  if 'UPDATE_STATS' is action.type
+    state.stats = action.stats
+
   if 'UPDATE_FACTORS' is action.type
     state.sellFactor = action.factors.sellFactor
     state.buyFactor = action.factors.buyFactor
-
-    # log state
-
-  if 'BID_CANCELLED' is action.type
-    # WIP update bid in bids storage with cancelled status
-    console.log 'BID_CANCELLED', action.id
-    state.bids = reject propEq( 'id', action.id ), state.bids
-    console.log state.bids.length, JSON.stringify pluck 'id', state.bids
-
-
-
-
-
-
 
 
   if 'UPDATE_TOP' is action.type
@@ -251,12 +273,26 @@ reducer = (state, action) ->
 
 
   if 'ADD_BID' is action.type
-    console.log 'ADD_BID', JSON.stringify action.bid
+    bid = pick(
+      [
+        'id',
+        'product_id',
+        'price',
+        'size',
+        'side'
+      ],
+      action.bid
+    )
+
+
+
     state.bids.push action.bid
+    state.bid_ids = pluck 'id', state.bids
 
 
   if 'ADD_RUN' is action.type
     unless 0 is action.run.d_price or 0 is action.run.d_time
+      # console.log 'ADD_RUN', state.runs.length, moment( action.run.end ).fromNow()
       state.runs.push action.run
 
 
@@ -264,14 +300,49 @@ reducer = (state, action) ->
     state.fills.push action.fill
 
 
+  if 'BID_CANCELLED' is action.type
+
+    index = findIndex propEq( 'id', action.bid.order_id ), state.bids
+
+    if index > -1
+      # console.log 'BID_CANCELLED', action.bid.order_id, action.bid
+      updatedBid = merge state.bids[ index ], action.bid
+
+      state.bids = reject propEq( 'id', action.bid.order_id ), state.bids
+
+      state.bids.push updatedBid
+
+      state.bid_ids = pluck 'id', state.bids
+
+      saveBidToStorage updatedBid
+
+
+
+
   if 'MATCH_FILLED' is action.type
     # console.log 'MATCH_FILLED', JSON.stringify action.match
-    if contains action.match.order_id, ( pluck 'id', state.bids )
-      updateBid( action.match.order_id, action.match ).then( ( result )->
-        log result
-      ).catch( ( err)->
-        console.log 'match filled error after updating the bid with the filled info', err
-      )
+
+    index = findIndex propEq( 'id', action.match.order_id ), state.bids
+
+    if index > -1
+      console.log 'MATCH_FILLED', JSON.stringify  action.match
+      updatedBid = merge state.bids[ index ], action.match
+
+      state.bids = reject propEq( 'id', action.match.order_id ), state.bids
+
+      state.bids.push updatedBid
+
+      state.bid_ids = pluck 'id', state.bids
+
+      saveBidToStorage updatedBid
+
+
+      # console.log merge state.bids[ index ], action.match
+      # saveBidToStorage merge state.bids[ index ], action.match
+
+
+
+    # state.bids = reject propEq( 'id', action.match.order_id ), state.bids
 
 
 
@@ -323,10 +394,15 @@ reducer = (state, action) ->
     if isEmpty state.run
       state.run = [ skinny action.match ]
 
+      # console.log(
+      #   parseFloat( ( skinny action.match ).price ),
+      #   2.0 * parseFloat( state[ ( skinny action.match ).side ].d_price )
+      # )
 
       bidPrice =
         parseFloat( ( skinny action.match ).price ) +
         2.0 * parseFloat( state[ ( skinny action.match ).side ].d_price )
+
 
       bid = cleanUpTrade
         price: bidPrice
@@ -335,6 +411,7 @@ reducer = (state, action) ->
         size: (
           state["#{action.match.side}Amount"]
         )
+        stats: state.stats
 
       lkfafdijwe = state[ action.match.side ]
 
@@ -375,13 +452,22 @@ reducer = (state, action) ->
       state.buyPrice = state.buy.price
 
     unless importantValue
-      if goodSeaState state
-        makeNewBid(
-          state[action.match.side],
-          pluck 'id', state.bids
-        )
-      # else
-      #   console.log 'sea state not good', JSON.stringify state[action.match.side].bid
+      openBids = filter(
+        ( bid )->
+          isNil prop 'reason', bid
+        ,
+        state.bids
+      )
+
+      good24HourTrend = dailyTide( state.stats, state[ action.match.side ].bid )
+
+      if good24HourTrend
+        if gooderSeaState( state.bids, state[ action.match.side ].bid )
+          makeNewBid(
+            state[ action.match.side ].bid,
+            pluck 'id', openBids
+          )
+
 
   if state.top and state.sell
     state.topValue = state.sell.price * state.top.available
@@ -406,6 +492,13 @@ reducer = (state, action) ->
     n = sum pluck 'n', runs
     n_runs = runs.length
 
+    # prices = pluck 'd_price', runs
+
+    # extremes = [
+    #   parseFloat( Math.min.apply( this, prices ).toFixed( 4 ) )
+    #   parseFloat( Math.max.apply( this, prices ).toFixed( 4 ) )
+    # ]
+
     response =
       d_time: averageOf( 'd_time' )( runs )
       d_price: parseFloat( ( averageOf( 'd_price' )( runs ) ).toFixed 4 )
@@ -429,21 +522,15 @@ reducer = (state, action) ->
 
 store = createStore reducer, applyMiddleware(thunk.default)
 
-saveRunToStorage = require './lib/saveRunToStorage'
+{
+  addRunToQueue
+} = require './workers/saveRunToStorage'
 
 saveRun = ( run )->
   consolidated = consolidateRun run, PRODUCT_ID
 
-  saveRunToStorage( consolidated ).then( (good)->
-    store.dispatch
-      type: 'ADD_RUN'
-      run: consolidated
-
-  ).catch( (err)->
-    console.log 'err', err
-  )
-
-
+  new Promise ( resolve, rejectPromise )->
+    addRunToQueue( consolidated )
 
 
 ###
@@ -456,43 +543,24 @@ saveRun = ( run )->
 ###
 
 
-updateAccountTotals = ( product_id )->
-  parts = product_id.split '-'
+Redis = require 'ioredis'
+feedChannel = new Redis()
 
-  topKey = parts[0]
-  bottomKey = parts[1]
+feedChannel.subscribe "feed:#{PRODUCT_ID}"
 
+feedChannel.on 'message', ( channel, hi )->
+  hi = JSON.parse hi
 
-  matchCurrency = ( currency )->
-    ( record )->
-      currency is record.currency
-
-
-  dispatchCurrency = ( currency )->
-    ( record )->
-      store.dispatch
-        type: currency
-        data: record
-
-
-  new RSVP.Promise ( resolve, reject )->
-    gdax.getAccounts( product_id ).then ( result )->
-      dispatchCurrency( 'UPDATE_TOP' ) head filter matchCurrency( topKey ), result
-      dispatchCurrency( 'UPDATE_BOTTOM' ) head filter matchCurrency( bottomKey ), result
-
-
-
-
-
-Stream = require './lib/stream'
-
-productStream = Stream PRODUCT_ID
-
-productStream.subscribe "message:#{PRODUCT_ID}", ( hi )->
   if 'match' is hi.type
     store.dispatch
       type: 'ADD_MATCH'
       match: hi
+
+
+  if 'done' is hi.type and 'canceled' is hi.reason
+    store.dispatch
+      type: 'BID_CANCELLED'
+      bid: hi
 
 
   if 'done' is hi.type and 'filled' is hi.reason
@@ -503,31 +571,33 @@ productStream.subscribe "message:#{PRODUCT_ID}", ( hi )->
 
 
 
+parts = PRODUCT_ID.split '-'
+
+topKey = parts[0]
+bottomKey = parts[1]
+
+matchCurrency = ( currency )->
+  ( record )->
+    currency is record.currency
 
 
-start = ( product_id )->
-
-  onSuccess = ( result )->
-    # console.log 'start onSuccess', result
-
-  onError = ( error )->
-    console.log 'start onError', error
-
-  init = ->
-    updateAccountTotals( product_id ).then( onSuccess ).catch( onError )
+dispatchCurrency = ( currency )->
+  ( record )->
+    store.dispatch
+      type: currency
+      data: record
 
 
-  init()
+accountChannel = new Redis()
 
-  setInterval init, 60 * 1000
+accountChannel.subscribe "accounts"
 
+accountChannel.on 'message', ( channel, jsonString )->
+  accounts = JSON.parse jsonString
 
-  onError = (fail)->
-    console.log 'fail', fail
-    reject fail
+  dispatchCurrency( 'UPDATE_TOP' ) head filter matchCurrency( topKey ), accounts
+  dispatchCurrency( 'UPDATE_BOTTOM' ) head filter matchCurrency( bottomKey ), accounts
 
-
-  mongoConnection().then(onSuccess).catch(onError)
 
 
 _throttle = require 'lodash.throttle'
@@ -622,13 +692,14 @@ getFills = require './lib/getFills'
 getBids = require './lib/getBids'
 
 
-addRun = ( run, index )->
+addRun = ( run, index = 1 )->
   storeDispatch = ->
+
     store.dispatch
       type: 'ADD_RUN'
       run: run
 
-  setTimeout storeDispatch, index * 100
+  setTimeout storeDispatch, index * 1000
 
 
 sortByAbsSize = ( a, b )->
@@ -642,53 +713,87 @@ dispatchFill = ( fill )->
     fill: fill
 
 
-promises = {
-  fills: getFills( PRODUCT_ID ),
-  bids: getBids( PRODUCT_ID ),
-  runs: getRunsFromStorage( product_id: PRODUCT_ID )
-}
+adfdsafafdsa = ->
 
-RSVP.hash( promises ).then( ( good )->
-  console.log good.fills.length, good.bids.length
-  map dispatchFill, good.fills.concat good.bids
-  addIndex( map ) addRun, sort sortByAbsSize, good.runs
+  promises = {
+    fills: getFills( PRODUCT_ID ),
+    bids: getBids( PRODUCT_ID, reason: 'filled' ),
+    runs: getRunsFromStorage( product_id: PRODUCT_ID ),
+    cancelAllOrders: gdax.cancelAllOrders [ PRODUCT_ID ]
+  }
 
-  start( PRODUCT_ID )
+  RSVP.hash( promises ).then( ( good )->
+    console.log good.fills.length, good.bids.length
+    map dispatchFill, good.fills.concat good.bids
+    addIndex( map ) addRun, sort sortByAbsSize, good.runs
 
-).catch( ( bad )->
-  console.log 'bad'
-)
+    map(
+      ( bid )->
+        store.dispatch
+          type: 'ADD_BID'
+          bid: bid
+      ,
+      good.bids
+    )
 
+    start( PRODUCT_ID )
+
+  ).catch( ( bad )->
+    console.log 'bad'
+  )
+
+setTimeout adfdsafafdsa, ( process.env.DELAY * 1000 )
 
 
 ###
 use candles to gauge where things are trending
 ###
 
-inTheWind = require './lib/inTheWind'
+candleChannel = new Redis()
 
-# https://docs.gdax.com/#get-historic-rates
-normaJean = ->
-  gdax.stat(
+candleChannel.subscribe "factors:#{PRODUCT_ID}"
+
+candleChannel.on 'message', ( channel, factors )->
+  store.dispatch
+    type: 'UPDATE_FACTORS'
+    factors: JSON.parse factors
+
+
+###
+            .___  .___           __          __             __           ___.   .__    .___
+_____     __| _/__| _/   _______/  |______ _/  |_  ______ _/  |_  ____   \_ |__ |__| __| _/______
+\__  \   / __ |/ __ |   /  ___/\   __\__  \\   __\/  ___/ \   __\/  _ \   | __ \|  |/ __ |/  ___/
+ / __ \_/ /_/ / /_/ |   \___ \  |  |  / __ \|  |  \___ \   |  | (  <_> )  | \_\ \  / /_/ |\___ \
+(____  /\____ \____ |  /____  > |__| (____  /__| /____  >  |__|  \____/   |___  /__\____ /____  >
+     \/      \/    \/       \/            \/          \/                      \/        \/    \/
+###
+
+getStats = require './lib/getStats'
+
+updateStats = ->
+  getStats(
     PRODUCT_ID
   ).then(
-    inTheWind
-  ).then(
-    ( factors )->
+    ( stats )->
       store.dispatch
-        type: 'UPDATE_FACTORS'
-        factors: factors
-
-  ).catch(
-    ( error )->
-      console.log 'candles error', error
+        type: 'UPDATE_STATS'
+        stats: stats
   )
 
-setInterval(
-  normaJean,
-  60 * 1000
-)
-normaJean()
+setInterval updateStats, 30 * 1000
+updateStats()
 
 
 
+
+
+process.on 'SIGINT', ->
+  gdax.cancelAllOrders [ PRODUCT_ID ]
+  console.log 'graceful timeout', PRODUCT_ID
+
+  timeout = ->
+    gdax.cancelAllOrders [ PRODUCT_ID ]
+    console.log 'graceful kill', PRODUCT_ID
+    process.exit err ? 1 : 0
+
+  setTimeout timeout, 1000
