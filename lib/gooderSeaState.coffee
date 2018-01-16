@@ -52,13 +52,15 @@ getValue = ( bid )->
   ( parseFloat bid.price ) * ( parseFloat bid.size )
 
 getSideSum = map ( side )->
+  deValuedSide = deValue side
+
   sideSum =
-    sum: sum map getValue, deValue side
-    size: sum map parseFloat, map prop( 'size' ), deValue side
+    sum: sum map getValue, deValuedSide
+    size: sum map parseFloat, map prop( 'size' ), deValuedSide
 
 
   sideSum.price = sideSum.sum / sideSum.size
-  sideSum.n = side.length
+  sideSum.n = deValuedSide.length
   sideSum
 
 
