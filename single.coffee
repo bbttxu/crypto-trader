@@ -133,7 +133,6 @@ addBid = ( bid, cancelPlease )->
 
 
 
-decisioner = require './lib/decisioner'
 gooderSeaState = require './lib/gooderSeaState'
 dailyTide = require './lib/dailyTide'
 
