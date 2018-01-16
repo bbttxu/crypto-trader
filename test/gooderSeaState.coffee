@@ -88,5 +88,12 @@ describe 'know a bad sea', ->
     decision.should.be.eql true
 
 
+  it 'handles undefined bid by not trading', ->
+    decision = goodSeaState [ 'not', 'empty' ], undefined
+    decision.should.be.eql false
+
+  it 'handles not enough enough info on bid by not trading', ->
+    decision = goodSeaState [ 'not', 'empty' ], {}
+    decision.should.be.eql false
 
 
