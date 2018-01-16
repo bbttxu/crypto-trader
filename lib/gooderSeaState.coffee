@@ -43,10 +43,9 @@ deValue = map ( bid )->
 
   delta = Math.abs( now - moment( bid.created_at ).unix() )
 
-  bid.size = halfLifeAmount original, 86400, delta
+  bid.size = halfLifeAmount bid.size, 86400, delta
 
   bid
-
 
 
 getValue = ( bid )->
@@ -54,8 +53,8 @@ getValue = ( bid )->
 
 getSideSum = map ( side )->
   sideSum =
-    sum: sum map getValue, side
-    size: sum map parseFloat, map prop( 'size' ), side
+    sum: sum map getValue, deValue side
+    size: sum map parseFloat, map prop( 'size' ), deValue side
 
 
   sideSum.price = sideSum.sum / sideSum.size
