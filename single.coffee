@@ -768,21 +768,14 @@ _____     __| _/__| _/   _______/  |______ _/  |_  ______ _/  |_  ____   \_ |__ 
      \/      \/    \/       \/            \/          \/                      \/        \/    \/
 ###
 
-getStats = require './lib/getStats'
+statsChannel = new Redis()
 
-updateStats = ->
-  getStats(
-    PRODUCT_ID
-  ).then(
-    ( stats )->
-      store.dispatch
-        type: 'UPDATE_STATS'
-        stats: stats
-  )
+statsChannel.subscribe "stats:#{PRODUCT_ID}"
 
-setInterval updateStats, 30 * 1000
-updateStats()
-
+statsChannel.on 'message', ( channel, stats )->
+  store.dispatch
+    type: 'UPDATE_STATS'
+    stats: JSON.parse stats
 
 
 

@@ -106,3 +106,33 @@ setInterval(
   30 * 1000
 )
 getCandles()
+
+
+
+
+
+statsChannel = new Redis()
+
+getStats = require './lib/getStats'
+
+updateStat = ( product_id, index = 1 )->
+  doIt = ->
+    getStats(
+      product_id
+    ).then(
+      ( stats )->
+        statsChannel.publish "stats:#{product_id}", JSON.stringify stats
+
+    )
+
+  setTimeout doIt, index * 6000
+
+updateStats = ->
+  addIndex( forEach ) updateStat, currencies
+
+
+
+setInterval updateStats, 30 * 1000
+updateStats()
+
+
