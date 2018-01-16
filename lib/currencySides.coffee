@@ -1,17 +1,17 @@
-{
-  keys
-  map
-  unnest
-} = require 'ramda'
+# {
+#   keys
+#   map
+#   unnest
+# } = require 'ramda'
 
-arrayify = require './arrayify'
+# arrayify = require './arrayify'
 
-currencySides = ( config ) ->
-  currencies = config.currencies
+# currencySides = ( config ) ->
+#   currencies = config.currencies
 
-  addSides = ( product ) ->
-    arrayify( [ product ] )( keys config.currencies[product] )
+#   addSides = ( product ) ->
+#     arrayify( [ product ] )( keys config.currencies[product] )
 
-  unnest map addSides, keys currencies
+#   unnest map addSides, keys currencies
 
-module.exports = currencySides
+# module.exports = currencySides
