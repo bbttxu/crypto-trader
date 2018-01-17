@@ -70,8 +70,15 @@ initalState =
   fills: []
   ratio: 0
   progress: 0
-  top: {}
-  bottom: {}
+  top:
+    available: 0
+    hold: 0
+    balance: 0
+
+  bottom:
+    available: 0
+    hold: 0
+    balance: 0
   run: []
   runs: []
   sell: {}
