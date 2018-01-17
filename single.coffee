@@ -17,7 +17,7 @@ RSVP = require 'rsvp'
 
 log = require './lib/log'
 
-handleFractionalSize = require './lib/handleFractionalSize'
+# handleFractionalSize = require './lib/handleFractionalSize'
 
 gdax = require './lib/gdax-client'
 
@@ -169,14 +169,14 @@ consolidateRun = require './consolidateRun'
 averageOf = require './lib/averageOf'
 
 makeNewBid = ( bid, cancelPlease )->
-  if handleFractionalSize bid
-    console.log 'passed fractional size', bid.size
+  # if handleFractionalSize bid
+  # console.log 'passed fractional size', bid.size
 
-    if bid.size < 0.1
-      bid.size = 0.1
+  # if bid.size < 0.1
+  #   bid.size = 0.1
 
 
-    addBid bid
+  addBid bid
 
 
   makeCancellation = ( cancelThisID )->
@@ -417,9 +417,7 @@ reducer = (state, action) ->
         price: bidPrice
         side: action.match.side
         product_id: PRODUCT_ID
-        size: (
-          state["#{action.match.side}Amount"]
-        )
+        size: 0.1
         stats: state.stats
 
       lkfafdijwe = state[ action.match.side ]
