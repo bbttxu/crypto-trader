@@ -163,10 +163,10 @@ averageOf = require './lib/averageOf'
 
 makeNewBid = ( bid, cancelPlease )->
   if handleFractionalSize bid
-    # console.log 'passed fractional size', bid.size
+    console.log 'passed fractional size', bid.size
 
-    if bid.size < 0.01
-      bid.size = 0.01
+    if bid.size < 0.1
+      bid.size = 0.1
 
 
     addBid bid
@@ -246,6 +246,8 @@ reducer = (state, action) ->
     state.bids = reject overADayOldBids, state.bids
 
     # do stuff here ^^^
+
+    console.log uniq pluck 'message', state.bids
 
     console.log moment( start ).format(),'HEARTBEAT', Date.now() - start, 'ms'
 
