@@ -264,9 +264,12 @@ reducer = (state, action) ->
     state.bottom = action.data
 
 
-  state.sellAmount = ( state.top.available / SIZING ) * state.sellFactor
+  topAvailable = state.top.available || 0
+  bottomAvailable = state.bottom.available || 0
 
-  state.buyAmount = ( state.bottom.available / state.sell.price / SIZING ) * parseFloat( state.buyFactor )
+  state.sellAmount = ( topAvailable / SIZING ) * state.sellFactor
+
+  state.buyAmount = ( bottomAvailable / state.sell.price / SIZING ) * parseFloat( state.buyFactor )
 
 
 
