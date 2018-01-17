@@ -17,7 +17,7 @@ RSVP = require 'rsvp'
 
 log = require './lib/log'
 
-handleFractionalSize = require './lib/handleFractionalSize'
+# handleFractionalSize = require './lib/handleFractionalSize'
 
 gdax = require './lib/gdax-client'
 
@@ -70,8 +70,15 @@ initalState =
   fills: []
   ratio: 0
   progress: 0
-  top: {}
-  bottom: {}
+  top:
+    available: 0
+    hold: 0
+    balance: 0
+
+  bottom:
+    available: 0
+    hold: 0
+    balance: 0
   run: []
   runs: []
   sell: {}
@@ -83,6 +90,8 @@ initalState =
   sellFactor: 0
   buyFactor: 0
   stats: {}
+  buyAmount: 0
+  sellAmount: 0
 
 showStatus = require './lib/showStatus'
 
@@ -160,14 +169,14 @@ consolidateRun = require './consolidateRun'
 averageOf = require './lib/averageOf'
 
 makeNewBid = ( bid, cancelPlease )->
-  if handleFractionalSize bid
-    # console.log 'passed fractional size', bid.size
+  # if handleFractionalSize bid
+  # console.log 'passed fractional size', bid.size
 
-    if bid.size < 0.01
-      bid.size = 0.01
+  # if bid.size < 0.1
+  #   bid.size = 0.1
 
 
-    addBid bid
+  addBid bid
 
 
   makeCancellation = ( cancelThisID )->
@@ -245,6 +254,8 @@ reducer = (state, action) ->
 
     # do stuff here ^^^
 
+    console.log uniq pluck 'message', state.bids
+
     console.log moment( start ).format(),'HEARTBEAT', Date.now() - start, 'ms'
 
 
@@ -258,15 +269,14 @@ reducer = (state, action) ->
 
   if 'UPDATE_TOP' is action.type
     state.top = action.data
+    topAvailable = state.top.available || 0
+    state.sellAmount = ( topAvailable / SIZING ) * state.sellFactor
 
 
   if 'UPDATE_BOTTOM' is action.type
     state.bottom = action.data
-
-
-  state.sellAmount = ( state.top.available / SIZING ) * state.sellFactor
-
-  state.buyAmount = ( state.bottom.available / state.sell.price / SIZING ) * parseFloat( state.buyFactor )
+    bottomAvailable = state.bottom.available || 0
+    state.buyAmount = ( bottomAvailable / state.sell.price / SIZING ) * parseFloat( state.buyFactor )
 
 
 
@@ -407,9 +417,7 @@ reducer = (state, action) ->
         price: bidPrice
         side: action.match.side
         product_id: PRODUCT_ID
-        size: (
-          state["#{action.match.side}Amount"]
-        )
+        size: 0.1
         stats: state.stats
 
       lkfafdijwe = state[ action.match.side ]
