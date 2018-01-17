@@ -83,6 +83,8 @@ initalState =
   sellFactor: 0
   buyFactor: 0
   stats: {}
+  buyAmount: 0
+  sellAmount: 0
 
 showStatus = require './lib/showStatus'
 
@@ -258,18 +260,14 @@ reducer = (state, action) ->
 
   if 'UPDATE_TOP' is action.type
     state.top = action.data
+    topAvailable = state.top.available || 0
+    state.sellAmount = ( topAvailable / SIZING ) * state.sellFactor
 
 
   if 'UPDATE_BOTTOM' is action.type
     state.bottom = action.data
-
-
-  topAvailable = state.top.available || 0
-  bottomAvailable = state.bottom.available || 0
-
-  state.sellAmount = ( topAvailable / SIZING ) * state.sellFactor
-
-  state.buyAmount = ( bottomAvailable / state.sell.price / SIZING ) * parseFloat( state.buyFactor )
+    bottomAvailable = state.bottom.available || 0
+    state.buyAmount = ( bottomAvailable / state.sell.price / SIZING ) * parseFloat( state.buyFactor )
 
 
 
