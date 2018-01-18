@@ -19,6 +19,7 @@ exit = require './lib/exit'
   keys
   map
   addIndex
+  forEachObjIndexed
 } = require 'ramda'
 
 pub = new Redis()
@@ -115,17 +116,38 @@ statsChannel = new Redis()
 
 getStats = require './lib/getStats'
 
+{ createStore, applyMiddleware } = require 'redux'
+thunk = require 'redux-thunk'
+
+initialState = {}
+
+reducer = ( state, action )->
+  if typeof state == 'undefined'
+    return initialState
+
+  if 'UPDATE' is action.type
+    state[ action.product_id ] = action.stats
+
+
+  state
+
+
+store = createStore reducer, applyMiddleware(thunk.default)
+
 updateStat = ( product_id, index = 1 )->
   doIt = ->
     getStats(
       product_id
     ).then(
       ( stats )->
-        statsChannel.publish "stats:#{product_id}", JSON.stringify stats
+        store.dispatch
+          type: 'UPDATE'
+          stats: stats
+          product_id: product_id
 
     )
 
-  setTimeout doIt, index * 6000
+  setTimeout doIt, index * 3000
 
 updateStats = ->
   addIndex( forEach ) updateStat, currencies
@@ -135,4 +157,11 @@ updateStats = ->
 setInterval updateStats, 30 * 1000
 updateStats()
 
+
+updateStatsFeed = ( stats, product_id )->
+  statsChannel.publish "stats:#{product_id}", JSON.stringify stats
+
+store.subscribe ->
+  state = store.getState()
+  forEachObjIndexed updateStatsFeed, store.getState()
 
