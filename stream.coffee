@@ -42,6 +42,12 @@ websocket.on 'message', (message)->
 
 
 
+catchError = ( name )->
+  ( error )->
+    console.log name, error.response.data.message
+
+
+
 accountChannel = new Redis()
 
 {
@@ -56,7 +62,10 @@ updateAccountinfo = ->
     ( results )->
       if not isEmpty results
         accounts = results
-  )
+    ).catch(
+      catchError( 'accounts' )
+
+    )
 
 updateAccountinfo()
 setInterval updateAccountinfo, 30 * 1000
@@ -91,8 +100,7 @@ normaJean = ( product_id, index = 1 )->
         candlesChannel.publish "factors:#{product_id}", JSON.stringify factors
 
     ).catch(
-      ( error )->
-        console.log 'candles error', error
+      catchError( 'candles' )
     )
 
   setTimeout doIt, index * 1000
@@ -145,6 +153,8 @@ updateStat = ( product_id, index = 1 )->
           stats: stats
           product_id: product_id
 
+    ).catch(
+      catchError( "stats #{product_id}" )
     )
 
   setTimeout doIt, index * 3000
