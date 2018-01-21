@@ -13,12 +13,20 @@ module.exports =
       # sell: {}
       buy: {}
 
+    'BCH-USD':
+      sell: {}
+      buy: {}
+
     'LTC-USD':
       sell: {}
       # buy: {}
 
     'ETH-USD':
       # sell: {}
+      buy: {}
+
+    'BCH-BTC':
+      sell: {}
       buy: {}
 
     'ETH-BTC':
@@ -29,9 +37,6 @@ module.exports =
       sell: {}
       buy: {}
 
-    'BCH-USD':
-      sell: {}
-      buy: {}
 
 
   intervals: [
