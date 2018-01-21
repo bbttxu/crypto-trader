@@ -101,9 +101,10 @@ module.exports = {
                 setupProduct,
                 [
                   'BTC-USD',
+                  'BCH-USD',
                   'ETH-USD',
                   'LTC-USD',
-                  'BCH-USD',
+                  'BCH-BTC',
                   'ETH-BTC',
                   'LTC-BTC'
                 ]
