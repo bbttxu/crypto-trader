@@ -6,7 +6,7 @@ describe 'it determines direction', ->
   it 'shows sell on increase', ->
 
     input =
-      latest: 2
+      last: 2
       open: 1
 
     output = getDirection input
@@ -17,7 +17,7 @@ describe 'it determines direction', ->
   it 'shows buy on decrease', ->
 
     input =
-      latest: 1
+      last: 1
       open: 2
 
     output = getDirection input
@@ -28,7 +28,7 @@ describe 'it determines direction', ->
   it 'passes present state if equal', ->
 
     input =
-      latest: 2
+      last: 2
       open: 2
 
     output = getDirection input, 'test'
