@@ -50,6 +50,6 @@ describe 'coveredBids', ->
     ]
 
 
-    output = coveredBids input, 'side'
+    output = coveredBids input, 'sell'
 
     expected.should.be.eql output
