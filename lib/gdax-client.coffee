@@ -92,6 +92,12 @@ getProduct24HrStats = ( product )->
       if err
         reject err
 
+      unless json and json.body
+        reject
+          func: 'getProduct24HrStats'
+          message: 'no JSON response body'
+          json: json
+
       obj = {}
       obj[ product ] = JSON.parse json.body
 
