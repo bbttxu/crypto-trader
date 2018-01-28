@@ -6,7 +6,7 @@ DELAY = process.env.DELAY || 3
 unless PRODUCT_ID
   console.log 'need a product id!'
 
-SIZING = 60
+# SIZING = 60
 
 
 kue = require 'kue'
@@ -269,14 +269,14 @@ reducer = (state, action) ->
 
   if 'UPDATE_TOP' is action.type
     state.top = action.data
-    topAvailable = state.top.available || 0
-    state.sellAmount = ( topAvailable / SIZING ) * state.sellFactor
+    # topAvailable = state.top.available || 0
+    # state.sellAmount = ( topAvailable / SIZING ) * state.sellFactor
 
 
   if 'UPDATE_BOTTOM' is action.type
     state.bottom = action.data
-    bottomAvailable = state.bottom.available || 0
-    state.buyAmount = ( bottomAvailable / state.sell.price / SIZING ) * parseFloat( state.buyFactor )
+    # bottomAvailable = state.bottom.available || 0
+    # state.buyAmount = ( bottomAvailable / state.sell.price / SIZING ) * parseFloat( state.buyFactor )
 
 
 
