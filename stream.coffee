@@ -91,6 +91,8 @@ inTheWind = require './lib/inTheWind'
 # https://docs.gdax.com/#get-historic-rates
 normaJean = ( product_id, index = 1 )->
   doIt = ->
+    console.log product_id, 'norma jean', index
+    
     stat(
       product_id
     ).then(
@@ -103,7 +105,7 @@ normaJean = ( product_id, index = 1 )->
       catchError( 'candles' )
     )
 
-  setTimeout doIt, index * 1000
+  setTimeout doIt, index * 3 * 1000
 
 
 getCandles = ->
