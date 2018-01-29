@@ -4,7 +4,7 @@ PRODUCT_ID = process.env.PRODUCT_ID ||  argv._[0]
 DELAY = process.env.DELAY || 3
 
 unless PRODUCT_ID
-  console.log 'need a product id!'
+  log 'need a product id!'
 
 # SIZING = 60
 
@@ -116,7 +116,7 @@ addBid = ( bid, cancelPlease )->
     message = foo.body
 
     if message.message
-      console.log 'message.message', message.message
+      log 'message.message', message.message
 
     else
       store.dispatch
@@ -127,10 +127,10 @@ addBid = ( bid, cancelPlease )->
 
 
   onError = ( err )->
-    console.log 'bid.side', bid.side, 'onError'
-    console.log 'error', err, err.body
+    log 'bid.side', bid.side, 'onError'
+    log 'error', err, err.body
 
-  # console.log 'start', bid.side, 'bid', bid
+  # log 'start', bid.side, 'bid', bid
 
   gdax[ bid.side ](
     bid
@@ -170,7 +170,7 @@ averageOf = require './lib/averageOf'
 
 makeNewBid = ( bid, cancelPlease )->
   # if handleFractionalSize bid
-  # console.log 'passed fractional size', bid.size
+  # log 'passed fractional size', bid.size
 
   # if bid.size < 0.1
   #   bid.size = 0.1
@@ -225,7 +225,7 @@ makeNewBid = ( bid, cancelPlease )->
 
 
   ).catch( (error)->
-    console.log 'really bad thing', error
+    log 'really bad thing', error
   )
 
 
@@ -239,8 +239,11 @@ reducer = (state, action) ->
 
     # do stuff here vvv
 
+
+    log PRODUCT_ID, 'is in', state.direction, 'mode'
+
     state.fills = sortBy prop( 'trade_id' ), state.fills
-    console.log 'showStatus', showStatus state.fills
+    log 'showStatus', showStatus state.fills
 
     overADayOld = ( run )->
       moment().subtract( 1, 'day' ).valueOf() > run.end
@@ -252,15 +255,19 @@ reducer = (state, action) ->
 
     state.bids = reject overADayOldBids, state.bids
 
+
+
+
     # do stuff here ^^^
 
-    console.log uniq pluck 'message', state.bids
+    log uniq pluck 'message', state.bids
 
-    console.log moment( start ).format(),'HEARTBEAT', Date.now() - start, 'ms'
+    log moment( start ).format(),'HEARTBEAT', Date.now() - start, 'ms'
 
 
   if 'UPDATE_STATS' is action.type
     state.stats = action.stats
+    # state.direction = getDirection action.stats, state.direction
 
   if 'UPDATE_FACTORS' is action.type
     state.sellFactor = action.factors.sellFactor
@@ -301,7 +308,7 @@ reducer = (state, action) ->
 
   if 'ADD_RUN' is action.type
     unless 0 is action.run.d_price or 0 is action.run.d_time
-      # console.log 'ADD_RUN', state.runs.length, moment( action.run.end ).fromNow()
+      # log 'ADD_RUN', state.runs.length, moment( action.run.end ).fromNow()
       state.runs.push action.run
 
 
@@ -314,7 +321,7 @@ reducer = (state, action) ->
     index = findIndex propEq( 'id', action.bid.order_id ), state.bids
 
     if index > -1
-      # console.log 'BID_CANCELLED', action.bid.order_id, action.bid
+      # log 'BID_CANCELLED', action.bid.order_id, action.bid
       updatedBid = merge state.bids[ index ], action.bid
 
       state.bids = reject propEq( 'id', action.bid.order_id ), state.bids
@@ -329,12 +336,12 @@ reducer = (state, action) ->
 
 
   if 'MATCH_FILLED' is action.type
-    # console.log 'MATCH_FILLED', JSON.stringify action.match
+    # log 'MATCH_FILLED', JSON.stringify action.match
 
     index = findIndex propEq( 'id', action.match.order_id ), state.bids
 
     if index > -1
-      console.log 'MATCH_FILLED', JSON.stringify  action.match
+      log 'MATCH_FILLED', JSON.stringify  action.match
       updatedBid = merge state.bids[ index ], action.match
 
       state.bids = reject propEq( 'id', action.match.order_id ), state.bids
@@ -346,7 +353,7 @@ reducer = (state, action) ->
       saveBidToStorage updatedBid
 
 
-      # console.log merge state.bids[ index ], action.match
+      # log merge state.bids[ index ], action.match
       # saveBidToStorage merge state.bids[ index ], action.match
 
 
@@ -392,7 +399,7 @@ reducer = (state, action) ->
       unless importantValue
         # Don't use runs that are only one fill long
         if state.run.length > 1
-          # console.log 'new run', JSON.stringify consolidateRun state.run, PRODUCT_ID
+          # log 'new run', JSON.stringify consolidateRun state.run, PRODUCT_ID
 
 
           saveRun state.run
@@ -403,14 +410,17 @@ reducer = (state, action) ->
     if isEmpty state.run
       state.run = [ skinny action.match ]
 
-      # console.log(
+      # log(
+      #   'sdfsdfsfsdfsdfsf'
       #   parseFloat( ( skinny action.match ).price ),
+      #   ( skinny action.match ).side
+      #   state[ action.match.side ]
       #   2.0 * parseFloat( state[ ( skinny action.match ).side ].d_price )
       # )
 
       bidPrice =
         parseFloat( ( skinny action.match ).price ) +
-        2.0 * parseFloat( state[ ( skinny action.match ).side ].d_price )
+        2.0 * parseFloat( state[ ( skinny action.match ).side ].d_price or 1 )
 
 
       bid = cleanUpTrade
@@ -730,7 +740,7 @@ adfdsafafdsa = ->
   }
 
   RSVP.hash( promises ).then( ( good )->
-    console.log good.fills.length, good.bids.length
+    log good.fills.length, good.bids.length
     map dispatchFill, good.fills.concat good.bids
     addIndex( map ) addRun, sort sortByAbsSize, good.runs
 
@@ -746,7 +756,7 @@ adfdsafafdsa = ->
     start( PRODUCT_ID )
 
   ).catch( ( bad )->
-    console.log 'bad'
+    log 'bad'
   )
 
 setTimeout adfdsafafdsa, ( process.env.DELAY * 1000 )
@@ -789,11 +799,11 @@ statsChannel.on 'message', ( channel, stats )->
 
 process.on 'SIGINT', ->
   gdax.cancelAllOrders [ PRODUCT_ID ]
-  console.log 'graceful timeout', PRODUCT_ID
+  log 'graceful timeout', PRODUCT_ID
 
   timeout = ->
     gdax.cancelAllOrders [ PRODUCT_ID ]
-    console.log 'graceful kill', PRODUCT_ID
+    log 'graceful kill', PRODUCT_ID
     process.exit err ? 1 : 0
 
   setTimeout timeout, 1000

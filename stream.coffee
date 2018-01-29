@@ -12,6 +12,8 @@ Redis = require 'ioredis'
 
 exit = require './lib/exit'
 
+log = require './lib/log'
+
 {
   isEmpty
   forEach
@@ -31,10 +33,10 @@ currencies = keys config.currencies
 websocket = new Gdax.WebsocketClient( currencies, null, authentication )
 
 websocket.on 'open', ->
-  console.log "OPENED #{currencies} WEBSOCKET!!!"
+  log "OPENED #{currencies} WEBSOCKET!!!"
 
 websocket.on 'close', ->
-  console.log "CLOSED #{currencies} WEBSOCKET!!!"
+  log "CLOSED #{currencies} WEBSOCKET!!!"
   exit( -1 )
 
 websocket.on 'message', (message)->
@@ -44,7 +46,7 @@ websocket.on 'message', (message)->
 
 catchError = ( name )->
   ( error )->
-    console.log name, error.response.data.message
+    log name, error.response.data.message
 
 
 
@@ -91,8 +93,8 @@ inTheWind = require './lib/inTheWind'
 # https://docs.gdax.com/#get-historic-rates
 normaJean = ( product_id, index = 1 )->
   doIt = ->
-    console.log product_id, 'norma jean', index
-    
+    log product_id, 'norma jean', index
+
     stat(
       product_id
     ).then(
