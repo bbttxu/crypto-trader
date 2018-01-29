@@ -24,6 +24,7 @@ log = require './lib/log'
   forEachObjIndexed
   sum
   takeLast
+  clamp
 } = require 'ramda'
 
 pub = new Redis()
@@ -98,7 +99,11 @@ addCandleSpacing = ( spacing )->
 
 
 candleSpacing = ( index = 1 )->
-  ( sum( candleSpacings ) / candleSpacings.length || 3000 ) * index
+  clamp(
+    1000
+    6000
+    ( sum( candleSpacings ) / candleSpacings.length || 3000 ) * index
+  )
 
 
 inTheWind = require './lib/inTheWind'
@@ -135,7 +140,7 @@ getCandles = ->
 
 setInterval(
   getCandles,
-  60 * 1000
+  30 * 1000
 )
 getCandles()
 
