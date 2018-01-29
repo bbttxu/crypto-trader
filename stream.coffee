@@ -22,6 +22,8 @@ log = require './lib/log'
   map
   addIndex
   forEachObjIndexed
+  sum
+  takeLast
 } = require 'ramda'
 
 pub = new Redis()
@@ -88,12 +90,23 @@ candlesChannel = new Redis()
 use candles to gauge where things are trending
 ###
 
+candleSpacings = []
+
+addCandleSpacing = ( spacing )->
+  candleSpacings.push spacing
+  candleSpacings = takeLast 50, candleSpacings
+
+
+candleSpacing = ( index = 1 )->
+  ( sum( candleSpacings ) / candleSpacings.length || 3000 ) * index
+
+
 inTheWind = require './lib/inTheWind'
 
 # https://docs.gdax.com/#get-historic-rates
 normaJean = ( product_id, index = 1 )->
   doIt = ->
-    log product_id, 'norma jean', index
+    start = Date.now()
 
     stat(
       product_id
@@ -101,13 +114,19 @@ normaJean = ( product_id, index = 1 )->
       inTheWind
     ).then(
       ( factors )->
+        log product_id, 'norma jean', Date.now() - start, 'ms'
+
+        addCandleSpacing Date.now() - start
+
+        log 'avg', candleSpacings.length, sum( candleSpacings ) / candleSpacings.length, 'ms'
+
         candlesChannel.publish "factors:#{product_id}", JSON.stringify factors
 
     ).catch(
       catchError( 'candles' )
     )
 
-  setTimeout doIt, index * 3 * 1000
+  setTimeout doIt, candleSpacing( index )
 
 
 getCandles = ->
@@ -116,7 +135,7 @@ getCandles = ->
 
 setInterval(
   getCandles,
-  30 * 1000
+  60 * 1000
 )
 getCandles()
 
