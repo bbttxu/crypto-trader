@@ -102,8 +102,8 @@ candleSpacing = ( index = 1 )->
   clamp(
     1000
     6000
-    ( sum( candleSpacings ) / candleSpacings.length || 3000 ) * index
-  )
+    ( sum( candleSpacings ) / candleSpacings.length || 3000 )
+  ) * index
 
 
 inTheWind = require './lib/inTheWind'
