@@ -65,6 +65,7 @@ accounts = []
 updateAccountinfo = ->
   getAccounts().then(
     ( results )->
+      log "RESULTS", results
       if not isEmpty results
         accounts = results
     ).catch(
