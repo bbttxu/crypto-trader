@@ -129,7 +129,8 @@ normaJean = ( product_id, index = 1 )->
 
         log 'avg', candleSpacings.length, sum( candleSpacings ) / candleSpacings.length, 'ms'
 
-        candlesChannel.publish "factors:#{product_id}", JSON.stringify factors
+        unless isNil factors.message
+          candlesChannel.publish "factors:#{product_id}", JSON.stringify factors
 
     ).catch(
       catchError( 'candles' )
