@@ -11,6 +11,7 @@ authentication =
   key: process.env.API_KEY
   passphrase: process.env.API_PASSPHRASE
 
+shuffle = require('knuth-shuffle').knuthShuffle
 
 Redis = require 'ioredis'
 
@@ -191,7 +192,7 @@ updateStat = ( product_id, index = 1 )->
   setTimeout doIt, index * 3000
 
 updateStats = ->
-  addIndex( forEach ) updateStat, currencies
+  addIndex( forEach ) updateStat, shuffle currencies
 
 
 
