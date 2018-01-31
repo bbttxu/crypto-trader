@@ -6,6 +6,7 @@ RSVP = require 'rsvp'
 {
   map
   keys
+  isNil
 } = require 'ramda'
 
 moment = require 'moment'
@@ -85,23 +86,29 @@ cancelAllOrders = ( currencies = [] )->
 
 
 getProduct24HrStats = ( product )->
-  new RSVP.Promise (resolve, reject)->
+  new RSVP.Promise (resolve, rejectPromise )->
     publicClient = new Gdax.PublicClient product
 
     callback = (err, json)->
       if err
         reject err
 
-      unless json and json.body
-        reject
+      body = JSON.parse json.body
+
+      unless body
+        rejectPromise
           func: 'getProduct24HrStats'
           message: 'no JSON response body'
           json: json
 
-      obj = {}
-      obj[ product ] = JSON.parse json.body
+      if isNil body.message
 
-      resolve obj
+        obj = {}
+        obj[ product ] = body
+
+        resolve obj
+
+      rejectPromise body
 
     publicClient.getProduct24HrStats callback
 

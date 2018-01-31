@@ -2,6 +2,10 @@ require('dotenv').config { silent: true }
 
 Gdax = require 'gdax'
 
+{
+  getProduct24HrStats
+} = require './lib/gdax-client'
+
 authentication =
   secret: process.env.API_SECRET
   key: process.env.API_KEY
@@ -65,13 +69,12 @@ accounts = []
 updateAccountinfo = ->
   getAccounts().then(
     ( results )->
-      log "RESULTS", results
       if not isEmpty results
         accounts = results
-    ).catch(
-      catchError( 'accounts' )
 
-    )
+  ).catch(
+    catchError( 'accounts' )
+  )
 
 updateAccountinfo()
 setInterval updateAccountinfo, 30 * 1000
@@ -151,8 +154,6 @@ getCandles()
 
 statsChannel = new Redis()
 
-getStats = require './lib/getStats'
-
 { createStore, applyMiddleware } = require 'redux'
 thunk = require 'redux-thunk'
 
@@ -173,7 +174,7 @@ store = createStore reducer, applyMiddleware(thunk.default)
 
 updateStat = ( product_id, index = 1 )->
   doIt = ->
-    getStats(
+    getProduct24HrStats(
       product_id
     ).then(
       ( stats )->
