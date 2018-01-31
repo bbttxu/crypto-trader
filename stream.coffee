@@ -95,59 +95,59 @@ candlesChannel = new Redis()
 use candles to gauge where things are trending
 ###
 
-candleSpacings = []
+# candleSpacings = []
 
-addCandleSpacing = ( spacing )->
-  candleSpacings.push spacing
-  candleSpacings = takeLast 50, candleSpacings
-
-
-candleSpacing = ( index = 1 )->
-  clamp(
-    1000
-    6000
-    ( sum( candleSpacings ) / candleSpacings.length || 3000 )
-  ) * index
+# addCandleSpacing = ( spacing )->
+#   candleSpacings.push spacing
+#   candleSpacings = takeLast 50, candleSpacings
 
 
-inTheWind = require './lib/inTheWind'
-
-# https://docs.gdax.com/#get-historic-rates
-normaJean = ( product_id, index = 1 )->
-  doIt = ->
-    start = Date.now()
-
-    stat(
-      product_id
-    ).then(
-      inTheWind
-    ).then(
-      ( factors )->
-        log product_id, 'norma jean', Date.now() - start, 'ms'
-
-        addCandleSpacing Date.now() - start
-
-        log 'avg', candleSpacings.length, sum( candleSpacings ) / candleSpacings.length, 'ms'
-
-        unless isNil factors.message
-          candlesChannel.publish "factors:#{product_id}", JSON.stringify factors
-
-    ).catch(
-      catchError( 'candles' )
-    )
-
-  setTimeout doIt, candleSpacing( index )
+# candleSpacing = ( index = 1 )->
+#   clamp(
+#     1000
+#     6000
+#     ( sum( candleSpacings ) / candleSpacings.length || 3000 )
+#   ) * index
 
 
-getCandles = ->
-  addIndex( forEach ) normaJean, currencies
+# inTheWind = require './lib/inTheWind'
+
+# # https://docs.gdax.com/#get-historic-rates
+# normaJean = ( product_id, index = 1 )->
+#   doIt = ->
+#     start = Date.now()
+
+#     stat(
+#       product_id
+#     ).then(
+#       inTheWind
+#     ).then(
+#       ( factors )->
+#         log product_id, 'norma jean', Date.now() - start, 'ms'
+
+#         addCandleSpacing Date.now() - start
+
+#         log 'avg', candleSpacings.length, sum( candleSpacings ) / candleSpacings.length, 'ms'
+
+#         unless isNil factors.message
+#           candlesChannel.publish "factors:#{product_id}", JSON.stringify factors
+
+#     ).catch(
+#       catchError( 'candles' )
+#     )
+
+#   setTimeout doIt, candleSpacing( index )
 
 
-setInterval(
-  getCandles,
-  30 * 1000
-)
-getCandles()
+# getCandles = ->
+#   addIndex( forEach ) normaJean, currencies
+
+
+# setInterval(
+#   getCandles,
+#   30 * 1000
+# )
+# getCandles()
 
 
 

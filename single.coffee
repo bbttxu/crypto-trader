@@ -84,11 +84,12 @@ initalState =
   sell: {}
   buy: {}
   bid: {}
+  counterBid: {}
   bids: []
   bid_ids: []
   match: {}
-  sellFactor: 0
-  buyFactor: 0
+  # sellFactor: 0
+  # buyFactor: 0
   stats: {}
   buyAmount: 0
   sellAmount: 0
@@ -269,9 +270,9 @@ reducer = (state, action) ->
     state.stats = action.stats
     # state.direction = getDirection action.stats, state.direction
 
-  if 'UPDATE_FACTORS' is action.type
-    state.sellFactor = action.factors.sellFactor
-    state.buyFactor = action.factors.buyFactor
+  # if 'UPDATE_FACTORS' is action.type
+  #   state.sellFactor = action.factors.sellFactor
+  #   state.buyFactor = action.factors.buyFactor
 
 
   if 'UPDATE_TOP' is action.type
@@ -766,14 +767,14 @@ setTimeout adfdsafafdsa, ( process.env.DELAY * 1000 )
 use candles to gauge where things are trending
 ###
 
-candleChannel = new Redis()
+# candleChannel = new Redis()
 
-candleChannel.subscribe "factors:#{PRODUCT_ID}"
+# candleChannel.subscribe "factors:#{PRODUCT_ID}"
 
-candleChannel.on 'message', ( channel, factors )->
-  store.dispatch
-    type: 'UPDATE_FACTORS'
-    factors: JSON.parse factors
+# candleChannel.on 'message', ( channel, factors )->
+#   store.dispatch
+#     type: 'UPDATE_FACTORS'
+#     factors: JSON.parse factors
 
 
 ###
