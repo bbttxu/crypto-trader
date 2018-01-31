@@ -61,12 +61,15 @@ cleanUpTrade = require './lib/cleanUpTrades'
   values
   uniq
   isNil
+  takeLast
 } = require 'ramda'
 
 
 
 initalState =
   tick: 0
+  direction: ''
+  advice: [ 'hold' ]
   fills: []
   ratio: 0
   progress: 0
@@ -266,6 +269,11 @@ reducer = (state, action) ->
     log moment( start ).format(),'HEARTBEAT', Date.now() - start, 'ms'
 
 
+  if 'UPDATE_ADVICE' is action.type
+    if not equals state.advice, action.advice
+      state.advice = action.advice
+      console.log 'ADVICE UPDATED to', state.advice.join ", "
+
   if 'UPDATE_STATS' is action.type
     state.stats = action.stats
     # state.direction = getDirection action.stats, state.direction
@@ -419,28 +427,53 @@ reducer = (state, action) ->
       #   2.0 * parseFloat( state[ ( skinny action.match ).side ].d_price )
       # )
 
-      bidPrice =
-        parseFloat( ( skinny action.match ).price ) +
-        2.0 * parseFloat( state[ ( skinny action.match ).side ].d_price or 1 )
+      unless contains action.match.side, state.advice
+        log "#{action.match.side} is not found in #{state.advice.join(', ')}"
+
+      if contains action.match.side, state.advice
+        log "following #{action.match.side} advice of #{state.advice.join(', ')}"
 
 
-      bid = cleanUpTrade
-        price: bidPrice
-        side: action.match.side
-        product_id: PRODUCT_ID
-        size: 0.1
-        stats: state.stats
+        bidPrice =
+          parseFloat( ( skinny action.match ).price ) +
+          2.0 * parseFloat( state[ ( skinny action.match ).side ].d_price or 1 )
 
-      lkfafdijwe = state[ action.match.side ]
 
-      iuwoiqe = merge lkfafdijwe, bid: bid
+        bid = cleanUpTrade
+          price: bidPrice
+          side: action.match.side
+          product_id: PRODUCT_ID
+          size: 0.1
+          stats: state.stats
 
-      if 'sell' is action.match.side
-        state.sell = iuwoiqe
+        lkfafdijwe = state[ action.match.side ]
 
-      if 'buy' is action.match.side
-        state.buy = iuwoiqe
+        iuwoiqe = merge lkfafdijwe, bid: bid
 
+        if 'sell' is action.match.side
+          state.sell = iuwoiqe
+
+        if 'buy' is action.match.side
+          state.buy = iuwoiqe
+
+        if state.direction is action.match.side
+          state.bid = iuwoiqe.bid
+
+        else
+
+          sortedBids = sortByCreatedAt( state.bids )
+          # covers = coveredBids state.bids, state.direction
+          # log state.bids
+          asdfasfasdfasfasfdsfas = coveredBids( sortByCreatedAt( state.bids ), state.direction )
+
+          coverPrice = coveredPrice asdfasfasdfasfasfdsfas
+
+          # log coverPrice, sum pluck 'size', asdfasfasdfasfasfdsfas
+
+          # log 'counter bid here', action.match.side, coverPrice, sum pluck 'size', asdfasfasdfasfasfdsfas
+          # log state.buy.price, state.sell.price
+
+        log JSON.stringify state.bid, 'state.bid'
 
 
     action.match.timestamp = moment( action.match.time ).valueOf()
@@ -587,6 +620,25 @@ feedChannel.on 'message', ( channel, hi )->
       match: hi
 
 
+
+###
+            .___     .__
+_____     __| _/__  _|__| ____  ____
+\__  \   / __ |\  \/ /  |/ ___\/ __ \
+ / __ \_/ /_/ | \   /|  \  \__\  ___/
+(____  /\____ |  \_/ |__|\___  >___  >
+     \/      \/              \/    \/
+###
+
+
+adviceChannel = new Redis()
+
+adviceChannel.subscribe "advice:#{PRODUCT_ID}"
+
+adviceChannel.on 'message', ( channel, jsonString )->
+  store.dispatch
+    type: 'UPDATE_ADVICE'
+    advice: JSON.parse jsonString
 
 
 parts = PRODUCT_ID.split '-'

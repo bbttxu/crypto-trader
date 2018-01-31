@@ -1,7 +1,10 @@
 
 getDirection = ( stats, previous = 'unknown' )->
-  return 'sell' if stats.last > stats.open
-  return 'buy' if stats.last < stats.open
+  open = parseFloat stats.open
+  last = parseFloat stats.last
+
+  return 'sell' if last > open
+  return 'buy' if last < open
   previous
 
 module.exports = getDirection
