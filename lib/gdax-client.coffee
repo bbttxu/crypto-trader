@@ -64,23 +64,23 @@ clientReject = ( err )->
 ###
 
 cancelAllOrders = ( currencies = [] )->
-  new RSVP.Promise (resolve, reject)->
+  new RSVP.Promise (resolve1, rejectPromise1)->
     promiseCancelCurrencyOrder = ( currency )->
-      new RSVP.Promise (resolve, reject)->
+      new RSVP.Promise (resolve2, reject2)->
         authedClient().cancelAllOrders { product_id: currency }, (err, results)->
           if err or undefined is results
             console.log 'cancelAllOrders.err', err
-            reject err
+            reject2 err
           else
-            resolve results.body
+            resolve2 results.body
 
     cancelAllCurrencyOrders = map promiseCancelCurrencyOrder, currencies
 
     rejectPromise = ( promise )->
-      reject promise
+      rejectPromise1 promise
 
     resolveIssues = ( issues )->
-      resolve issues
+      resolve1 issues
 
     RSVP.allSettled( cancelAllCurrencyOrders ).then( resolveIssues ).catch( rejectPromise )
 
@@ -91,7 +91,7 @@ getProduct24HrStats = ( product )->
 
     callback = (err, json)->
       if err
-        reject err
+        rejectPromise err
 
       body = JSON.parse json.body
 
