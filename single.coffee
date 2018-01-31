@@ -476,48 +476,48 @@ reducer = (state, action) ->
         log JSON.stringify state.bid, 'state.bid'
 
 
-    action.match.timestamp = moment( action.match.time ).valueOf()
+        action.match.timestamp = moment( action.match.time ).valueOf()
 
-    if 'sell' is action.match.side
-      matchKeys = [
-        'price'
-        'sequence'
-        'time'
-        'timestamp'
-      ]
-
-
-      state.sell = merge state.sell, pick keys, action.match
-      state.sellPrice = state.sell.price
-
-    if 'buy' is action.match.side
-      matchKeys = [
-        'price'
-        'sequence'
-        'time'
-        'timestamp'
-      ]
+        if 'sell' is action.match.side
+          matchKeys = [
+            'price'
+            'sequence'
+            'time'
+            'timestamp'
+          ]
 
 
-      state.buy = merge state.buy, pick matchKeys, action.match
-      state.buyPrice = state.buy.price
+          state.sell = merge state.sell, pick keys, action.match
+          state.sellPrice = state.sell.price
 
-    unless importantValue
-      openBids = filter(
-        ( bid )->
-          isNil prop 'reason', bid
-        ,
-        state.bids
-      )
+        if 'buy' is action.match.side
+          matchKeys = [
+            'price'
+            'sequence'
+            'time'
+            'timestamp'
+          ]
 
-      good24HourTrend = dailyTide( state.stats, state[ action.match.side ].bid )
 
-      if good24HourTrend
-        if gooderSeaState( state.bids, state[ action.match.side ].bid )
-          makeNewBid(
-            state[ action.match.side ].bid,
-            pluck 'id', openBids
+          state.buy = merge state.buy, pick matchKeys, action.match
+          state.buyPrice = state.buy.price
+
+        unless importantValue
+          openBids = filter(
+            ( bid )->
+              isNil prop 'reason', bid
+            ,
+            state.bids
           )
+
+          good24HourTrend = dailyTide( state.stats, state[ action.match.side ].bid )
+
+          if good24HourTrend
+            if gooderSeaState( state.bids, state[ action.match.side ].bid )
+              makeNewBid(
+                state[ action.match.side ].bid,
+                pluck 'id', openBids
+              )
 
 
   if state.top and state.sell
