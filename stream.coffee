@@ -30,6 +30,7 @@ log = require './lib/log'
   sum
   takeLast
   clamp
+  isNil
 } = require 'ramda'
 
 pub = new Redis()
@@ -71,7 +72,8 @@ updateAccountinfo = ->
   getAccounts().then(
     ( results )->
       if not isEmpty results
-        accounts = results
+        if isNil results.message
+          accounts = results
 
   ).catch(
     catchError( 'accounts' )
