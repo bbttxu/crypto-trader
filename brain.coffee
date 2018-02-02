@@ -1,3 +1,12 @@
+###
+.____    ._____.                      .__
+|    |   |__\_ |______________ _______|__| ____   ______
+|    |   |  || __ \_  __ \__  \\_  __ \  |/ __ \ /  ___/
+|    |___|  || \_\ \  | \// __ \|  | \/  \  ___/ \___ \
+|_______ \__||___  /__|  (____  /__|  |__|\___  >____  >
+        \/       \/           \/              \/     \/
+###
+
 log = require './lib/log'
 
 Redis = require 'ioredis'
@@ -5,78 +14,31 @@ Redis = require 'ioredis'
 statsChannel = new Redis()
 
 {
-  merge
-  groupBy
-  values
-  mapObjIndexed
-  flatten
-  map
-  mergeAll
-  uniq
-  pluck
   equals
   forEachObjIndexed
 } = require 'ramda'
 
-{ createStore, applyMiddleware } = require 'redux'
+{
+  createStore
+  applyMiddleware
+
+} = require 'redux'
+
 thunk = require 'redux-thunk'
 
-getDirection = require './lib/getDirection'
+brainReducer = require './reducers/brainReducer'
 
 
-initialState =
-  stats: {}
-  directions: {}
+###
+.____           __               .___         __  .__    .__
+|    |    _____/  |_  ______   __| _/____   _/  |_|  |__ |__| ______
+|    |  _/ __ \   __\/  ___/  / __ |/  _ \  \   __\  |  \|  |/  ___/
+|    |__\  ___/|  |  \___ \  / /_/ (  <_> )  |  | |   Y  \  |\___ \
+|_______ \___  >__| /____  > \____ |\____/   |__| |___|  /__/____  >
+        \/   \/          \/       \/                   \/        \/     \/
+###
 
-
-separateBases = groupBy ( key )->
-  key.product.split( '-' )[1]
-
-
-asdf = mapObjIndexed ( value, key )->
-  value.product = key
-  value
-
-
-
-individualDiretion = map ( item )->
-  obj = {}
-  obj[ item.product ] = getDirection item
-  obj
-
-
-noTrading = map ( item, a )->
-  obj = {}
-  obj[ item ] = 'hold'
-  obj
-
-foobar = mapObjIndexed ( value, index )->
-
-  baseDirections = individualDiretion value
-
-  directions = uniq values mergeAll values baseDirections
-
-  if directions.length is 1
-    return baseDirections
-
-  noTrading pluck 'product', value
-
-reducer = ( state, action )->
-  if typeof state == 'undefined'
-    return initialState
-
-  if 'UPDATE' is action.type
-    state.stats = merge state.stats, action.stats
-
-    bases = separateBases flatten values asdf state.stats
-
-    state.directions = mergeAll flatten values foobar bases
-
-  state
-
-
-store = createStore reducer, applyMiddleware(thunk.default)
-
+store = createStore brainReducer, applyMiddleware(thunk.default)
 
 adviceChannel = new Redis()
 
@@ -91,7 +53,6 @@ store.subscribe ->
     publishAdvice directions
 
     _directions = directions
-
 
 
 statsChannel.on 'pmessage', ( match, channel, stats )->
