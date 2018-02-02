@@ -21,7 +21,9 @@ log = require './lib/log'
 
 gdax = require './lib/gdax-client'
 
-
+getDirection = require './lib/getDirection'
+coveredBids = require './lib/coveredBids'
+coveredPrice = require './lib/coveredPrice'
 
 require('dotenv').config( silent: true )
 mongoConnection = require('./lib/mongoConnection')
@@ -149,6 +151,8 @@ addBid = ( bid, cancelPlease )->
 gooderSeaState = require './lib/gooderSeaState'
 dailyTide = require './lib/dailyTide'
 
+
+sortByCreatedAt = sortBy prop( 'created_at' )
 
 
 asdf = ( fill )->

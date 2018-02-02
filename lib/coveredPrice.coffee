@@ -27,6 +27,8 @@ coveredPrice = ( bids )->
 
   prices = uniq pluck 'price', bids
 
+  # console.log sides, prices
+
   if equals( 1, sides.length ) and gt( prices.length, 1 )
 
     edge = if sides[0] is 'sell' then Math.min else Math.max
