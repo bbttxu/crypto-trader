@@ -80,7 +80,7 @@ updateAccountinfo = ->
   )
 
 updateAccountinfo()
-setInterval updateAccountinfo, 30 * 1000
+setInterval updateAccountinfo, 60 * 1000
 
 publishAccountInfo = ->
   accountChannel.publish "accounts", JSON.stringify map pick( ['currency', 'available', 'hold', 'balance'] ), accounts
@@ -158,23 +158,12 @@ use candles to gauge where things are trending
 
 statsChannel = new Redis()
 
+statsChannelReducer = require './reducers/statsChannelReducer'
+
 { createStore, applyMiddleware } = require 'redux'
 thunk = require 'redux-thunk'
 
-initialState = {}
-
-reducer = ( state, action )->
-  if typeof state == 'undefined'
-    return initialState
-
-  if 'UPDATE' is action.type
-    state[ action.product_id ] = action.stats
-
-
-  state
-
-
-store = createStore reducer, applyMiddleware(thunk.default)
+store = createStore statsChannelReducer, applyMiddleware(thunk.default)
 
 updateStat = ( product_id, index = 1 )->
   doIt = ->
@@ -198,7 +187,7 @@ updateStats = ->
 
 
 
-setInterval updateStats, 30 * 1000
+setInterval updateStats, 60 * 1000
 updateStats()
 
 
