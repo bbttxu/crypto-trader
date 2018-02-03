@@ -5,8 +5,26 @@ statsChannelReducer = require '../reducers/statsChannelReducer'
 describe 'stats channel reducer', ->
   it 'initial state', ->
 
-    decision = statsChannelReducer undefined
-    decision.should.be.eql {}
+    statsChannelReducer( undefined ).should.be.eql {}
+
+
+  it 'does nothing for non-actionable requests', ->
+    state =
+      a:
+        foo: 'bar'
+
+    action =
+      type: 'BAD_ACTION'
+      product_id: 'b'
+      stats:
+        baz: 1
+
+    expected =
+      a:
+        foo: 'bar'
+
+    statsChannelReducer( state, action ).should.be.eql expected
+
 
   it 'do NOT buy if last is higher than open', ->
     state =
@@ -25,9 +43,7 @@ describe 'stats channel reducer', ->
       b:
         baz: 1
 
-
-    decision = statsChannelReducer state, action
-    decision.should.be.eql expected
+    statsChannelReducer( state, action ).should.be.eql expected
 
 
 
