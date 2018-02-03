@@ -105,3 +105,38 @@ describe 'stats channel reducer', ->
 
 
 
+  it 'does not change state on non-actionable item', ->
+    state =
+      stats:
+        'ABC-GHI':
+          last: 2
+          open: 1
+
+    action =
+      type: 'UPDATE'
+      stats:
+        'DEF-GHI':
+          last: 1
+          open: 3
+
+
+    brainReducer state, action
+
+    action2 =
+      type: 'BAD_ACTION'
+      stats:
+        'DEF-GHI':
+          last: 3
+          open: 1
+
+
+    expected =
+      'ABC-GHI': 'hold'
+      'DEF-GHI': 'hold'
+
+
+    brainReducer( state, action2 ).directions.should.be.eql expected
+
+
+
+
