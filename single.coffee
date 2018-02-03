@@ -4,9 +4,9 @@ PRODUCT_ID = process.env.PRODUCT_ID ||  argv._[0]
 DELAY = process.env.DELAY || 3
 
 unless PRODUCT_ID
-  console.log 'need a product id!'
+  log 'need a product id!'
 
-SIZING = 60
+# SIZING = 60
 
 
 kue = require 'kue'
@@ -17,7 +17,7 @@ RSVP = require 'rsvp'
 
 log = require './lib/log'
 
-handleFractionalSize = require './lib/handleFractionalSize'
+# handleFractionalSize = require './lib/handleFractionalSize'
 
 gdax = require './lib/gdax-client'
 
@@ -61,28 +61,42 @@ cleanUpTrade = require './lib/cleanUpTrades'
   values
   uniq
   isNil
+  takeLast
 } = require 'ramda'
 
 
 
 initalState =
   tick: 0
+  direction: ''
+  advice: [ 'hold' ]
   fills: []
   ratio: 0
   progress: 0
-  top: {}
-  bottom: {}
+  top:
+    available: 0
+    hold: 0
+    balance: 0
+
+  bottom:
+    available: 0
+    hold: 0
+    balance: 0
   run: []
   runs: []
   sell: {}
   buy: {}
   bid: {}
+  counterBid: {}
   bids: []
   bid_ids: []
+  persisted_ids: []
   match: {}
-  sellFactor: 0
-  buyFactor: 0
+  # sellFactor: 0
+  # buyFactor: 0
   stats: {}
+  buyAmount: 0
+  sellAmount: 0
 
 showStatus = require './lib/showStatus'
 
@@ -98,8 +112,7 @@ saveBidToStorage = ( bid ) ->
 
 updateBid = require './lib/updateBid'
 
-addBid = ( bid, cancelPlease )->
-
+addBid = ( bid )->
   # TODO make an optional flag so we can listen and record, but not trade
   # return 1
 
@@ -107,21 +120,19 @@ addBid = ( bid, cancelPlease )->
     message = foo.body
 
     if message.message
-      console.log 'message.message', message.message
+      log 'message.message', message.message
 
     else
       store.dispatch
         type: 'ADD_BID'
         bid: merge( JSON.parse( foo.body ), bid )
 
-    merge( JSON.parse( foo.body ), bid )
-
 
   onError = ( err )->
-    console.log 'bid.side', bid.side, 'onError'
-    console.log 'error', err, err.body
+    log 'bid.side', bid.side, 'onError'
+    log 'error', err, err.body
 
-  # console.log 'start', bid.side, 'bid', bid
+  # log 'start', bid.side, 'bid', bid
 
   gdax[ bid.side ](
     bid
@@ -133,7 +144,6 @@ addBid = ( bid, cancelPlease )->
 
 
 
-decisioner = require './lib/decisioner'
 gooderSeaState = require './lib/gooderSeaState'
 dailyTide = require './lib/dailyTide'
 
@@ -160,15 +170,12 @@ consolidateRun = require './consolidateRun'
 
 averageOf = require './lib/averageOf'
 
-makeNewBid = ( bid, cancelPlease )->
-  if handleFractionalSize bid
-    # console.log 'passed fractional size', bid.size
+makeNewBid = ( bid, cancelPlease = [], persist = false )->
 
-    if bid.size < 0.01
-      bid.size = 0.01
+  if true is persist
+    bid.reason = 'persist'
 
-
-    addBid bid
+  addBid bid
 
 
   makeCancellation = ( cancelThisID )->
@@ -181,7 +188,7 @@ makeNewBid = ( bid, cancelPlease )->
 
   # since we're catching cancellations on the stream, we
   # don't really care of the outcome
-  RSVP.hashSettled( mergeAll map makeCancellation, cancelPlease ).then( ( good )->
+  RSVP.hashSettled( mergeAll map makeCancellation, reject isNil, cancelPlease ).then( ( good )->
 
 
     #
@@ -191,33 +198,8 @@ makeNewBid = ( bid, cancelPlease )->
     fulfilled = filter isFullfilled, good
 
 
-    #
-    # cancelBid = ( bid, id )->
-    #   if true is bid.value
-    #     payload =
-    #       type: 'BID_CANCELLED'
-    #       id: id
-    #       bid: bid
-
-
-    #     store.dispatch payload
-
-    #   if 'order not found' is bid.reason
-    #     payload =
-    #       type: 'BID_CANCELLED'
-    #       id: id
-    #       bid: bid
-
-
-    #     store.dispatch payload
-
-
-    # forEachObjIndexed cancelBid, good
-
-
-
   ).catch( (error)->
-    console.log 'really bad thing', error
+    log 'really bad thing', error
   )
 
 
@@ -231,8 +213,11 @@ reducer = (state, action) ->
 
     # do stuff here vvv
 
+
+    log PRODUCT_ID, 'is in', state.direction, 'mode'
+
     state.fills = sortBy prop( 'trade_id' ), state.fills
-    console.log 'showStatus', showStatus state.fills
+    log 'showStatus', showStatus state.fills
 
     overADayOld = ( run )->
       moment().subtract( 1, 'day' ).valueOf() > run.end
@@ -244,30 +229,40 @@ reducer = (state, action) ->
 
     state.bids = reject overADayOldBids, state.bids
 
+
+
+
     # do stuff here ^^^
 
-    console.log moment( start ).format(),'HEARTBEAT', Date.now() - start, 'ms'
+    log uniq pluck 'message', state.bids
 
+    log moment( start ).format(),'HEARTBEAT', Date.now() - start, 'ms'
+
+
+  if 'UPDATE_ADVICE' is action.type
+    if not equals state.advice, action.advice
+      state.advice = action.advice
+      console.log 'ADVICE UPDATED to', state.advice.join ", "
 
   if 'UPDATE_STATS' is action.type
     state.stats = action.stats
+    # state.direction = getDirection action.stats, state.direction
 
-  if 'UPDATE_FACTORS' is action.type
-    state.sellFactor = action.factors.sellFactor
-    state.buyFactor = action.factors.buyFactor
+  # if 'UPDATE_FACTORS' is action.type
+  #   state.sellFactor = action.factors.sellFactor
+  #   state.buyFactor = action.factors.buyFactor
 
 
   if 'UPDATE_TOP' is action.type
     state.top = action.data
+    # topAvailable = state.top.available || 0
+    # state.sellAmount = ( topAvailable / SIZING ) * state.sellFactor
 
 
   if 'UPDATE_BOTTOM' is action.type
     state.bottom = action.data
-
-
-  state.sellAmount = ( state.top.available / SIZING ) * state.sellFactor
-
-  state.buyAmount = ( state.bottom.available / state.sell.price / SIZING ) * parseFloat( state.buyFactor )
+    # bottomAvailable = state.bottom.available || 0
+    # state.buyAmount = ( bottomAvailable / state.sell.price / SIZING ) * parseFloat( state.buyFactor )
 
 
 
@@ -279,20 +274,27 @@ reducer = (state, action) ->
         'product_id',
         'price',
         'size',
-        'side'
+        'side',
+        'reason'
       ],
       action.bid
     )
 
-
+    # TODO why make bid variable above?
+    persist = 'persist' is bid.reason or false
 
     state.bids.push action.bid
-    state.bid_ids = pluck 'id', state.bids
+
+    if true is persist
+      state.persisted_ids.push bid.id
+    else
+      state.bid_ids.push bid.id
+
 
 
   if 'ADD_RUN' is action.type
     unless 0 is action.run.d_price or 0 is action.run.d_time
-      # console.log 'ADD_RUN', state.runs.length, moment( action.run.end ).fromNow()
+      # log 'ADD_RUN', state.runs.length, moment( action.run.end ).fromNow()
       state.runs.push action.run
 
 
@@ -305,39 +307,49 @@ reducer = (state, action) ->
     index = findIndex propEq( 'id', action.bid.order_id ), state.bids
 
     if index > -1
-      # console.log 'BID_CANCELLED', action.bid.order_id, action.bid
+      # log 'BID_CANCELLED', action.bid.order_id, action.bid
       updatedBid = merge state.bids[ index ], action.bid
 
       state.bids = reject propEq( 'id', action.bid.order_id ), state.bids
 
       state.bids.push updatedBid
 
-      state.bid_ids = pluck 'id', state.bids
-
       saveBidToStorage updatedBid
 
 
+    idIndex = findIndex equals( action.bid.order_id ), state.bid_ids
+
+    if idIndex > -1
+      state.bid_ids = reject equals( action.bid.order_id ), state.bid_ids
+
+
+    persistedIndex = findIndex equals( action.bid.order_id ), state.persisted_ids
+
+    if persistedIndex > -1
+      state.persisted_ids = reject equals( action.bid.order_id ), state.persisted_ids
 
 
   if 'MATCH_FILLED' is action.type
-    # console.log 'MATCH_FILLED', JSON.stringify action.match
+    # log 'MATCH_FILLED', JSON.stringify action.match
 
     index = findIndex propEq( 'id', action.match.order_id ), state.bids
 
     if index > -1
-      console.log 'MATCH_FILLED', JSON.stringify  action.match
+      log 'MATCH_FILLED', JSON.stringify  action.match
       updatedBid = merge state.bids[ index ], action.match
 
       state.bids = reject propEq( 'id', action.match.order_id ), state.bids
 
       state.bids.push updatedBid
 
-      state.bid_ids = pluck 'id', state.bids
+      # console.log 'PLUCKERS PLUCKERS PLUCKERS PLUCKERS PLUCKERS PLUCKERS PLUCKERS '
+
+      # state.bid_ids = pluck 'id', state.bids
 
       saveBidToStorage updatedBid
 
 
-      # console.log merge state.bids[ index ], action.match
+      # log merge state.bids[ index ], action.match
       # saveBidToStorage merge state.bids[ index ], action.match
 
 
@@ -383,7 +395,7 @@ reducer = (state, action) ->
       unless importantValue
         # Don't use runs that are only one fill long
         if state.run.length > 1
-          # console.log 'new run', JSON.stringify consolidateRun state.run, PRODUCT_ID
+          # log 'new run', JSON.stringify consolidateRun state.run, PRODUCT_ID
 
 
           saveRun state.run
@@ -394,79 +406,105 @@ reducer = (state, action) ->
     if isEmpty state.run
       state.run = [ skinny action.match ]
 
-      # console.log(
+      # log(
+      #   'sdfsdfsfsdfsdfsf'
       #   parseFloat( ( skinny action.match ).price ),
+      #   ( skinny action.match ).side
+      #   state[ action.match.side ]
       #   2.0 * parseFloat( state[ ( skinny action.match ).side ].d_price )
       # )
 
-      bidPrice =
-        parseFloat( ( skinny action.match ).price ) +
-        2.0 * parseFloat( state[ ( skinny action.match ).side ].d_price )
+      unless contains action.match.side, state.advice
+        log "#{action.match.side} is not found in #{state.advice.join(', ')}"
+
+      if contains action.match.side, state.advice
+        log "following #{action.match.side} advice of #{state.advice.join(', ')}"
 
 
-      bid = cleanUpTrade
-        price: bidPrice
-        side: action.match.side
-        product_id: PRODUCT_ID
-        size: (
-          state["#{action.match.side}Amount"]
-        )
-        stats: state.stats
-
-      lkfafdijwe = state[ action.match.side ]
-
-      iuwoiqe = merge lkfafdijwe, bid: bid
-
-      if 'sell' is action.match.side
-        state.sell = iuwoiqe
-
-      if 'buy' is action.match.side
-        state.buy = iuwoiqe
+        bidPrice =
+          parseFloat( ( skinny action.match ).price ) +
+          2.0 * parseFloat( state[ ( skinny action.match ).side ].d_price or 1 )
 
 
+        bid = cleanUpTrade
+          price: bidPrice
+          side: action.match.side
+          product_id: PRODUCT_ID
+          size: 0.1
+          stats: state.stats
 
-    action.match.timestamp = moment( action.match.time ).valueOf()
+        lkfafdijwe = state[ action.match.side ]
 
-    if 'sell' is action.match.side
-      matchKeys = [
-        'price'
-        'sequence'
-        'time'
-        'timestamp'
-      ]
+        iuwoiqe = merge lkfafdijwe, bid: bid
+
+        if 'sell' is action.match.side
+          state.sell = iuwoiqe
+
+        if 'buy' is action.match.side
+          state.buy = iuwoiqe
+
+        if state.direction is action.match.side
+          state.bid = iuwoiqe.bid
+
+        else
+
+          # sortedBids = sortByCreatedAt( state.bids )
+          # # covers = coveredBids state.bids, state.direction
+          # # log state.bids
+          # asdfasfasdfasfasfdsfas = coveredBids( sortByCreatedAt( state.bids ), state.direction )
+
+          # coverPrice = coveredPrice asdfasfasdfasfasfdsfas
+
+          # # log coverPrice, sum pluck 'size', asdfasfasdfasfasfdsfas
+
+          # # log 'counter bid here', action.match.side, coverPrice, sum pluck 'size', asdfasfasdfasfasfdsfas
+          # # log state.buy.price, state.sell.price
+
+        log JSON.stringify state.bid, 'state.bid'
 
 
-      state.sell = merge state.sell, pick keys, action.match
-      state.sellPrice = state.sell.price
+        action.match.timestamp = moment( action.match.time ).valueOf()
 
-    if 'buy' is action.match.side
-      matchKeys = [
-        'price'
-        'sequence'
-        'time'
-        'timestamp'
-      ]
+        if 'sell' is action.match.side
+          matchKeys = [
+            'price'
+            'sequence'
+            'time'
+            'timestamp'
+          ]
 
 
-      state.buy = merge state.buy, pick matchKeys, action.match
-      state.buyPrice = state.buy.price
+          state.sell = merge state.sell, pick keys, action.match
+          state.sellPrice = state.sell.price
 
-    unless importantValue
-      openBids = filter(
-        ( bid )->
-          isNil prop 'reason', bid
-        ,
-        state.bids
-      )
+        if 'buy' is action.match.side
+          matchKeys = [
+            'price'
+            'sequence'
+            'time'
+            'timestamp'
+          ]
 
-      good24HourTrend = dailyTide( state.stats, state[ action.match.side ].bid )
 
-      if good24HourTrend
-        if gooderSeaState( state.bids, state[ action.match.side ].bid )
-          makeNewBid(
-            state[ action.match.side ].bid,
-            pluck 'id', openBids
+          state.buy = merge state.buy, pick matchKeys, action.match
+          state.buyPrice = state.buy.price
+
+        unless importantValue
+          openBids = filter(
+            ( bid )->
+              isNil prop 'reason', bid
+            ,
+            state.bids
           )
+
+          good24HourTrend = dailyTide( state.stats, state[ action.match.side ].bid )
+
+          if good24HourTrend
+            if gooderSeaState( state.bids, state[ action.match.side ].bid )
+              makeNewBid(
+                state[ action.match.side ].bid,
+                pluck 'id', openBids
+              )
 
 
   if state.top and state.sell
@@ -570,6 +608,25 @@ feedChannel.on 'message', ( channel, hi )->
 
 
 
+###
+            .___     .__
+_____     __| _/__  _|__| ____  ____
+\__  \   / __ |\  \/ /  |/ ___\/ __ \
+ / __ \_/ /_/ | \   /|  \  \__\  ___/
+(____  /\____ |  \_/ |__|\___  >___  >
+     \/      \/              \/    \/
+###
+
+
+adviceChannel = new Redis()
+
+adviceChannel.subscribe "advice:#{PRODUCT_ID}"
+
+adviceChannel.on 'message', ( channel, jsonString )->
+  store.dispatch
+    type: 'UPDATE_ADVICE'
+    advice: JSON.parse jsonString
+
 
 parts = PRODUCT_ID.split '-'
 
@@ -586,6 +643,28 @@ dispatchCurrency = ( currency )->
     store.dispatch
       type: currency
       data: record
+
+
+###
+       .__                  ___.
+  ____ |  |__ _____    _____\_ |__   ___________
+_/ ___\|  |  \\__  \  /     \| __ \_/ __ \_  __ \
+\  \___|   Y  \/ __ \|  Y Y  \ \_\ \  ___/|  | \/
+ \___  >___|  (____  /__|_|  /___  /\___  >__|
+     \/     \/     \/      \/    \/     \/
+chamber
+###
+
+chamberChannel = new Redis()
+
+chamberChannel.subscribe "chamber:#{PRODUCT_ID}"
+
+chamberChannel.on 'message', ( channel, jsonString )->
+  bid = JSON.parse jsonString
+  makeNewBid bid, [], true
+
+
+
 
 
 accountChannel = new Redis()
@@ -723,7 +802,7 @@ adfdsafafdsa = ->
   }
 
   RSVP.hash( promises ).then( ( good )->
-    console.log good.fills.length, good.bids.length
+    log good.fills.length, good.bids.length
     map dispatchFill, good.fills.concat good.bids
     addIndex( map ) addRun, sort sortByAbsSize, good.runs
 
@@ -739,7 +818,7 @@ adfdsafafdsa = ->
     start( PRODUCT_ID )
 
   ).catch( ( bad )->
-    console.log 'bad'
+    log 'bad'
   )
 
 setTimeout adfdsafafdsa, ( process.env.DELAY * 1000 )
@@ -749,14 +828,14 @@ setTimeout adfdsafafdsa, ( process.env.DELAY * 1000 )
 use candles to gauge where things are trending
 ###
 
-candleChannel = new Redis()
+# candleChannel = new Redis()
 
-candleChannel.subscribe "factors:#{PRODUCT_ID}"
+# candleChannel.subscribe "factors:#{PRODUCT_ID}"
 
-candleChannel.on 'message', ( channel, factors )->
-  store.dispatch
-    type: 'UPDATE_FACTORS'
-    factors: JSON.parse factors
+# candleChannel.on 'message', ( channel, factors )->
+#   store.dispatch
+#     type: 'UPDATE_FACTORS'
+#     factors: JSON.parse factors
 
 
 ###
@@ -768,32 +847,25 @@ _____     __| _/__| _/   _______/  |______ _/  |_  ______ _/  |_  ____   \_ |__ 
      \/      \/    \/       \/            \/          \/                      \/        \/    \/
 ###
 
-getStats = require './lib/getStats'
+statsChannel = new Redis()
 
-updateStats = ->
-  getStats(
-    PRODUCT_ID
-  ).then(
-    ( stats )->
-      store.dispatch
-        type: 'UPDATE_STATS'
-        stats: stats
-  )
+statsChannel.subscribe "stats:#{PRODUCT_ID}"
 
-setInterval updateStats, 30 * 1000
-updateStats()
-
+statsChannel.on 'message', ( channel, stats )->
+  store.dispatch
+    type: 'UPDATE_STATS'
+    stats: JSON.parse stats
 
 
 
 
 process.on 'SIGINT', ->
   gdax.cancelAllOrders [ PRODUCT_ID ]
-  console.log 'graceful timeout', PRODUCT_ID
+  log 'graceful timeout', PRODUCT_ID
 
   timeout = ->
     gdax.cancelAllOrders [ PRODUCT_ID ]
-    console.log 'graceful kill', PRODUCT_ID
+    log 'graceful kill', PRODUCT_ID
     process.exit err ? 1 : 0
 
   setTimeout timeout, 1000

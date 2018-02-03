@@ -19,7 +19,8 @@
     "reload": "pm2 reload ecosystem.config.js",
     "status": "pm2 status",
     "monit": "pm2 monit",
-    "logs": "pm2 logs"
+    "logs": "pm2 logs",
+    "chamber": "coffee chamber.coffee"
   },
   "author": "adam krawiec",
   "license": "ISC",
@@ -34,7 +35,7 @@
     "gdax": "0.4.2",
     "ioredis": "^3.2.2",
     "istanbul": "0.4.5",
-    "knuth-shuffle": "1.0.8",
+    "knuth-shuffle": "1.0",
     "kue": "0.11.6",
     "lodash.memoize": "4.1.2",
     "lodash.throttle": "4.1.1",

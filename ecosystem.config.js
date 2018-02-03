@@ -76,10 +76,16 @@ module.exports = {
           applyRandomReload,
           concat(
             [
+              // Brain
+              {
+                name: "Brain",
+                script: "brain.coffee",
+                interpreter: './node_modules/coffeescript/bin/coffee'
+              },
               // First application
               {
-                name: "stream",
-                script: "stream.coffee",
+                name: "Worker",
+                script: "worker.coffee",
                 interpreter: './node_modules/coffeescript/bin/coffee'
               },
               // First application
@@ -90,8 +96,8 @@ module.exports = {
               },
               // First application
               {
-                name: "Worker",
-                script: "worker.coffee",
+                name: "stream",
+                script: "stream.coffee",
                 interpreter: './node_modules/coffeescript/bin/coffee'
               }
             ],
@@ -101,9 +107,10 @@ module.exports = {
                 setupProduct,
                 [
                   'BTC-USD',
+                  'BCH-USD',
                   'ETH-USD',
                   'LTC-USD',
-                  'BCH-USD',
+                  'BCH-BTC',
                   'ETH-BTC',
                   'LTC-BTC'
                 ]
