@@ -9,18 +9,25 @@ module.exports =
 
 
   currencies:
+    'BTC-USD':
+      # sell: {}
+      buy: {}
 
-    # 'BTC-USD':
-    #   sell: {}
-    #   buy: {}
+    'BCH-USD':
+      sell: {}
+      buy: {}
 
-    # 'LTC-USD':
-    #   sell: {}
-    #   buy: {}
+    'LTC-USD':
+      sell: {}
+      # buy: {}
 
-    # 'ETH-USD':
-    #   sell: {}
-    #   buy: {}
+    'ETH-USD':
+      # sell: {}
+      buy: {}
+
+    'BCH-BTC':
+      sell: {}
+      buy: {}
 
     'ETH-BTC':
       sell: {}
@@ -30,6 +37,15 @@ module.exports =
       sell: {}
       buy: {}
 
+
+
+  intervals: [
+    86
+    864
+    8640
+    86400
+    # 864000
+  ]
 
   # for reporting purposes
   reporting:

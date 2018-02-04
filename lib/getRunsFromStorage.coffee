@@ -1,12 +1,3 @@
-require('dotenv').config( silent: true )
-
-RESET_CALLS = 100
-
-i = 1
-
-persistedMongoConnection = undefined
-
-
 ###
 .____    ._____.                      .__
 |    |   |__\_ |______________ _______|__| ____   ______
@@ -16,14 +7,17 @@ persistedMongoConnection = undefined
         \/       \/           \/              \/     \/
 ###
 
-RSVP = require 'rsvp'
-mongo = require('mongodb').MongoClient
+{
+  Promise
+} = require 'rsvp'
 
 {
-  modulo
-  equals
-  __
+  merge
 } = require 'ramda'
+
+mongoConnection = require './mongoConnection'
+
+moment = require 'moment'
 
 
 ###
@@ -35,39 +29,41 @@ ___________                   __  .__
      \/             \/     \/                    \/     \/
 ###
 
-shouldResetOnCounter = ( index )->
-  equals(
-    0,
-    modulo(
-      index,
-      RESET_CALLS
-    )
-  )
-
 #
 #
-mongoConnection = ( name = 'default' )->
+getRunsFromStorage = ( search )->
 
-  new RSVP.Promise (resolve, reject)->
-    ++i
+  defaults =
+    d_price:
+      $ne: 0
+    n:
+      $ne: 0
+    d_time:
+      $ne: 0
 
-    if shouldResetOnCounter i
-      console.log 'RESET MONGODB CONNECTION', RESET_CALLS, i
-      persistedMongoConnection.close() if persistedMongoConnection
-      persistedMongoConnection = undefined
+    end:
+      $gt: moment().subtract( 24, 'hours' ).valueOf()
 
-    # return persisted connection if available
-    resolve persistedMongoConnection if persistedMongoConnection
+  #
+  #
+  new Promise ( resolve, reject )->
+    callback = ( result )->
+      resolve result
 
-    # otherwise make connection
-    mongo.connect process.env.MONGO_URL, (err, connection)->
-      reject err if err
+    onError = ( error )->
+      console.log error
+      reject error
 
-      # Persist connection
-      persistedMongoConnection = connection
 
-      # resolve connection
-      resolve connection
+    #
+    #
+    mongoConnection().then ( db )->
+      db.collection( 'runs' )
+        .find( merge defaults, search )
+        .toArray()
+        .then(callback)
+        .catch(onError)
+
 
 ###
 ___________                             __
@@ -78,4 +74,4 @@ ___________                             __
         \/      \/|__|                           \/
 ###
 
-module.exports = mongoConnection
+module.exports = getRunsFromStorage
