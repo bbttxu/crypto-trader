@@ -13,13 +13,19 @@ getValue = ( bid )->
   ( parseFloat bid.price ) * ( parseFloat bid.size )
 
 getSideSum = map ( side )->
+  prices = map prop( 'price' ), side
+
   sideSum =
     sum: sum map getValue, side
     size: sum map parseFloat, map prop( 'size' ), side
 
 
-  sideSum.price = sideSum.sum / sideSum.size
   sideSum.n = side.length
+  sideSum.price =
+    min: Math.min.apply this, prices
+    avg: sideSum.sum / sideSum.size
+    max: Math.max.apply this, prices
+
   sideSum
 
 assessBids = ( bids )->

@@ -22,6 +22,7 @@ log = require './lib/log'
 gdax = require './lib/gdax-client'
 
 assessBids = require './lib/assessBids'
+assessPrices = require './lib/assessPrices'
 
 # getDirection = require './lib/getDirection'
 # coveredBids = require './lib/coveredBids'
@@ -236,9 +237,15 @@ reducer = (state, action) ->
     state.bids = reject overADayOldBids, state.bids
 
     pricesForSides = assessBids state.bids
-    if not isEmpty pricesForSides
-      console.log "can SELL above #{pricesForSides.buy.price || 'idk'}"
-      console.log "can BUY below #{pricesForSides.sell.price || 'idk'}"
+
+    # console.log pricesForSides
+
+    sidesPricing = assessPrices pricesForSides
+
+    if not isEmpty sidesPricing
+      # console.log sidesPricing
+      console.log "SHOULD SELL ABOVE #{sidesPricing.sell || 'idk'}"
+      console.log "SHOULD  BUY BELOW #{sidesPricing.buy || 'idk'}"
 
 
 
@@ -736,8 +743,8 @@ pulse = ->
   store.dispatch
     type: 'HEARTBEAT'
 setTimeout (->
-  setInterval pulse, 60 * 1000
-), 60 * 1000
+  setInterval pulse, 6 * 1000
+), 6 * 1000
 
 
 
@@ -813,7 +820,7 @@ adfdsafafdsa = ->
 
   RSVP.hash( promises ).then( ( good )->
     log good.fills.length, good.bids.length
-    map dispatchFill, good.fills.concat good.bids
+    map dispatchFill, good.bids
     addIndex( map ) addRun, sort sortByAbsSize, good.runs
 
     map(
