@@ -106,7 +106,6 @@ module.exports = {
               map(
                 setupProduct,
                 [
-                  'BTC-USD',
                   'BCH-USD',
                   'ETH-USD',
                   'LTC-USD',
