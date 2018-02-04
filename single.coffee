@@ -419,18 +419,20 @@ reducer = (state, action) ->
 
         lastStreak = coveredBids( sortByCreatedAt( state.bids ), action.match.side )
 
+
         unless isEmpty lastStreak
-          counterBid = cleanUpTrade
-            price: coveredPrice lastStreak
-            size: sum pluck 'size', lastStreak
-            side: otherSide action.match.side
-            product_id: PRODUCT_ID
+          if lastStreak.length > 1
+            counterBid = cleanUpTrade
+              price: coveredPrice lastStreak
+              size: sum pluck 'size', lastStreak
+              side: otherSide action.match.side
+              product_id: PRODUCT_ID
 
-          importantValues = pick [ 'price', 'size', 'side', 'product_id' ]
+            importantValues = pick [ 'price', 'size', 'side', 'product_id' ]
 
-          unless equals importantValues( state.counterBid ), importantValues( counterBid )
-            makeNewBid counterBid, pluck( 'id', counterBids ), 'counter'
-            state.counterBid = counterBid
+            unless equals importantValues( state.counterBid ), importantValues( counterBid )
+              makeNewBid counterBid, pluck( 'id', counterBids ), 'counter'
+              state.counterBid = counterBid
 
       if contains action.match.side, state.advice
         log "following #{action.match.side} advice of #{state.advice.join(', ')}"
