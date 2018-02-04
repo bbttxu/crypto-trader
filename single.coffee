@@ -21,9 +21,11 @@ log = require './lib/log'
 
 gdax = require './lib/gdax-client'
 
-getDirection = require './lib/getDirection'
-coveredBids = require './lib/coveredBids'
-coveredPrice = require './lib/coveredPrice'
+assessBids = require './lib/assessBids'
+
+# getDirection = require './lib/getDirection'
+# coveredBids = require './lib/coveredBids'
+# coveredPrice = require './lib/coveredPrice'
 
 require('dotenv').config( silent: true )
 mongoConnection = require('./lib/mongoConnection')
@@ -218,7 +220,7 @@ reducer = (state, action) ->
     # do stuff here vvv
 
 
-    log PRODUCT_ID, 'is in', state.direction, 'mode'
+    log PRODUCT_ID, 'is in', ( state.advice || [] ).join( ", " ), 'mode'
 
     state.fills = sortBy prop( 'trade_id' ), state.fills
     log 'showStatus', showStatus state.fills
@@ -233,6 +235,10 @@ reducer = (state, action) ->
 
     state.bids = reject overADayOldBids, state.bids
 
+    pricesForSides = assessBids state.bids
+    if not isEmpty pricesForSides
+      console.log "can SELL above #{pricesForSides.buy.price || 'idk'}"
+      console.log "can BUY below #{pricesForSides.sell.price || 'idk'}"
 
 
 
@@ -418,8 +424,8 @@ reducer = (state, action) ->
       #   2.0 * parseFloat( state[ ( skinny action.match ).side ].d_price )
       # )
 
-      unless contains action.match.side, state.advice
-        log "#{action.match.side} is not found in #{state.advice.join(', ')}"
+      # unless contains action.match.side, state.advice
+      #   log "#{action.match.side} is not found in #{state.advice.join(', ')}"
 
       if contains action.match.side, state.advice
         log "following #{action.match.side} advice of #{state.advice.join(', ')}"
