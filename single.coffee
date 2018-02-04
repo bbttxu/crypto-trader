@@ -92,6 +92,7 @@ initalState =
   counterBid: {}
   bids: []
   bid_ids: []
+  persisted_ids: []
   match: {}
   # sellFactor: 0
   # buyFactor: 0
@@ -113,8 +114,7 @@ saveBidToStorage = ( bid ) ->
 
 updateBid = require './lib/updateBid'
 
-addBid = ( bid, cancelPlease )->
-
+addBid = ( bid )->
   # TODO make an optional flag so we can listen and record, but not trade
   # return 1
 
@@ -128,8 +128,6 @@ addBid = ( bid, cancelPlease )->
       store.dispatch
         type: 'ADD_BID'
         bid: merge( JSON.parse( foo.body ), bid )
-
-    merge( JSON.parse( foo.body ), bid )
 
 
   onError = ( err )->
@@ -176,13 +174,10 @@ consolidateRun = require './consolidateRun'
 
 averageOf = require './lib/averageOf'
 
-makeNewBid = ( bid, cancelPlease )->
-  # if handleFractionalSize bid
-  # log 'passed fractional size', bid.size
+makeNewBid = ( bid, cancelPlease = [], persist = false )->
 
-  # if bid.size < 0.1
-  #   bid.size = 0.1
-
+  if true is persist
+    bid.reason = 'persist'
 
   addBid bid
 
@@ -197,7 +192,7 @@ makeNewBid = ( bid, cancelPlease )->
 
   # since we're catching cancellations on the stream, we
   # don't really care of the outcome
-  RSVP.hashSettled( mergeAll map makeCancellation, cancelPlease ).then( ( good )->
+  RSVP.hashSettled( mergeAll map makeCancellation, reject isNil, cancelPlease ).then( ( good )->
 
 
     #
@@ -205,31 +200,6 @@ makeNewBid = ( bid, cancelPlease )->
       true is outcome.value
 
     fulfilled = filter isFullfilled, good
-
-
-    #
-    # cancelBid = ( bid, id )->
-    #   if true is bid.value
-    #     payload =
-    #       type: 'BID_CANCELLED'
-    #       id: id
-    #       bid: bid
-
-
-    #     store.dispatch payload
-
-    #   if 'order not found' is bid.reason
-    #     payload =
-    #       type: 'BID_CANCELLED'
-    #       id: id
-    #       bid: bid
-
-
-    #     store.dispatch payload
-
-
-    # forEachObjIndexed cancelBid, good
-
 
 
   ).catch( (error)->
@@ -308,15 +278,22 @@ reducer = (state, action) ->
         'product_id',
         'price',
         'size',
-        'side'
+        'side',
+        'reason'
       ],
       action.bid
     )
 
-
+    # TODO why make bid variable above?
+    persist = 'persist' is bid.reason or false
 
     state.bids.push action.bid
-    state.bid_ids = pluck 'id', state.bids
+
+    if true is persist
+      state.persisted_ids.push bid.id
+    else
+      state.bid_ids.push bid.id
+
 
 
   if 'ADD_RUN' is action.type
@@ -341,11 +318,19 @@ reducer = (state, action) ->
 
       state.bids.push updatedBid
 
-      state.bid_ids = pluck 'id', state.bids
-
       saveBidToStorage updatedBid
 
 
+    idIndex = findIndex equals( action.bid.order_id ), state.bid_ids
+
+    if idIndex > -1
+      state.bid_ids = reject equals( action.bid.order_id ), state.bid_ids
+
+
+    persistedIndex = findIndex equals( action.bid.order_id ), state.persisted_ids
+
+    if persistedIndex > -1
+      state.persisted_ids = reject equals( action.bid.order_id ), state.persisted_ids
 
 
   if 'MATCH_FILLED' is action.type
@@ -361,7 +346,9 @@ reducer = (state, action) ->
 
       state.bids.push updatedBid
 
-      state.bid_ids = pluck 'id', state.bids
+      # console.log 'PLUCKERS PLUCKERS PLUCKERS PLUCKERS PLUCKERS PLUCKERS PLUCKERS '
+
+      # state.bid_ids = pluck 'id', state.bids
 
       saveBidToStorage updatedBid
 
@@ -465,17 +452,17 @@ reducer = (state, action) ->
 
         else
 
-          sortedBids = sortByCreatedAt( state.bids )
-          # covers = coveredBids state.bids, state.direction
-          # log state.bids
-          asdfasfasdfasfasfdsfas = coveredBids( sortByCreatedAt( state.bids ), state.direction )
+          # sortedBids = sortByCreatedAt( state.bids )
+          # # covers = coveredBids state.bids, state.direction
+          # # log state.bids
+          # asdfasfasdfasfasfdsfas = coveredBids( sortByCreatedAt( state.bids ), state.direction )
 
-          coverPrice = coveredPrice asdfasfasdfasfasfdsfas
+          # coverPrice = coveredPrice asdfasfasdfasfasfdsfas
 
-          # log coverPrice, sum pluck 'size', asdfasfasdfasfasfdsfas
+          # # log coverPrice, sum pluck 'size', asdfasfasdfasfasfdsfas
 
-          # log 'counter bid here', action.match.side, coverPrice, sum pluck 'size', asdfasfasdfasfasfdsfas
-          # log state.buy.price, state.sell.price
+          # # log 'counter bid here', action.match.side, coverPrice, sum pluck 'size', asdfasfasdfasfasfdsfas
+          # # log state.buy.price, state.sell.price
 
         log JSON.stringify state.bid, 'state.bid'
 
@@ -660,6 +647,28 @@ dispatchCurrency = ( currency )->
     store.dispatch
       type: currency
       data: record
+
+
+###
+       .__                  ___.
+  ____ |  |__ _____    _____\_ |__   ___________
+_/ ___\|  |  \\__  \  /     \| __ \_/ __ \_  __ \
+\  \___|   Y  \/ __ \|  Y Y  \ \_\ \  ___/|  | \/
+ \___  >___|  (____  /__|_|  /___  /\___  >__|
+     \/     \/     \/      \/    \/     \/
+chamber
+###
+
+chamberChannel = new Redis()
+
+chamberChannel.subscribe "chamber:#{PRODUCT_ID}"
+
+chamberChannel.on 'message', ( channel, jsonString )->
+  bid = JSON.parse jsonString
+  makeNewBid bid, [], true
+
+
+
 
 
 accountChannel = new Redis()

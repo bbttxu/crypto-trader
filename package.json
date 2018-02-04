@@ -19,7 +19,8 @@
     "reload": "pm2 reload ecosystem.config.js",
     "status": "pm2 status",
     "monit": "pm2 monit",
-    "logs": "pm2 logs"
+    "logs": "pm2 logs",
+    "chamber": "coffee chamber.coffee"
   },
   "author": "adam krawiec",
   "license": "ISC",
