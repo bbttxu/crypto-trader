@@ -2,6 +2,9 @@
 
 assessPrices = ( sides )->
 
+  return sides unless sides.buy and sides.sell
+
+
   if sides.buy and sides.sell
 
     if sides.buy.price.avg > sides.sell.price.avg
