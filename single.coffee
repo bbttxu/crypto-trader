@@ -25,14 +25,15 @@ assessBids = require './lib/assessBids'
 assessPrices = require './lib/assessPrices'
 
 # getDirection = require './lib/getDirection'
-# coveredBids = require './lib/coveredBids'
-# coveredPrice = require './lib/coveredPrice'
+coveredBids = require './lib/coveredBids'
+coveredPrice = require './lib/coveredPrice'
 
 require('dotenv').config( silent: true )
 mongoConnection = require('./lib/mongoConnection')
 
 cleanUpTrade = require './lib/cleanUpTrades'
 
+otherSide = require './lib/otherSide'
 {
   map
   pick
@@ -119,6 +120,7 @@ updateBid = require './lib/updateBid'
 
 addBid = ( bid )->
   # TODO make an optional flag so we can listen and record, but not trade
+  # console.log bid
   # return 1
 
   onGood = ( foo )->
@@ -177,10 +179,10 @@ consolidateRun = require './consolidateRun'
 
 averageOf = require './lib/averageOf'
 
-makeNewBid = ( bid, cancelPlease = [], persist = false )->
+makeNewBid = ( bid, cancelPlease = [], label = false )->
 
-  if true is persist
-    bid.reason = 'persist'
+  if false isnt label
+    bid.reason = label
 
   addBid bid
 
@@ -347,7 +349,6 @@ reducer = (state, action) ->
 
 
   if 'MATCH_FILLED' is action.type
-    # log 'MATCH_FILLED', JSON.stringify action.match
 
     index = findIndex propEq( 'id', action.match.order_id ), state.bids
 
@@ -359,19 +360,8 @@ reducer = (state, action) ->
 
       state.bids.push updatedBid
 
-      # console.log 'PLUCKERS PLUCKERS PLUCKERS PLUCKERS PLUCKERS PLUCKERS PLUCKERS '
-
-      # state.bid_ids = pluck 'id', state.bids
-
       saveBidToStorage updatedBid
 
-
-      # log merge state.bids[ index ], action.match
-      # saveBidToStorage merge state.bids[ index ], action.match
-
-
-
-    # state.bids = reject propEq( 'id', action.match.order_id ), state.bids
 
 
 
@@ -423,16 +413,24 @@ reducer = (state, action) ->
     if isEmpty state.run
       state.run = [ skinny action.match ]
 
-      # log(
-      #   'sdfsdfsfsdfsdfsf'
-      #   parseFloat( ( skinny action.match ).price ),
-      #   ( skinny action.match ).side
-      #   state[ action.match.side ]
-      #   2.0 * parseFloat( state[ ( skinny action.match ).side ].d_price )
-      # )
+      counterBids = filter propEq( 'reason', 'counter' ), state.bids
 
-      # unless contains action.match.side, state.advice
-      #   log "#{action.match.side} is not found in #{state.advice.join(', ')}"
+      if contains action.match.side, state.advice
+
+        lastStreak = coveredBids( sortByCreatedAt( state.bids ), action.match.side )
+
+        unless isEmpty lastStreak
+          counterBid = cleanUpTrade
+            price: coveredPrice lastStreak
+            size: sum pluck 'size', lastStreak
+            side: otherSide action.match.side
+            product_id: PRODUCT_ID
+
+          importantValues = pick [ 'price', 'size', 'side', 'product_id' ]
+
+          unless equals importantValues( state.counterBid ), importantValues( counterBid )
+            makeNewBid counterBid, pluck( 'id', counterBids ), 'counter'
+            state.counterBid = counterBid
 
       if contains action.match.side, state.advice
         log "following #{action.match.side} advice of #{state.advice.join(', ')}"
@@ -460,22 +458,6 @@ reducer = (state, action) ->
         if 'buy' is action.match.side
           state.buy = iuwoiqe
 
-        if state.direction is action.match.side
-          state.bid = iuwoiqe.bid
-
-        else
-
-          # sortedBids = sortByCreatedAt( state.bids )
-          # # covers = coveredBids state.bids, state.direction
-          # # log state.bids
-          # asdfasfasdfasfasfdsfas = coveredBids( sortByCreatedAt( state.bids ), state.direction )
-
-          # coverPrice = coveredPrice asdfasfasdfasfasfdsfas
-
-          # # log coverPrice, sum pluck 'size', asdfasfasdfasfasfdsfas
-
-          # # log 'counter bid here', action.match.side, coverPrice, sum pluck 'size', asdfasfasdfasfasfdsfas
-          # # log state.buy.price, state.sell.price
 
         log JSON.stringify state.bid, 'state.bid'
 
@@ -678,7 +660,7 @@ chamberChannel.subscribe "chamber:#{PRODUCT_ID}"
 
 chamberChannel.on 'message', ( channel, jsonString )->
   bid = JSON.parse jsonString
-  makeNewBid bid, [], true
+  makeNewBid bid, [], 'persist'
 
 
 
@@ -743,8 +725,8 @@ pulse = ->
   store.dispatch
     type: 'HEARTBEAT'
 setTimeout (->
-  setInterval pulse, 6 * 1000
-), 6 * 1000
+  setInterval pulse, 60 * 1000
+), 60 * 1000
 
 
 
