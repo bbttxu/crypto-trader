@@ -54,6 +54,11 @@ store.subscribe ->
 
     _directions = directions
 
+pushMinuteUpdates = ->
+  if store.getState().directions
+    publishAdvice store.getState().directions
+
+setInterval pushMinuteUpdates, 60 * 1000
 
 statsChannel.on 'pmessage', ( match, channel, stats )->
   store.dispatch
