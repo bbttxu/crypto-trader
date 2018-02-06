@@ -155,8 +155,9 @@ gooderSeaState = require './lib/gooderSeaState'
 dailyTide = require './lib/dailyTide'
 
 
-sortByCreatedAt = sortBy prop( 'created_at' )
+sortByCreatedAt = sortBy prop( 'time' )
 
+onlyFilledReasons = filter propEq( 'reason', 'filled' )
 
 asdf = ( fill )->
   value = fill.price * fill.size
@@ -237,6 +238,8 @@ reducer = (state, action) ->
       moment().subtract( 7, 'days' ) > moment( bid.time )
 
     state.bids = reject overADayOldBids, state.bids
+
+    state.bids = sortByCreatedAt( state.bids )
 
     pricesForSides = assessBids state.bids
 
@@ -362,8 +365,7 @@ reducer = (state, action) ->
 
       if contains action.match.side, state.advice
 
-        lastStreak = coveredBids( sortByCreatedAt( state.bids ), action.match.side )
-
+        lastStreak = coveredBids( sortByCreatedAt( onlyFilledReasons( state.bids ) ), action.match.side )
 
         unless isEmpty lastStreak
           if lastStreak.length > 1
