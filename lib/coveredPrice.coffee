@@ -10,6 +10,7 @@
   equals
   gt
   pluck
+  last
 } = require 'ramda'
 
 arrayStats = require './arrayStats'
@@ -34,10 +35,18 @@ coveredPrice = ( bids )->
 
   prices = pluck 'price', bids
 
+  latest = last bids
   stats = arrayStats prices
 
-  if sides[0] is 'sell'
+  if equals sides[0], 'sell'
+
+    if equals latest.price, stats.min
+      return undefined
+
     return stats.min
+
+  if equals latest.price, stats.max
+    return undefined
 
   stats.max
 
