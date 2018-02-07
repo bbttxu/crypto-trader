@@ -383,6 +383,8 @@ reducer = (state, action) ->
 
               log lastStreak.length, counterBid
 
+              counterBids = filter propEq( 'reason', 'counter' ), state.bids
+              
               unless equals importantValues( state.counterBid ), importantValues( counterBid )
                 makeNewBid counterBid, pluck( 'id', counterBids ), 'counter'
                 state.counterBid = counterBid
@@ -440,9 +442,6 @@ reducer = (state, action) ->
 
     if isEmpty state.run
       state.run = [ skinny action.match ]
-
-      counterBids = filter propEq( 'reason', 'counter' ), state.bids
-
 
       if contains action.match.side, state.advice
         log "following #{action.match.side} advice of #{state.advice.join(', ')}"
