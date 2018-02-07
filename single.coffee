@@ -152,7 +152,7 @@ addBid = ( bid )->
 
 
 gooderSeaState = require './lib/gooderSeaState'
-dailyTide = require './lib/dailyTide'
+# dailyTide = require './lib/dailyTide'
 
 
 sortByCreatedAt = sortBy prop( 'time' )
@@ -502,14 +502,14 @@ reducer = (state, action) ->
             state.bids
           )
 
-          good24HourTrend = dailyTide( state.stats, state[ action.match.side ].bid )
+          # good24HourTrend = dailyTide( state.stats, state[ action.match.side ].bid )
 
-          if good24HourTrend
-            if gooderSeaState( state.bids, state[ action.match.side ].bid )
-              makeNewBid(
-                state[ action.match.side ].bid,
-                pluck 'id', openBids
-              )
+          # if good24HourTrend
+          if gooderSeaState( state.bids, state[ action.match.side ].bid )
+            makeNewBid(
+              state[ action.match.side ].bid,
+              pluck 'id', openBids
+            )
 
 
   if state.top and state.sell
