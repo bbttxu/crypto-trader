@@ -369,17 +369,23 @@ reducer = (state, action) ->
 
         unless isEmpty lastStreak
           if lastStreak.length > 1
-            counterBid = cleanUpTrade
-              price: coveredPrice lastStreak
-              size: sum pluck 'size', lastStreak
-              side: otherSide action.match.side
-              product_id: PRODUCT_ID
 
-            importantValues = pick [ 'price', 'size', 'side', 'product_id' ]
+            price = coveredPrice lastStreak
 
-            unless equals importantValues( state.counterBid ), importantValues( counterBid )
-              makeNewBid counterBid, pluck( 'id', counterBids ), 'counter'
-              state.counterBid = counterBid
+            if price
+              counterBid = cleanUpTrade
+                price: price
+                size: sum pluck 'size', lastStreak
+                side: otherSide action.match.side
+                product_id: PRODUCT_ID
+
+              importantValues = pick [ 'price', 'size', 'side', 'product_id' ]
+
+              log counterBid
+
+              unless equals importantValues( state.counterBid ), importantValues( counterBid )
+                makeNewBid counterBid, pluck( 'id', counterBids ), 'counter'
+                state.counterBid = counterBid
 
 
       saveBidToStorage updatedBid
