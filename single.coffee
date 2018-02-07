@@ -381,7 +381,7 @@ reducer = (state, action) ->
 
               importantValues = pick [ 'price', 'size', 'side', 'product_id' ]
 
-              log counterBid
+              log lastStreak.length, counterBid
 
               unless equals importantValues( state.counterBid ), importantValues( counterBid )
                 makeNewBid counterBid, pluck( 'id', counterBids ), 'counter'
