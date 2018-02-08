@@ -224,8 +224,8 @@ reducer = (state, action) ->
         \/     \/     \/    \/       \/                 \/          \/             \/        \/
   ###
 
-  makeCounterBid = ->
-    lastStreak = coveredBids( sortByCreatedAt( onlyFilledReasons( state.bids ) ), action.match.side )
+  makeCounterBid = ( match )->
+    lastStreak = coveredBids( sortByCreatedAt( onlyFilledReasons( state.bids ) ), match.side )
 
     unless isEmpty lastStreak
       if lastStreak.length > 1
@@ -236,7 +236,7 @@ reducer = (state, action) ->
           counterBid = cleanUpTrade
             price: price
             size: sum pluck 'size', lastStreak
-            side: otherSide action.match.side
+            side: otherSide match.side
             product_id: PRODUCT_ID
 
           importantValues = pick [ 'price', 'size', 'side', 'product_id' ]
@@ -279,8 +279,6 @@ reducer = (state, action) ->
     state.bids = sortByCreatedAt( state.bids )
 
     pricesForSides = assessBids state.bids
-
-    makeCounterBid()
 
     # console.log pricesForSides
 
@@ -403,7 +401,7 @@ reducer = (state, action) ->
       state.bids.push updatedBid
 
       if contains action.match.side, state.advice
-        makeCounterBid()
+        makeCounterBid( action.match )
 
 
       saveBidToStorage updatedBid
@@ -458,6 +456,10 @@ reducer = (state, action) ->
 
     if isEmpty state.run
       state.run = [ skinny action.match ]
+
+      if contains action.match.side, state.advice
+        makeCounterBid( action.match )
+
 
       if contains action.match.side, state.advice
         log "following #{action.match.side} advice of #{state.advice.join(', ')}"
