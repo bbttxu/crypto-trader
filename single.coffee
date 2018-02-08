@@ -214,6 +214,43 @@ makeNewBid = ( bid, cancelPlease = [], label = false )->
 
 
 reducer = (state, action) ->
+
+  ###
+                  __                                       __                 ___.   .__    .___
+    _____ _____  |  | __ ____     ____  ____  __ __  _____/  |_  ___________  \_ |__ |__| __| _/
+  /     \\__  \ |  |/ // __ \  _/ ___\/  _ \|  |  \/    \   __\/ __ \_  __ \  | __ \|  |/ __ |
+  |  Y Y  \/ __ \|    <\  ___/  \  \__(  <_> )  |  /   |  \  | \  ___/|  | \/  | \_\ \  / /_/ |
+  |__|_|  (____  /__|_ \\___  >  \___  >____/|____/|___|  /__|  \___  >__|     |___  /__\____ |
+        \/     \/     \/    \/       \/                 \/          \/             \/        \/
+  ###
+
+  makeCounterBid = ->
+    lastStreak = coveredBids( sortByCreatedAt( onlyFilledReasons( state.bids ) ), action.match.side )
+
+    unless isEmpty lastStreak
+      if lastStreak.length > 1
+
+        price = coveredPrice lastStreak
+
+        if price
+          counterBid = cleanUpTrade
+            price: price
+            size: sum pluck 'size', lastStreak
+            side: otherSide action.match.side
+            product_id: PRODUCT_ID
+
+          importantValues = pick [ 'price', 'size', 'side', 'product_id' ]
+
+          log lastStreak.length, counterBid
+
+          counterBids = filter propEq( 'reason', 'counter' ), state.bids
+
+          unless equals importantValues( state.counterBid ), importantValues( counterBid )
+            makeNewBid counterBid, pluck( 'id', counterBids ), 'counter'
+            state.counterBid = counterBid
+
+
+
   if typeof state == 'undefined'
     return initalState
 
@@ -242,6 +279,8 @@ reducer = (state, action) ->
     state.bids = sortByCreatedAt( state.bids )
 
     pricesForSides = assessBids state.bids
+
+    makeCounterBid()
 
     # console.log pricesForSides
 
@@ -364,30 +403,7 @@ reducer = (state, action) ->
       state.bids.push updatedBid
 
       if contains action.match.side, state.advice
-
-        lastStreak = coveredBids( sortByCreatedAt( onlyFilledReasons( state.bids ) ), action.match.side )
-
-        unless isEmpty lastStreak
-          if lastStreak.length > 1
-
-            price = coveredPrice lastStreak
-
-            if price
-              counterBid = cleanUpTrade
-                price: price
-                size: sum pluck 'size', lastStreak
-                side: otherSide action.match.side
-                product_id: PRODUCT_ID
-
-              importantValues = pick [ 'price', 'size', 'side', 'product_id' ]
-
-              log lastStreak.length, counterBid
-
-              counterBids = filter propEq( 'reason', 'counter' ), state.bids
-              
-              unless equals importantValues( state.counterBid ), importantValues( counterBid )
-                makeNewBid counterBid, pluck( 'id', counterBids ), 'counter'
-                state.counterBid = counterBid
+        makeCounterBid()
 
 
       saveBidToStorage updatedBid
