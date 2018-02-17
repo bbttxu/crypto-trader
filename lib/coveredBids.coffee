@@ -27,9 +27,14 @@ onlyFilled = filter propEq 'reason', 'filled'
 
 coveredBids = ( bids, direction )->
   sides = pluck 'side', bids
-  latestOppositeIndex = lastIndexOf otherSide( direction ), sides
-  onlyFilled takeLast ( bids.length - latestOppositeIndex ), bids
 
+  # console.log sides, 'z', direction
+  latestOppositeIndex = lastIndexOf otherSide( direction ), sides
+  # console.log latestOppositeIndex, otherSide( direction ), ( bids.length - latestOppositeIndex - 1 )
+
+  dfjk = onlyFilled takeLast ( bids.length - latestOppositeIndex - 1 ), bids
+
+  dfjk
 
 #                                      __
 #   ____ ___  _________   ____________/  |_  ______

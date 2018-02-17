@@ -10,8 +10,12 @@
   equals
   gt
   pluck
+  last
 } = require 'ramda'
 
+arrayStats = require './arrayStats'
+
+log = require './log'
 
 #   _____                    __  .__
 # _/ ____\_ __  ____   _____/  |_|__| ____   ____   ______
@@ -25,15 +29,27 @@ coveredPrice = ( bids )->
 
   sides = uniq pluck 'side', bids
 
-  prices = uniq pluck 'price', bids
+  unless equals( 1, sides.length )
+    log 'undefined there is mixed data'
+    return undefined
 
-  if equals( 1, sides.length ) and gt( prices.length, 1 )
+  prices = pluck 'price', bids
 
-    edge = if sides[0] is 'sell' then Math.min else Math.max
+  latest = last bids
+  stats = arrayStats prices
 
-    return edge.apply this, prices
+  if equals sides[0], 'sell'
 
-  undefined
+    if equals latest.price, stats.min
+      return undefined
+
+    return stats.min
+
+  if equals latest.price, stats.max
+    return undefined
+
+  stats.max
+
 
 #                                      __
 #   ____ ___  _________   ____________/  |_  ______

@@ -21,13 +21,19 @@ log = require './lib/log'
 
 gdax = require './lib/gdax-client'
 
+assessBids = require './lib/assessBids'
+assessPrices = require './lib/assessPrices'
 
+# getDirection = require './lib/getDirection'
+coveredBids = require './lib/coveredBids'
+coveredPrice = require './lib/coveredPrice'
 
 require('dotenv').config( silent: true )
 mongoConnection = require('./lib/mongoConnection')
 
 cleanUpTrade = require './lib/cleanUpTrades'
 
+otherSide = require './lib/otherSide'
 {
   map
   pick
@@ -114,6 +120,7 @@ updateBid = require './lib/updateBid'
 
 addBid = ( bid )->
   # TODO make an optional flag so we can listen and record, but not trade
+  # console.log bid
   # return 1
 
   onGood = ( foo )->
@@ -145,9 +152,12 @@ addBid = ( bid )->
 
 
 gooderSeaState = require './lib/gooderSeaState'
-dailyTide = require './lib/dailyTide'
+# dailyTide = require './lib/dailyTide'
 
 
+sortByCreatedAt = sortBy prop( 'time' )
+
+onlyFilledReasons = filter propEq( 'reason', 'filled' )
 
 asdf = ( fill )->
   value = fill.price * fill.size
@@ -170,10 +180,10 @@ consolidateRun = require './consolidateRun'
 
 averageOf = require './lib/averageOf'
 
-makeNewBid = ( bid, cancelPlease = [], persist = false )->
+makeNewBid = ( bid, cancelPlease = [], label = false )->
 
-  if true is persist
-    bid.reason = 'persist'
+  if false isnt label
+    bid.reason = label
 
   addBid bid
 
@@ -204,6 +214,43 @@ makeNewBid = ( bid, cancelPlease = [], persist = false )->
 
 
 reducer = (state, action) ->
+
+  ###
+                  __                                       __                 ___.   .__    .___
+    _____ _____  |  | __ ____     ____  ____  __ __  _____/  |_  ___________  \_ |__ |__| __| _/
+  /     \\__  \ |  |/ // __ \  _/ ___\/  _ \|  |  \/    \   __\/ __ \_  __ \  | __ \|  |/ __ |
+  |  Y Y  \/ __ \|    <\  ___/  \  \__(  <_> )  |  /   |  \  | \  ___/|  | \/  | \_\ \  / /_/ |
+  |__|_|  (____  /__|_ \\___  >  \___  >____/|____/|___|  /__|  \___  >__|     |___  /__\____ |
+        \/     \/     \/    \/       \/                 \/          \/             \/        \/
+  ###
+
+  makeCounterBid = ( match )->
+    lastStreak = coveredBids( sortByCreatedAt( onlyFilledReasons( state.bids ) ), match.side )
+
+    unless isEmpty lastStreak
+      if lastStreak.length > 1
+
+        price = coveredPrice lastStreak
+
+        if price
+          counterBid = cleanUpTrade
+            price: price
+            size: sum pluck 'size', lastStreak
+            side: otherSide match.side
+            product_id: PRODUCT_ID
+
+          importantValues = pick [ 'price', 'size', 'side', 'product_id' ]
+
+          log lastStreak.length, counterBid
+
+          counterBids = filter propEq( 'reason', 'counter' ), state.bids
+
+          unless equals importantValues( state.counterBid ), importantValues( counterBid )
+            makeNewBid counterBid, pluck( 'id', counterBids ), 'counter'
+            state.counterBid = counterBid
+
+
+
   if typeof state == 'undefined'
     return initalState
 
@@ -214,7 +261,7 @@ reducer = (state, action) ->
     # do stuff here vvv
 
 
-    log PRODUCT_ID, 'is in', state.direction, 'mode'
+    log PRODUCT_ID, 'is in', ( state.advice || [] ).join( ", " ), 'mode'
 
     state.fills = sortBy prop( 'trade_id' ), state.fills
     log 'showStatus', showStatus state.fills
@@ -229,6 +276,18 @@ reducer = (state, action) ->
 
     state.bids = reject overADayOldBids, state.bids
 
+    state.bids = sortByCreatedAt( state.bids )
+
+    pricesForSides = assessBids state.bids
+
+    # console.log pricesForSides
+
+    sidesPricing = assessPrices pricesForSides
+
+    if not isEmpty sidesPricing
+      # console.log sidesPricing
+      console.log "SHOULD SELL ABOVE #{sidesPricing.sell || 'idk'}"
+      console.log "SHOULD  BUY BELOW #{sidesPricing.buy || 'idk'}"
 
 
 
@@ -330,7 +389,6 @@ reducer = (state, action) ->
 
 
   if 'MATCH_FILLED' is action.type
-    # log 'MATCH_FILLED', JSON.stringify action.match
 
     index = findIndex propEq( 'id', action.match.order_id ), state.bids
 
@@ -342,19 +400,12 @@ reducer = (state, action) ->
 
       state.bids.push updatedBid
 
-      # console.log 'PLUCKERS PLUCKERS PLUCKERS PLUCKERS PLUCKERS PLUCKERS PLUCKERS '
+      if contains action.match.side, state.advice
+        makeCounterBid( action.match )
 
-      # state.bid_ids = pluck 'id', state.bids
 
       saveBidToStorage updatedBid
 
-
-      # log merge state.bids[ index ], action.match
-      # saveBidToStorage merge state.bids[ index ], action.match
-
-
-
-    # state.bids = reject propEq( 'id', action.match.order_id ), state.bids
 
 
 
@@ -406,16 +457,9 @@ reducer = (state, action) ->
     if isEmpty state.run
       state.run = [ skinny action.match ]
 
-      # log(
-      #   'sdfsdfsfsdfsdfsf'
-      #   parseFloat( ( skinny action.match ).price ),
-      #   ( skinny action.match ).side
-      #   state[ action.match.side ]
-      #   2.0 * parseFloat( state[ ( skinny action.match ).side ].d_price )
-      # )
+      if contains action.match.side, state.advice
+        makeCounterBid( action.match )
 
-      unless contains action.match.side, state.advice
-        log "#{action.match.side} is not found in #{state.advice.join(', ')}"
 
       if contains action.match.side, state.advice
         log "following #{action.match.side} advice of #{state.advice.join(', ')}"
@@ -443,22 +487,6 @@ reducer = (state, action) ->
         if 'buy' is action.match.side
           state.buy = iuwoiqe
 
-        if state.direction is action.match.side
-          state.bid = iuwoiqe.bid
-
-        else
-
-          # sortedBids = sortByCreatedAt( state.bids )
-          # # covers = coveredBids state.bids, state.direction
-          # # log state.bids
-          # asdfasfasdfasfasfdsfas = coveredBids( sortByCreatedAt( state.bids ), state.direction )
-
-          # coverPrice = coveredPrice asdfasfasdfasfasfdsfas
-
-          # # log coverPrice, sum pluck 'size', asdfasfasdfasfasfdsfas
-
-          # # log 'counter bid here', action.match.side, coverPrice, sum pluck 'size', asdfasfasdfasfasfdsfas
-          # # log state.buy.price, state.sell.price
 
         log JSON.stringify state.bid, 'state.bid'
 
@@ -497,14 +525,14 @@ reducer = (state, action) ->
             state.bids
           )
 
-          good24HourTrend = dailyTide( state.stats, state[ action.match.side ].bid )
+          # good24HourTrend = dailyTide( state.stats, state[ action.match.side ].bid )
 
-          if good24HourTrend
-            if gooderSeaState( state.bids, state[ action.match.side ].bid )
-              makeNewBid(
-                state[ action.match.side ].bid,
-                pluck 'id', openBids
-              )
+          # if good24HourTrend
+          if gooderSeaState( state.bids, state[ action.match.side ].bid )
+            makeNewBid(
+              state[ action.match.side ].bid,
+              pluck 'id', openBids
+            )
 
 
   if state.top and state.sell
@@ -661,7 +689,7 @@ chamberChannel.subscribe "chamber:#{PRODUCT_ID}"
 
 chamberChannel.on 'message', ( channel, jsonString )->
   bid = JSON.parse jsonString
-  makeNewBid bid, [], true
+  makeNewBid bid, [], 'persist'
 
 
 
@@ -803,7 +831,7 @@ adfdsafafdsa = ->
 
   RSVP.hash( promises ).then( ( good )->
     log good.fills.length, good.bids.length
-    map dispatchFill, good.fills.concat good.bids
+    map dispatchFill, good.bids
     addIndex( map ) addRun, sort sortByAbsSize, good.runs
 
     map(
