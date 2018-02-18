@@ -15,12 +15,16 @@ otherSide = require './lib/otherSide'
 
 assessBids = require './lib/assessBids'
 
+normalizeStatsInputs = require './lib/normalizeStatsInputs'
+
 {
   pick
   map
-  takeLast
   where
   filter
+  isNil
+  isEmpty
+  reject
 } = require 'ramda'
 
 moment = require 'moment'
@@ -91,16 +95,30 @@ findEfficacy = ( list )->
           output = false
 
 
-    console.log bid.time, output, JSON.stringify bid.stats
-
     return
       bid: bid
       output: output
-      input: bid.stats
+      input: normalizeStatsInputs bid.stats
 
 
 
-  console.log map individualPrice, list
+  judgments = map individualPrice, list
+
+
+  makeLine = ( line )->
+    console.log line.output, JSON.stringify( line.input )
+
+  lines = map makeLine, judgments
+
+  console.log lines.join "\n"
+
+noStats = ( bid )->
+  isEmpty( bid.stats ) or isNil( bid.stats )
+
+
+cutOffDate = moment( '2018/02/01 00:00:00Z' )
+removeEarlierVersions = filter ( bid )->
+  moment( bid.time ).isAfter cutOffDate
 
 
 ###
@@ -117,9 +135,9 @@ getBids(
   'LTC-USD',
   reason: 'filled'
 ).then(
-
+  removeEarlierVersions
 ).then(
-  takeLast 50
+  reject noStats
 ).then(
   pickImportant
 ).then(
