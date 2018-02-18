@@ -29,6 +29,8 @@ normalizeStatsInputs = require './lib/normalizeStatsInputs'
 
 moment = require 'moment'
 
+ml = require './lib/ml'
+
 ###
 ___________                   __  .__
 \_   _____/_ __  ____   _____/  |_|__| ____   ____   ______
@@ -51,6 +53,8 @@ findEfficacy = ( list )->
   individualPrice = ( bid )->
     # console.log bid.time
 
+    sideFlag = if bid.side is 'sell' then 1 else 0
+
     now = moment( bid.time )
     aDayLater = moment( bid.time ).add( 24, 'hours' )
 
@@ -64,59 +68,44 @@ findEfficacy = ( list )->
       false
 
 
-
     relevant = filter last24Hours, list
-    # console.log relevant.length
-
-    # console.log bid.price, bid.size, bid.side
 
     assessment = assessBids relevant
-    # console.log assessment
 
-    output = 'N/A'
+    output = 0
 
     if assessment[ otherSide bid.side ]
       average = assessment[ otherSide bid.side ].price.avg
 
-      # console.log average
-
       if 'sell' is bid.side
 
         if bid.price > average
-          output = bid.side
+          output = 1
         else
-          output = false
+          output = 0
 
       if 'buy' is bid.side
 
         if bid.price < average
-          output = bid.side
+          output = 1
         else
-          output = false
+          output = 0
 
 
     return
       bid: bid
-      output: output
-      input: normalizeStatsInputs bid.stats
+      output: [ output ]
+      input: [ sideFlag ].concat normalizeStatsInputs bid.stats
 
 
+  map individualPrice, list
 
-  judgments = map individualPrice, list
-
-
-  makeLine = ( line )->
-    console.log line.output, JSON.stringify( line.input )
-
-  lines = map makeLine, judgments
-
-  console.log lines.join "\n"
 
 noStats = ( bid )->
   isEmpty( bid.stats ) or isNil( bid.stats )
 
 
-cutOffDate = moment( '2018/02/01 00:00:00Z' )
+cutOffDate = moment( '2018-02-01T00:00:00-00:00' )
 removeEarlierVersions = filter ( bid )->
   moment( bid.time ).isAfter cutOffDate
 
@@ -130,7 +119,6 @@ removeEarlierVersions = filter ( bid )->
         \/   \/          \/       \/                   \/        \/     \/
 ###
 
-
 getBids(
   'LTC-USD',
   reason: 'filled'
@@ -143,10 +131,7 @@ getBids(
 ).then(
   findEfficacy
 ).then(
-#   consoleReturn
-# ).then(
-
-
+  ml
 ).catch(
   catchError( 'db' )
 )
