@@ -72,7 +72,7 @@ findEfficacy = ( list )->
 
     assessment = assessBids relevant
 
-    output = 0
+    output = -1
 
     if assessment[ otherSide bid.side ]
       average = assessment[ otherSide bid.side ].price.avg
@@ -92,10 +92,12 @@ findEfficacy = ( list )->
           output = 0
 
 
-    return
-      bid: bid
-      output: [ output ]
-      input: [ sideFlag ].concat normalizeStatsInputs bid.stats
+      return
+        bid: bid
+        output: [ output ]
+        input: [ sideFlag ].concat normalizeStatsInputs bid.stats
+
+    undefined
 
 
   map individualPrice, list
@@ -130,6 +132,8 @@ getBids(
   pickImportant
 ).then(
   findEfficacy
+).then(
+  reject isNil
 ).then(
   ml
 ).catch(

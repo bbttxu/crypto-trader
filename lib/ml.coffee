@@ -32,12 +32,12 @@ ___________                   __  .__
 makeTrainingSet = map pick [ 'input', 'output' ]
 
 ml = ( ios )->
-  myNetwork = new Architect.Perceptron 4, 5, 1
+  myNetwork = new Architect.Perceptron 5, 6, 1
   trainer = new Trainer myNetwork
 
-  console.log 'start'
+  console.log 'start', ios.length
 
-  results = trainer.train makeTrainingSet( ios ), { log: 10 }
+  results = trainer.train makeTrainingSet( ios ), { log: 10000, shuffle: false }
   console.log results
   console.log 'end', trainer
 
