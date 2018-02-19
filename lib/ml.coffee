@@ -18,7 +18,11 @@
 
 {
   pick
+  dropLast
+  takeLast
 } = require 'ramda'
+
+shuffle = require( 'knuth-shuffle' ).knuthShuffle
 
 ###
 ___________                   __  .__
@@ -29,17 +33,42 @@ ___________                   __  .__
      \/             \/     \/                    \/     \/
 ###
 
-makeTrainingSet = map pick [ 'input', 'output' ]
+makeTrainingSet = shuffle map pick [ 'input', 'output' ]
+
+
+minimums =
+  log: 10000
+  shuffle: false
+  error: .001
 
 ml = ( ios )->
+
+  percentageValue = Math.round ios.length * .1
+
   myNetwork = new Architect.Perceptron 5, 6, 1
   trainer = new Trainer myNetwork
 
-  console.log 'start', ios.length
+  data = makeTrainingSet( ios )
 
-  results = trainer.train makeTrainingSet( ios ), { log: 10000, shuffle: false }
-  console.log results
-  console.log 'end', trainer
+  trainingSet = dropLast percentageValue, data
+
+  testSet = takeLast percentageValue, data
+
+  console.log 'start', ios.length, percentageValue
+
+  trainingResults = trainer.train trainingSet, { log: 10000, shuffle: false }
+  testResults = trainer.test testSet
+
+  console.log trainingResults, testResults
+
+  if testResults.error < trainingResults.error
+
+
+    console.log 'SUCCESS!!!', JSON.stringify myNetwork.toJSON()
+
+  else
+    console.log 'FAILED!!!!'
+
 
 
 ###
