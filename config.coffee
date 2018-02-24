@@ -9,9 +9,9 @@ module.exports =
 
 
   currencies:
-    # 'BTC-USD':
-    #   # sell: {}
-    #   buy: {}
+    'BTC-USD':
+      # sell: {}
+      buy: {}
 
     'BCH-USD':
       sell: {}

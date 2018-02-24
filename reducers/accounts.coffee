@@ -7,11 +7,6 @@
         \/       \/           \/              \/     \/
 ###
 
-{
-  lensPath
-  set
-} = require 'ramda'
-
 
 ###
 .____           __               .___         __  .__    .__
@@ -24,20 +19,15 @@
 
 initialState = {}
 
-pricingReducer = ( state, action )->
+accountsReducer = ( state, action )->
   if typeof state == 'undefined'
     return initialState
 
-  if 'UPDATE_PRICING' is action.type
-    # match price might not be present if there is still
-    # remaining size for the trade hasn't been filled
-    if action.match.price
-      lens = lensPath [ action.match.product_id, action.match.side ]
-      state = set lens, action.match.price, state
-
+  if 'UPDATE_ACCOUNTS' is action.type
+    state = action.accounts
 
   state
 
 
-module.exports = pricingReducer
+module.exports = accountsReducer
 
