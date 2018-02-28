@@ -40,8 +40,12 @@ toKeyedObjects = ( object ) ->
 
 getValues = pick( [ 'balance', 'available', 'hold' ] )
 
+
+ensureFloat = ( float )->
+  parseFloat( float or 0 )
+
 multiply = ( one, two )->
-  parseFloat( one ) * parseFloat( two )
+  ensureFloat( one ) * ensureFloat( two )
 
 
 getAmounts = ( pair )->
@@ -71,7 +75,7 @@ showApproximateTable = ( value )->
 
 
 showStake = ( accounts, pricing )->
-  pr = reject isNil, mergeDeepRight pricing, 'USD-USD': { sell: 1.0, buy: 1.0 }
+  pr = reject isNil, mergeDeepRight pricing, 'USD-USD': { sell: '1.0', buy: '1.0' }
 
   # log accounts
   accts = mergeAll map toKeyedObjects, accounts
