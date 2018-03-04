@@ -49,7 +49,7 @@ multiply = ( one, two )->
 
 
 getAmounts = ( pair )->
-
+  # console.log pair
   return
     balance: multiply pair.balance, pair.sell or pair.buy
     hold: multiply pair.hold, pair.sell or pair.buy
