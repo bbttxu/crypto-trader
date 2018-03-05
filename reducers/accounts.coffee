@@ -7,6 +7,8 @@
         \/       \/           \/              \/     \/
 ###
 
+md5 = require 'blueimp-md5'
+
 
 ###
 .____           __               .___         __  .__    .__
@@ -24,7 +26,9 @@ accountsReducer = ( state, action )->
     return initialState
 
   if 'UPDATE_ACCOUNTS' is action.type
-    state = action.accounts
+    state.accounts = action.accounts
+
+    state._hash = md5 JSON.stringify state.accounts
 
   state
 

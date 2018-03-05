@@ -10,7 +10,10 @@
 {
   lensPath
   set
+  lensProp
 } = require 'ramda'
+
+md5 = require 'blueimp-md5'
 
 
 ###
@@ -32,9 +35,11 @@ pricingReducer = ( state, action )->
     # match price might not be present if there is still
     # remaining size for the trade hasn't been filled
     if action.match.price
-      lens = lensPath [ action.match.product_id, action.match.side ]
+      lens = lensPath [ 'prices', action.match.product_id, action.match.side ]
       state = set lens, action.match.price, state
 
+      hashLens = lensProp '_hash'
+      state = set hashLens, md5( JSON.stringify state.prices ), state
 
   state
 

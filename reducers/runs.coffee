@@ -88,7 +88,7 @@ runsReducer = ( state, action )->
     state = set statsHashPath, md5( JSON.stringify state.stats ), state
 
 
-    console.log Date.now() - start, 'ms'
+    # console.log Date.now() - start, 'ms'
 
   state
 

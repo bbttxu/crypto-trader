@@ -121,7 +121,7 @@ updateBid = require './lib/updateBid'
 addBid = ( bid )->
   # TODO make an optional flag so we can listen and record, but not trade
   # console.log bid
-  # return 1
+  return 1
 
   onGood = ( foo )->
     message = foo.body
