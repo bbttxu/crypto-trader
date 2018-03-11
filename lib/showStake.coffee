@@ -69,36 +69,91 @@ getAmounts = ( pair )->
 
 sortByBalance = sortBy prop 'balance'
 
+tableify = ( value )->
+  leftPad parseFloat( value ).toFixed( 2 ), 8
 
 showApproximateTable = ( value )->
   leftPad approximate( value, { min10k: true, decimal: ',' } ), 8
 
 
 showStake = ( accounts, pricing )->
-  pr = reject isNil, mergeDeepRight pricing, 'USD-USD': { sell: '1.0', buy: '1.0' }
+  pr = reject isNil, mergeDeepRight pricing, { 'USD-USD': { sell: '1.0', buy: '1.0' }, 'BTC-BTC': { sell: '1.0', buy: '1.0' } }
 
   # log accounts
-  accts = mergeAll map toKeyedObjects, accounts
+  # log pricing
 
 
-  usdTotals = map getAmounts, mergeDeepRight pr, accts
+  getAccountBalances = map ( account )->
+    source = pick [ 'currency', 'balance', 'hold', 'available' ], account
+
+    usdAmount = 0
+    source.usd = 0
+    if account
+      if account.currency
+        if pr
+          if pr[ "#{account.currency}-USD" ]
+            usdAmount = pr[ "#{account.currency}-USD" ].sell or 0
+            source.usd = parseFloat usdAmount * account.balance
+
+    source
+
+  sortByBalance =  sortBy prop 'usd'
 
 
-  deKey = ( value, key )->
-    value.currency = key
-    value
+  balances = reverse sortByBalance getAccountBalances accounts
 
-  vals = values mapObjIndexed deKey, usdTotals
+  # console.log pricing
+
+  showBalance = ( account )->
+
+    usdAmount = 0
+
+    if account
+      if account.currency
+        if pr
+          if pr[ "#{account.currency}-USD" ]
+            usdAmount = pr[ "#{account.currency}-USD" ].sell
+
+
+    "#{account.currency} #{showApproximateTable( account.balance * usdAmount )} #{tableify( account.balance )} #{tableify( account.hold )} #{tableify( account.available )}"
+
+
+  log
+  console.log ( map showBalance, balances ).join "\n"
+
+  #   # "#{accounts.currency} #{showApproximateTable( accounts.balance )} #{showApproximateTable( accounts.hold )} #{showApproximateTable( accounts.available )}"
 
 
 
-  showOff = ( line )->
-    "#{line.currency} #{showApproximateTable( line.balance )} #{showApproximateTable( line.hold )} #{showApproximateTable( line.available )}"
+  # if accounts and pricing
+  #   accts = mergeAll map toKeyedObjects, accounts
 
-  log ""
-  # log reject isNil, pluck 'balance', vals
-  console.log "+TOTALS", ( sum reject isNil, pluck 'balance', vals ).toFixed 2
-  console.log ( map showOff, reverse sortByBalance vals ).join "\n"
+
+
+
+
+
+
+
+
+  #   usdTotals = map getAmounts, mergeDeepRight pr, accts
+
+
+  #   deKey = ( value, key )->
+  #     value.currency = key
+  #     value
+
+  #   vals = values mapObjIndexed deKey, usdTotals
+
+
+
+  #   showOff = ( line )->
+  #     "#{line.currency} #{showApproximateTable( line.balance )} #{showApproximateTable( line.hold )} #{showApproximateTable( line.available )}"
+
+  #   log ""
+  #   log reject isNil, pluck 'balance', vals
+  #   # console.log "+TOTALS", ( sum reject isNil, pluck 'balance', vals ).toFixed 2
+  #   # console.log ( map showOff, reverse sortByBalance vals ).join "\n"
 
 
 module.exports = showStake

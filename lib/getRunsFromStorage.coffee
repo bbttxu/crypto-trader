@@ -42,7 +42,7 @@ getRunsFromStorage = ( search )->
       $ne: 0
 
     end:
-      $gt: moment().subtract( 3, 'days' ).valueOf()
+      $gt: moment().subtract( 1, 'days' ).valueOf()
 
   #
   #

@@ -85,8 +85,8 @@ productReducer = ( product )->
 
             # saveBidToStorage updatedBid
 
-        if 'ADD_MATCH' is action.type
-          console.log 'ADD_MATCH', product, action
+        # if 'ADD_MATCH' is action.type
+        #   console.log 'ADD_MATCH', product, action
 
         if 'MATCH_FILLED' is action.type
           console.log 'MATCH_FILLED', product, action
