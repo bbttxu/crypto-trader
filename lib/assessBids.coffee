@@ -1,3 +1,12 @@
+###
+.____    ._____.                      .__
+|    |   |__\_ |______________ _______|__| ____   ______
+|    |   |  || __ \_  __ \__  \\_  __ \  |/ __ \ /  ___/
+|    |___|  || \_\ \  | \// __ \|  | \/  \  ___/ \___ \
+|_______ \__||___  /__|  (____  /__|  |__|\___  >____  >
+        \/       \/           \/              \/     \/
+###
+
 {
   groupBy
   map
@@ -6,6 +15,18 @@
   filter
   sum
 } = require 'ramda'
+
+statistics = require 'summary-statistics'
+
+
+###
+___________                   __  .__
+\_   _____/_ __  ____   _____/  |_|__| ____   ____   ______
+ |    __)|  |  \/    \_/ ___\   __\  |/  _ \ /    \ /  ___/
+ |     \ |  |  /   |  \  \___|  | |  (  <_> )   |  \\___ \
+ \___  / |____/|___|  /\___  >__| |__|\____/|___|  /____  >
+     \/             \/     \/                    \/     \/
+###
 
 groupBySide = groupBy prop 'side'
 
@@ -16,17 +37,9 @@ getSideSum = map ( side )->
   prices = map prop( 'price' ), side
 
   sideSum =
-    sum: sum map getValue, side
     size: sum map parseFloat, map prop( 'size' ), side
+    price: statistics prices
 
-
-  sideSum.n = side.length
-  sideSum.price =
-    min: Math.min.apply this, prices
-    avg: sideSum.sum / sideSum.size
-    max: Math.max.apply this, prices
-
-  sideSum
 
 assessBids = ( bids )->
   getSideSum groupBySide map(
@@ -39,5 +52,15 @@ assessBids = ( bids )->
       bids
     )
   )
+
+
+###
+.____           __               .___         __  .__    .__
+|    |    _____/  |_  ______   __| _/____   _/  |_|  |__ |__| ______
+|    |  _/ __ \   __\/  ___/  / __ |/  _ \  \   __\  |  \|  |/  ___/
+|    |__\  ___/|  |  \___ \  / /_/ (  <_> )  |  | |   Y  \  |\___ \
+|_______ \___  >__| /____  > \____ |\____/   |__| |___|  /__/____  >
+        \/   \/          \/       \/                   \/        \/     \/
+###
 
 module.exports = assessBids

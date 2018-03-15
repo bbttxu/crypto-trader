@@ -15,6 +15,12 @@ getBids = require './lib/getBids'
   isNil
   mergeAll
   reverse
+  values
+  isEmpty
+  sum
+  unnest
+  reject
+  pick
 } = require 'ramda'
 
 log = require './lib/log'
@@ -51,6 +57,7 @@ productReducer = require './reducers/product'
 pricingReducer = require './reducers/pricing'
 accountsReducer = require './reducers/accounts'
 runsReducer = require './reducers/runs'
+strategicReducer = require './reducers/strategic'
 
 getRunsFromStorage = require './lib/getRunsFromStorage'
 
@@ -123,12 +130,13 @@ reducers = mergeAll map makeProductReducer, currencies
 reducers.pricing = pricingReducer
 reducers.accounts = accountsReducer
 reducers.runs = runsReducer
+reducers.strategic = strategicReducer
 
 rootReducer = combineReducers reducers
 store = createStore rootReducer, applyMiddleware(thunk.default)
 
 
-INDEX_INCREMENT = 32
+INDEX_INCREMENT = 321
 
 dispatchBidsFromStorage = addIndex( map ) ( bid, index = 10 )->
   doIt = ->
@@ -191,31 +199,117 @@ store.subscribe ->
 
 
 
+
+
+determineNewTrades = ( stats, prices )->
+  # log 'STATS', stats
+
+  determineTradesOffPrices = ( value, key )->
+    # log key, value
+
+    currencyTrades = []
+
+    if prices[ key ]
+      if prices[ key ].sell
+        if value.sell
+          if value.sell.avg
+            # console.log 'value.sell and prices[ key ].sell', value.sell, prices[ key ].sell
+
+            trade =
+              product: key
+              side: 'sell'
+              # size: 0.1
+              price: sum map parseFloat, [ prices[ key ].sell, value.sell.avg ]
+
+            # console.log trade
+
+            currencyTrades.push trade
+
+    if prices[ key ]
+      if prices[ key ].buy
+        if value.buy
+          if value.buy.avg
+            # console.log 'value.buy and prices[ key ].buy', value.buy, prices[ key ].buy
+
+            trade =
+              product: key
+              side: 'buy'
+              price: sum map parseFloat, [ prices[ key ].buy, value.buy.avg ]
+
+            # console.log trade
+
+            currencyTrades.push trade
+
+
+
+    # if prices[ key ] and prices[ key ].sell and prices[ key ].buy
+    #   if prices[ key ].sell < prices[ key ].buy
+    #     console.log 'both!s', key
+
+
+
+
+
+    return undefined if isEmpty currencyTrades
+
+    currencyTrades
+
+
+  reject isNil, unnest values mapObjIndexed determineTradesOffPrices, stats
+
+
+
+
+
+
+
+
 _runs_stats_hash = undefined
+
 store.subscribe ->
   state = store.getState()
 
-  if state.runs.stats_hash
+  pricing_hash = state.pricing._hash or undefined
+  runs_stats_hash = state.runs.stats_hash
 
-    runs_stats_hash = state.runs.stats_hash
+  if runs_stats_hash and pricing_hash
 
-    unless equals _runs_stats_hash, runs_stats_hash
-      log 'RUNS', state.runs.stats_hash
+    unless equals _runs_stats_hash, runs_stats_hash or equals _pricing_hash, pricing_hash
+
+      frontline = determineNewTrades state.runs.stats, state.pricing.prices
+
+      # log 'FRONTLINE', "\n", frontline
+
       _runs_stats_hash = runs_stats_hash
+      _pricing_hash = pricing_hash
 
+
+
+basicBids = map ( foo )->
+  pick [ 'price', 'side', 'size', 'reason' ], foo
 
 start = ( product )->
-  # _bids_hash = undefined
-  # store.subscribe ->
-  #   state = store.getState()
+  _bids_hash = undefined
+  store.subscribe ->
+    state = store.getState()
 
-  #   if state[ product ]
-  #     bids_hash = state[ product ].bids_hash or undefined
+    if state[ product ]
+      bids_hash = state[ product ].bids_hash or undefined
 
-  #     unless equals _bids_hash, bids_hash
+      unless equals _bids_hash, bids_hash
 
-  #       log 'BIDS', product, state[ product ].tick, bids_hash
-  #       _bids_hash = bids_hash
+        doIt = ->
+          # console.log
+          store.dispatch
+            type: 'UPDATE_STRATEGIC_BIDS'
+            bids:  basicBids state[ product ].bids
+            product: product
+
+
+        setTimeout doIt, 1
+
+        log 'BIDS', product, state[ product ].tick, state[ product ].bids_hash
+        _bids_hash = bids_hash
 
 
 
@@ -225,7 +319,7 @@ start = ( product )->
   log product
 
   hash(
-    bids: getBids product, reason: 'filled'
+    bids: getBids product, { reason: 'filled', side: 'buy' }
     runs: getRunsFromStorage( product_id: product )
     # runs: getRunsFromStorage( product_id: product )
   ).then(
@@ -293,3 +387,30 @@ start = ( product )->
 
 
 forEach start, currencies
+
+
+
+###
+            .___     .__
+_____     __| _/__  _|__| ____  ____
+\__  \   / __ |\  \/ /  |/ ___\/ __ \
+ / __ \_/ /_/ | \   /|  \  \__\  ___/
+(____  /\____ |  \_/ |__|\___  >___  >
+     \/      \/              \/    \/
+###
+
+# console.log 'advice'
+
+adviceChannel = new Redis()
+
+adviceChannel.psubscribe "advice?"
+
+adviceChannel.on 'pmessage', ( channel, jsonString )->
+  console.log 'received', channel, jsonString
+
+  # store.dispatch
+  console.log
+    type: 'UPDATE_ADVICE'
+    advice: JSON.parse jsonString
+
+

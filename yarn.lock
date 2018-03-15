@@ -3156,6 +3156,10 @@ stylus@~0.54.5, stylus@0.54.5:
     sax "0.5.x"
     source-map "0.1.x"
 
+summary-statistics:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/summary-statistics/-/summary-statistics-1.0.0.tgz#9bc6b9ad2071cf08bf2a26eac23232535f7962cf"
+
 supports-color@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/supports-color/-/supports-color-2.0.0.tgz#535d045ce6b6363fa40117084629995e9df324c7"
