@@ -9,13 +9,11 @@
 
 {
   groupBy
-  prop
 } = require 'ramda'
 
 
 {
-  # groupBy
-  # prop
+  prop
 } = require 'sanctuary'
 
 

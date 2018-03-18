@@ -24,6 +24,10 @@ otherSide = require './otherSide'
 
 pricing = require './pricing'
 
+halfLifeAmount = require './halfLifeAmount'
+
+groupBySide = require '../lib/groupBySide'
+
 ###
 ___________                   __  .__
 \_   _____/_ __  ____   _____/  |_|__| ____   ____   ______
@@ -34,9 +38,6 @@ ___________                   __  .__
 ###
 
 
-halfLifeAmount = require './halfLifeAmount'
-
-groupBySide = groupBy prop 'side'
 
 deValue = map ( bid )->
   now = moment().unix()
