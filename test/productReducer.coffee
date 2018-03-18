@@ -12,6 +12,7 @@ describe '', ->
 
     expected =
       tick: 0
+      runs: []
       bids: []
 
     output.should.be.eql expected

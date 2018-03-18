@@ -2,7 +2,7 @@ should = require 'should'
 
 accountsReducer = require '../reducers/accounts'
 
-describe 'pricing channel reducer', ->
+describe 'accounts channel reducer', ->
   it 'initial state', ->
 
     expected = {}

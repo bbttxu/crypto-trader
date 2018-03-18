@@ -319,14 +319,16 @@ start = ( product )->
   log product
 
   hash(
-    bids: getBids product, { reason: 'filled', side: 'buy' }
+    buyBids: getBids product, { reason: 'filled', side: 'buy' }
+    sellBids: getBids product, { reason: 'filled', side: 'sell' }
     runs: getRunsFromStorage( product_id: product )
     # runs: getRunsFromStorage( product_id: product )
   ).then(
     ( results )->
       # console.log results.bids.length, 'bids'
       new Promise ( resolve, rejectPromise )->
-        dispatchBidsFromStorage( results.bids )
+        dispatchBidsFromStorage( results.buyBids )
+        dispatchBidsFromStorage( results.sellBids )
         doIt = ->
           resolve results
 
