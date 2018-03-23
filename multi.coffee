@@ -8,7 +8,6 @@ getBidsBuys = require './lib/getBidsBuys'
   prop
   pluck
   addIndex
-  lensPath
   view
   set
   forEach
@@ -24,6 +23,7 @@ getBidsBuys = require './lib/getBidsBuys'
   pick
   mergeDeepRight
   lensProp
+  lensPath
   view
   set
 } = require 'ramda'
@@ -39,6 +39,8 @@ catchError = ( name, callback = log )->
 throttle = require 'lodash.throttle'
 
 md5 = require 'blueimp-md5'
+
+ensureSellIsMoreThanBuy = require './lib/ensureSellIsMoreThanBuy'
 
 {
   hash
@@ -216,28 +218,24 @@ determineNewTrades = ( stats, prices )->
 
     frontline = {}
 
-    ddkdkdkd = lensPath [ 'buy' ]
-    buyRunsLens = lensPath [ 'buy', 'avg']
-
+    buyLens = lensProp 'buy'
+    buyPriceLens = lensPath [ currency, 'buy' ]
+    buyRunsLens = lensPath [ currency, 'buy', 'avg' ]
 
     buyPrice = view buyPriceLens, prices
     buyDelta = view buyRunsLens, stats
 
     buyDope = reject isNil, [ buyPrice, buyDelta ]
 
-    # console.log buyPrice, buyDelta, buyDope
-
     if buyDope.length is 2
-      console.log currency, 'buy', sum buyDope
-      frontline = set buyPriceLens, sum( buyDope ), frontline
-      # log frontline
+      frontline = set buyLens, sum( buyDope ), frontline
 
 
 
-    sellLensPath = [ 'sell' ]
-    sellPriceLens = lensPath sellLensPath
-    sellRunsLens = lensPath sellLensPath.concat 'avg'
 
+    sellLens = lensProp 'sell'
+    sellPriceLens = lensPath [ currency, 'sell' ]
+    sellRunsLens = lensPath [ currency, 'sell', 'avg' ]
 
     sellPrice = view sellPriceLens, prices
     sellDelta = view sellRunsLens, stats
@@ -245,59 +243,14 @@ determineNewTrades = ( stats, prices )->
     sellDope = reject isNil, [ sellPrice, sellDelta ]
 
     if sellDope.length is 2
-      console.log currency, 'sell', sum sellDope
-      frontline = set sellPriceLens, sum( sellDope ), frontline
+      frontline = set sellLens, sum( sellDope ), frontline
 
-    log frontline
+    frontline = ensureSellIsMoreThanBuy frontline
 
     frontline
 
 
 
-    # if prices[ key ]
-    #   if prices[ key ].sell
-    #     if value.sell
-    #       if value.sell.avg
-    #         # console.log 'value.sell and prices[ key ].sell', value.sell, prices[ key ].sell
-
-    #         trade =
-    #           product: key
-    #           side: 'sell'
-    #           # size: 0.1
-    #           price: sum map parseFloat, [ prices[ key ].sell, value.sell.avg ]
-
-    #         # console.log trade
-
-    #         currencyTrades.push trade
-
-    # if prices[ key ]
-    #   if prices[ key ].buy
-    #     if value.buy
-    #       if value.buy.avg
-    #         # console.log 'value.buy and prices[ key ].buy', value.buy, prices[ key ].buy
-
-    #         trade =
-    #           product: key
-    #           side: 'buy'
-    #           price: sum map parseFloat, [ prices[ key ].buy, value.buy.avg ]
-
-    #         # console.log trade
-
-    #         currencyTrades.push trade
-
-
-
-    # if prices[ key ] and prices[ key ].sell and prices[ key ].buy
-    #   if prices[ key ].sell < prices[ key ].buy
-    #     console.log 'both!s', key
-
-
-
-
-
-    # return undefined if isEmpty currencyTrades
-
-    # frontline
 
 
   adfadfadf = mapObjIndexed determineTradesOffPrices, stats
