@@ -28,7 +28,7 @@ ___________                   __  .__
      \/             \/     \/                    \/     \/
 ###
 
-groupBySide = groupBy prop 'side'
+groupBySide = require '../lib/groupBySide'
 
 getValue = ( bid )->
   ( parseFloat bid.price ) * ( parseFloat bid.size )

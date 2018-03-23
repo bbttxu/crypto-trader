@@ -38,7 +38,7 @@ strategicReducer = ( state, action )->
 
     state = set currencyLens, assessBids( action.bids ), state
 
-    console.log state
+    # console.log state
 
     # state
     # # match price might not be present if there is still

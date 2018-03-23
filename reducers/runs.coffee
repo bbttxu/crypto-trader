@@ -33,12 +33,13 @@ moment = require 'moment'
   all
 } = require 'ramda'
 
+statistics = require 'summary-statistics'
 
 md5 = require 'blueimp-md5'
 
 groupBySide = require '../lib/groupBySide'
 
-arrayStats = require '../lib/arrayStats'
+# arrayStats = require '../lib/arrayStats'
 
 consolidate = require '../lib/consolidateRun'
 
@@ -68,7 +69,7 @@ skinny = ( data )->
 
 
 findStats = ( runs )->
-  arrayStats pluck 'd_price', runs
+  statistics pluck 'd_price', runs
 
 # sortByCreatedAt = sortBy prop( 'start' )
 

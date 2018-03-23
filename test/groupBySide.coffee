@@ -3,6 +3,10 @@ should = require 'should'
 groupBySide = require '../lib/groupBySide'
 
 describe 'array stats', ->
+  it 'returns self with empty array', ->
+    groupBySide( [] ).should.be.eql {}
+
+
   it 'returns stats on array of numbers', ->
 
     input = [

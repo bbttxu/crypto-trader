@@ -1,14 +1,18 @@
 should = require 'should'
 
-# runsReducer = require '../reducers/runs'
+runsReducer = require '../reducers/runs'
 
-# describe 'pricing channel reducer', ->
-#   it 'initial state', ->
+describe 'runs channel reducer', ->
+  it 'initial state', ->
 
-#     expected = {}
+    expected = {
+      run: []
+      runs: []
+      stats: {}
+    }
 
-#     decision = adviceReducer undefined
-#     decision.should.be.eql expected
+    decision = runsReducer undefined
+    decision.should.be.eql expected
 
 #   it 'do NOT buy if last is higher than open', ->
 #     state =
@@ -32,7 +36,7 @@ should = require 'should'
 #         buy: 1
 #         sell: 89.3
 
-#     decision = adviceReducer state, action
+#     decision = runsReducer state, action
 #     decision.should.be.eql expected
 
 

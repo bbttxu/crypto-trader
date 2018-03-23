@@ -1,4 +1,5 @@
-getBids = require './lib/getBids'
+getBidsSells = require './lib/getBidsSells'
+getBidsBuys = require './lib/getBidsBuys'
 
 {
   map
@@ -21,9 +22,15 @@ getBids = require './lib/getBids'
   unnest
   reject
   pick
+  mergeDeepRight
+  lensProp
+  view
+  set
 } = require 'ramda'
 
 log = require './lib/log'
+
+groupBySide = require './lib/groupBySide'
 
 catchError = ( name, callback = log )->
   ( error )->
@@ -59,7 +66,9 @@ accountsReducer = require './reducers/accounts'
 runsReducer = require './reducers/runs'
 strategicReducer = require './reducers/strategic'
 
-getRunsFromStorage = require './lib/getRunsFromStorage'
+getRunsSoldFromStorage = require './lib/getRunsSoldFromStorage'
+getRunsBoughtFromStorage = require './lib/getRunsBoughtFromStorage'
+# getRunsSoldFromStorage
 
 showStake = require './lib/showStake'
 
@@ -202,43 +211,79 @@ store.subscribe ->
 
 
 determineNewTrades = ( stats, prices )->
-  # log 'STATS', stats
 
-  determineTradesOffPrices = ( value, key )->
-    # log key, value
+  determineTradesOffPrices = ( value, currency )->
 
-    currencyTrades = []
+    frontline = {}
 
-    if prices[ key ]
-      if prices[ key ].sell
-        if value.sell
-          if value.sell.avg
-            # console.log 'value.sell and prices[ key ].sell', value.sell, prices[ key ].sell
+    ddkdkdkd = lensPath [ 'buy' ]
+    buyRunsLens = lensPath [ 'buy', 'avg']
 
-            trade =
-              product: key
-              side: 'sell'
-              # size: 0.1
-              price: sum map parseFloat, [ prices[ key ].sell, value.sell.avg ]
 
-            # console.log trade
+    buyPrice = view buyPriceLens, prices
+    buyDelta = view buyRunsLens, stats
 
-            currencyTrades.push trade
+    buyDope = reject isNil, [ buyPrice, buyDelta ]
 
-    if prices[ key ]
-      if prices[ key ].buy
-        if value.buy
-          if value.buy.avg
-            # console.log 'value.buy and prices[ key ].buy', value.buy, prices[ key ].buy
+    # console.log buyPrice, buyDelta, buyDope
 
-            trade =
-              product: key
-              side: 'buy'
-              price: sum map parseFloat, [ prices[ key ].buy, value.buy.avg ]
+    if buyDope.length is 2
+      console.log currency, 'buy', sum buyDope
+      frontline = set buyPriceLens, sum( buyDope ), frontline
+      # log frontline
 
-            # console.log trade
 
-            currencyTrades.push trade
+
+    sellLensPath = [ 'sell' ]
+    sellPriceLens = lensPath sellLensPath
+    sellRunsLens = lensPath sellLensPath.concat 'avg'
+
+
+    sellPrice = view sellPriceLens, prices
+    sellDelta = view sellRunsLens, stats
+
+    sellDope = reject isNil, [ sellPrice, sellDelta ]
+
+    if sellDope.length is 2
+      console.log currency, 'sell', sum sellDope
+      frontline = set sellPriceLens, sum( sellDope ), frontline
+
+    log frontline
+
+    frontline
+
+
+
+    # if prices[ key ]
+    #   if prices[ key ].sell
+    #     if value.sell
+    #       if value.sell.avg
+    #         # console.log 'value.sell and prices[ key ].sell', value.sell, prices[ key ].sell
+
+    #         trade =
+    #           product: key
+    #           side: 'sell'
+    #           # size: 0.1
+    #           price: sum map parseFloat, [ prices[ key ].sell, value.sell.avg ]
+
+    #         # console.log trade
+
+    #         currencyTrades.push trade
+
+    # if prices[ key ]
+    #   if prices[ key ].buy
+    #     if value.buy
+    #       if value.buy.avg
+    #         # console.log 'value.buy and prices[ key ].buy', value.buy, prices[ key ].buy
+
+    #         trade =
+    #           product: key
+    #           side: 'buy'
+    #           price: sum map parseFloat, [ prices[ key ].buy, value.buy.avg ]
+
+    #         # console.log trade
+
+    #         currencyTrades.push trade
 
 
 
@@ -250,15 +295,15 @@ determineNewTrades = ( stats, prices )->
 
 
 
-    return undefined if isEmpty currencyTrades
+    # return undefined if isEmpty currencyTrades
 
-    currencyTrades
-
-
-  reject isNil, unnest values mapObjIndexed determineTradesOffPrices, stats
+    # frontline
 
 
+  adfadfadf = mapObjIndexed determineTradesOffPrices, stats
 
+  log adfadfadf
+  adfadfadf
 
 
 
@@ -278,7 +323,7 @@ store.subscribe ->
 
       frontline = determineNewTrades state.runs.stats, state.pricing.prices
 
-      # log 'FRONTLINE', "\n", frontline
+      log 'FRONTLINE', "\n", frontline
 
       _runs_stats_hash = runs_stats_hash
       _pricing_hash = pricing_hash
@@ -299,7 +344,7 @@ start = ( product )->
       unless equals _bids_hash, bids_hash
 
         doIt = ->
-          # console.log
+          # console.log basicBids state[ product ].bids
           store.dispatch
             type: 'UPDATE_STRATEGIC_BIDS'
             bids:  basicBids state[ product ].bids
@@ -319,16 +364,15 @@ start = ( product )->
   log product
 
   hash(
-    buyBids: getBids product, { reason: 'filled', side: 'buy' }
-    sellBids: getBids product, { reason: 'filled', side: 'sell' }
-    runs: getRunsFromStorage( product_id: product )
-    # runs: getRunsFromStorage( product_id: product )
+    getBidsBuys: getBidsBuys product
+    getBidsSells: getBidsSells product
+    runsSold: getRunsSoldFromStorage( product_id: product )
+    runsBought: getRunsBoughtFromStorage( product_id: product )
   ).then(
     ( results )->
-      # console.log results.bids.length, 'bids'
       new Promise ( resolve, rejectPromise )->
-        dispatchBidsFromStorage( results.buyBids )
-        dispatchBidsFromStorage( results.sellBids )
+        dispatchBidsFromStorage( results.getBidsBuys )
+        dispatchBidsFromStorage( results.getBidsSells )
         doIt = ->
           resolve results
 
@@ -337,7 +381,9 @@ start = ( product )->
 
   ).then(
     ( results )->
-      dispatchRuns( reverse( sortByAbsoluteDPrice( results.runs ) ) )
+      # console.log results.runs
+      dispatchRuns( reverse( sortByAbsoluteDPrice( results.runsSold ) ) )
+      dispatchRuns( reverse( sortByAbsoluteDPrice( results.runsBought ) ) )
       results
 
   ).then(

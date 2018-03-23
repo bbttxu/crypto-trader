@@ -29,8 +29,10 @@ getBids = ( product, query = {} )->
 
       collection.find(
         merge search, query
+      ).limit(
+        100
       ).sort(
-        trade_id: 1
+        price: 1
       ).toArray().then(
         callback
       ).catch(
