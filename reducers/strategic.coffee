@@ -10,11 +10,16 @@
 {
   set
   lensProp
+  lensPath
+  view
+  map
 } = require 'ramda'
 
-# md5 = require 'blueimp-md5'
+md5 = require 'blueimp-md5'
 
 assessBids = require '../lib/assessBids'
+
+ensureSellIsMoreThanBuy = require '../lib/ensureSellIsMoreThanBuy'
 
 ###
 .____           __               .___         __  .__    .__
@@ -34,21 +39,35 @@ strategicReducer = ( state, action )->
   # console.log action
   if 'UPDATE_STRATEGIC_BIDS' is action.type
 
-    currencyLens = lensProp action.product
+    hahaha = {}
 
-    state = set currencyLens, assessBids( action.bids ), state
+    bids = assessBids( action.bids )
 
-    # console.log state
+    if bids.sell
+      bidsLensPath = lensProp 'sell'
+      hahaha = set bidsLensPath, bids.sell.price.q3, hahaha
 
-    # state
-    # # match price might not be present if there is still
-    # # remaining size for the trade hasn't been filled
-    # if action.match.price
-    #   lens = lensPath [ 'prices', action.match.product_id, action.match.side ]
-    #   state = set lens, action.match.price, state
 
-    #   hashLens = lensProp '_hash'
-    #   state = set hashLens, md5( JSON.stringify state.prices ), state
+    if bids.buy
+      bidsLensPath = lensProp 'buy'
+      hahaha = set bidsLensPath, bids.buy.price.q1, hahaha
+
+
+    addPriceKey = map ( thing )->
+      return
+        price: thing
+
+    theLastLaugh = ensureSellIsMoreThanBuy( hahaha )
+
+    currencyLens = lensPath [ 'bids', action.product ]
+
+    state = set currencyLens, addPriceKey( theLastLaugh ), state
+
+    console.log md5 JSON.stringify state
+
+    hashLens = lensProp '_hash'
+
+    state = set hashLens, md5( JSON.stringify state.bids ), state
 
   state
 

@@ -64,7 +64,7 @@ getRunsBoughtFromStorage = ( search )->
     mongoConnection().then ( db )->
       db.collection( 'runs' )
         .find( mergeAll [ defaults, search, required ] )
-        .limit( 10 )
+        .limit( 100 )
         .sort( d_price: 1 )
         .toArray()
         .then(callback)

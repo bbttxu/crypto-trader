@@ -7,13 +7,16 @@
         \/       \/           \/              \/     \/
 ###
 
+md5 = require 'blueimp-md5'
+
+log = require '../lib/log'
+
 {
-  lensPath
+  view
   set
   lensProp
+  mergeDeepLeft
 } = require 'ramda'
-
-md5 = require 'blueimp-md5'
 
 
 ###
@@ -25,26 +28,36 @@ md5 = require 'blueimp-md5'
         \/   \/          \/       \/                   \/        \/     \/
 ###
 
-initialState = {}
+initialState =
+  strategic: {}
+  frontline: {}
+  proposals: {}
+  _hash: 'undefinedtacticalhash'
 
-adviceReducer = ( state, action )->
+
+tacticalReducer = ( state, action )->
   if typeof state == 'undefined'
     return initialState
 
-  if 'UPDATE_ADVICE' is action.type
-    # match price might not be present if there is still
-    # remaining size for the trade hasn't been filled
-    # if action.match.price
-    #   lens = lensPath [ 'prices', action.match.product_id, action.match.side ]
-    #   state = set lens, action.match.price, state
+  if 'FRONTLINE_UPDATE' is action.type
+    lens = lensProp 'frontline'
+    state = set lens, action.frontline, state
 
-    #   hashLens = lensProp '_hash'
-    #   state = set hashLens, md5( JSON.stringify state.prices ), state
+  if 'STRATEGIC_UPDATE' is action.type
+    lens = lensProp 'strategic'
+    state = set lens, action.strategic, state
 
-    console.log action
+
+  proposals = mergeDeepLeft state.frontline, state.strategic
+  proposalLens = lensProp 'proposals'
+  state = set proposalLens, proposals, state
+
+  hash = md5 JSON.stringify state.proposals
+  hashLens = lensProp '_hash'
+  state = set hashLens, hash, state
 
   state
 
 
-module.exports = adviceReducer
+module.exports = tacticalReducer
 

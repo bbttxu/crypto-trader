@@ -67,6 +67,8 @@ pricingReducer = require './reducers/pricing'
 accountsReducer = require './reducers/accounts'
 runsReducer = require './reducers/runs'
 strategicReducer = require './reducers/strategic'
+tacticatlReducer = require './reducers/tactical'
+adviceReducer = require './reducers/advice'
 
 getRunsSoldFromStorage = require './lib/getRunsSoldFromStorage'
 getRunsBoughtFromStorage = require './lib/getRunsBoughtFromStorage'
@@ -131,10 +133,10 @@ currencies = [
   'LTC-USD'
   'ETH-USD'
   'BCH-USD'
-  'BTC-USD'
-  'LTC-BTC'
-  'ETH-BTC'
-  'BCH-BTC'
+  # 'BTC-USD'
+  # 'LTC-BTC'
+  # 'ETH-BTC'
+  # 'BCH-BTC'
 ]
 
 reducers = mergeAll map makeProductReducer, currencies
@@ -142,12 +144,14 @@ reducers.pricing = pricingReducer
 reducers.accounts = accountsReducer
 reducers.runs = runsReducer
 reducers.strategic = strategicReducer
+reducers.tactical = tacticatlReducer
+reducers.advice = adviceReducer
 
 rootReducer = combineReducers reducers
 store = createStore rootReducer, applyMiddleware(thunk.default)
 
 
-INDEX_INCREMENT = 321
+INDEX_INCREMENT = 4321
 
 dispatchBidsFromStorage = addIndex( map ) ( bid, index = 10 )->
   doIt = ->
@@ -187,29 +191,70 @@ accountsChannel.on 'message', ( channel, message )->
 
 
 
-_pricing_hash = undefined
-_accounts_hash = undefined
+
+_tactical_hash = undefined
 
 store.subscribe ->
   state = store.getState()
 
-  # console.log state.accounts
-  pricing_hash = state.pricing._hash or undefined
-  accounts_hash = state.accounts._hash or undefined
+  tactical_hash = state.tactical._hash or 'undefinedtacticalhash'
 
-  if pricing_hash and accounts_hash
+  # console.log _tactical_hash, tactical_hash, equals( tactical_hash, _tactical_hash )
 
-    # log accounts_hash, pricing_hash
-    unless equals _pricing_hash, pricing_hash or equals _accounts_hash, accounts_hash
-      # log accounts_hash, pricing_hash
+  unless equals tactical_hash, _tactical_hash
+    _tactical_hash = tactical_hash
 
-      _pricing_hash = pricing_hash
-      _accounts_hash = accounts_hash
-
-      throttleShowStake  state.accounts.accounts, state.pricing.prices
+    console.log 'tactical', tactical_hash, state.tactical.proposals
 
 
 
+
+_strategic_hash = undefined
+
+store.subscribe ->
+  state = store.getState()
+
+  strategic_hash = state.strategic._hash or 'undefinedstrategichash'
+
+  # console.log _strategic_hash, strategic_hash, equals( strategic_hash, _strategic_hash )
+
+  unless equals strategic_hash, _strategic_hash
+    _strategic_hash = strategic_hash
+
+    # console.log 'STRATEGIC_UPDATE', strategic_hash, state.strategic.bids
+    store.dispatch
+      type: 'STRATEGIC_UPDATE'
+      strategic: state.strategic.bids
+
+
+
+
+# _pricing_hash = undefined
+# _accounts_hash = undefined
+
+# store.subscribe ->
+#   state = store.getState()
+
+#   # console.log state.accounts
+#   pricing_hash = state.pricing._hash or undefined
+#   accounts_hash = state.accounts._hash or undefined
+
+#   if pricing_hash and accounts_hash
+
+#     # log accounts_hash, pricing_hash
+#     unless equals _pricing_hash, pricing_hash or equals _accounts_hash, accounts_hash
+#       # log accounts_hash, pricing_hash
+
+#       _pricing_hash = pricing_hash
+#       _accounts_hash = accounts_hash
+
+#       throttleShowStake  state.accounts.accounts, state.pricing.prices
+
+
+
+addPriceKey = map ( thing )->
+  return
+    price: thing
 
 
 determineNewTrades = ( stats, prices )->
@@ -247,7 +292,7 @@ determineNewTrades = ( stats, prices )->
 
     frontline = ensureSellIsMoreThanBuy frontline
 
-    frontline
+    addPriceKey frontline
 
 
 
@@ -255,31 +300,37 @@ determineNewTrades = ( stats, prices )->
 
   adfadfadf = mapObjIndexed determineTradesOffPrices, stats
 
-  log adfadfadf
+  # log adfadfadf
   adfadfadf
 
 
 
 
-
+_pricing_hash = undefined
 _runs_stats_hash = undefined
 
 store.subscribe ->
   state = store.getState()
 
   pricing_hash = state.pricing._hash or undefined
-  runs_stats_hash = state.runs.stats_hash
+  runs_stats_hash = state.runs.stats_hash or undefined
 
   if runs_stats_hash and pricing_hash
 
-    unless equals _runs_stats_hash, runs_stats_hash or equals _pricing_hash, pricing_hash
-
-      frontline = determineNewTrades state.runs.stats, state.pricing.prices
-
-      log 'FRONTLINE', "\n", frontline
+    unless equals _runs_stats_hash, runs_stats_hash
 
       _runs_stats_hash = runs_stats_hash
-      _pricing_hash = pricing_hash
+
+      unless equals _pricing_hash, pricing_hash
+
+        frontline = determineNewTrades state.runs.stats, state.pricing.prices
+
+        store.dispatch
+          type: 'FRONTLINE_UPDATE'
+          frontline: frontline
+
+        # _runs_stats_hash = runs_stats_hash
+        _pricing_hash = pricing_hash
 
 
 
