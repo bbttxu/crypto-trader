@@ -15,8 +15,13 @@ log = require '../lib/log'
   view
   set
   lensProp
+  lensPath
   mergeDeepLeft
+  map
+  mapObjIndexed
 } = require 'ramda'
+
+ensureSellIsMoreThanBuy = require '../lib/ensureSellIsMoreThanBuy'
 
 
 ###
@@ -29,6 +34,7 @@ log = require '../lib/log'
 ###
 
 initialState =
+  advice: {}
   strategic: {}
   frontline: {}
   proposals: {}
@@ -38,6 +44,10 @@ initialState =
 tacticalReducer = ( state, action )->
   if typeof state == 'undefined'
     return initialState
+
+  if 'ADVICE_UPDATE' is action.type
+    lens = lensProp 'advice'
+    state = set lens, action.advice, state
 
   if 'FRONTLINE_UPDATE' is action.type
     lens = lensProp 'frontline'
@@ -49,8 +59,32 @@ tacticalReducer = ( state, action )->
 
 
   proposals = mergeDeepLeft state.frontline, state.strategic
+
+
+  newProposals = {}
+
+
+  oiewoicncndsjksdfewio = ( side, currency )->
+    # console.log currency, side
+
+    lens = lensPath [ currency, side ]
+
+    asdf = view lens, proposals
+
+    if asdf
+      newProposals = set lens, asdf, newProposals
+
+    # console.log currency, asdf
+
+  mapObjIndexed oiewoicncndsjksdfewio, state.advice
+  # log 'proposals'
+  # log proposals
+  # log map ensureSellIsMoreThanBuy, proposals
+
+  console.log newProposals
+
   proposalLens = lensProp 'proposals'
-  state = set proposalLens, proposals, state
+  state = set proposalLens, newProposals, state
 
   hash = md5 JSON.stringify state.proposals
   hashLens = lensProp '_hash'

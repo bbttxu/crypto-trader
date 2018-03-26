@@ -63,8 +63,6 @@ strategicReducer = ( state, action )->
 
     state = set currencyLens, addPriceKey( theLastLaugh ), state
 
-    console.log md5 JSON.stringify state
-
     hashLens = lensProp '_hash'
 
     state = set hashLens, md5( JSON.stringify state.bids ), state

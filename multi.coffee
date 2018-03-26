@@ -133,10 +133,10 @@ currencies = [
   'LTC-USD'
   'ETH-USD'
   'BCH-USD'
-  # 'BTC-USD'
-  # 'LTC-BTC'
-  # 'ETH-BTC'
-  # 'BCH-BTC'
+  'BTC-USD'
+  'LTC-BTC'
+  'ETH-BTC'
+  'BCH-BTC'
 ]
 
 reducers = mergeAll map makeProductReducer, currencies
@@ -151,7 +151,7 @@ rootReducer = combineReducers reducers
 store = createStore rootReducer, applyMiddleware(thunk.default)
 
 
-INDEX_INCREMENT = 4321
+INDEX_INCREMENT = 1000 / currencies.length
 
 dispatchBidsFromStorage = addIndex( map ) ( bid, index = 10 )->
   doIt = ->
@@ -355,9 +355,9 @@ start = ( product )->
             product: product
 
 
-        setTimeout doIt, 1
+        setTimeout doIt, 10
 
-        log 'BIDS', product, state[ product ].tick, state[ product ].bids_hash
+        # log 'BIDS', product, state[ product ].tick, state[ product ].bids_hash
         _bids_hash = bids_hash
 
 
@@ -455,14 +455,13 @@ _____     __| _/__  _|__| ____  ____
 
 adviceChannel = new Redis()
 
-adviceChannel.psubscribe "advice?"
+adviceChannel.subscribe "advice"
 
-adviceChannel.on 'pmessage', ( channel, jsonString )->
+adviceChannel.on 'message', ( channel, jsonString )->
   console.log 'received', channel, jsonString
 
-  # store.dispatch
-  console.log
-    type: 'UPDATE_ADVICE'
+  store.dispatch
+    type: 'ADVICE_UPDATE'
     advice: JSON.parse jsonString
 
 
