@@ -229,26 +229,28 @@ store.subscribe ->
 
 
 
-# _pricing_hash = undefined
-# _accounts_hash = undefined
+_pricing_hash = undefined
+_accounts_hash = undefined
 
-# store.subscribe ->
-#   state = store.getState()
+store.subscribe ->
+  state = store.getState()
 
-#   # console.log state.accounts
-#   pricing_hash = state.pricing._hash or undefined
-#   accounts_hash = state.accounts._hash or undefined
+  pricing_hash = state.pricing._hash or undefined
+  accounts_hash = state.accounts._hash or undefined
 
-#   if pricing_hash and accounts_hash
+  # log accounts_hash, pricing_hash
 
-#     # log accounts_hash, pricing_hash
-#     unless equals _pricing_hash, pricing_hash or equals _accounts_hash, accounts_hash
-#       # log accounts_hash, pricing_hash
+  if pricing_hash and accounts_hash
+    unless equals _accounts_hash, accounts_hash
+      _accounts_hash = accounts_hash
 
-#       _pricing_hash = pricing_hash
-#       _accounts_hash = accounts_hash
+      unless equals _pricing_hash, pricing_hash
+        log 'account and pricing changes', accounts_hash, pricing_hash
 
-#       throttleShowStake  state.accounts.accounts, state.pricing.prices
+        _pricing_hash = pricing_hash
+        # _accounts_hash = accounts_hash
+
+        throttleShowStake state.accounts.accounts, state.pricing.prices
 
 
 
@@ -381,7 +383,7 @@ start = ( product )->
           resolve results
 
         setTimeout doIt, 1000
-        results
+        resolve results
 
   ).then(
     ( results )->
@@ -392,6 +394,9 @@ start = ( product )->
 
   ).then(
     ( results )->
+
+
+      console.log 'afjdlkajflasjdlfjasllkjlkajlj aldfjl kajdflkajsdlkfa'
 
       feedChannel = new Redis()
 
@@ -458,7 +463,7 @@ adviceChannel = new Redis()
 adviceChannel.subscribe "advice"
 
 adviceChannel.on 'message', ( channel, jsonString )->
-  console.log 'received', channel, jsonString
+  # console.log 'received', channel, jsonString
 
   store.dispatch
     type: 'ADVICE_UPDATE'
