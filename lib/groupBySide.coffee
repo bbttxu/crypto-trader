@@ -9,14 +9,12 @@
 
 {
   groupBy
-  map
-  prop
-  pick
-  filter
-  sum
 } = require 'ramda'
 
-statistics = require 'summary-statistics'
+
+{
+  prop
+} = require 'sanctuary'
 
 
 ###
@@ -28,30 +26,7 @@ ___________                   __  .__
      \/             \/     \/                    \/     \/
 ###
 
-groupBySide = require '../lib/groupBySide'
-
-getValue = ( bid )->
-  ( parseFloat bid.price ) * ( parseFloat bid.size )
-
-getSideSum = map ( side )->
-  prices = map prop( 'price' ), side
-
-  sideSum =
-    size: sum map parseFloat, map prop( 'size' ), side
-    price: statistics prices
-
-
-assessBids = ( bids )->
-  getSideSum groupBySide map(
-    pick ['id', 'side', 'size', 'price', 'created_at']
-
-    filter(
-      ( bid )->
-        'filled' is bid.reason
-      ,
-      bids
-    )
-  )
+groupBySide = groupBy prop 'side'
 
 
 ###
@@ -60,7 +35,7 @@ assessBids = ( bids )->
 |    |  _/ __ \   __\/  ___/  / __ |/  _ \  \   __\  |  \|  |/  ___/
 |    |__\  ___/|  |  \___ \  / /_/ (  <_> )  |  | |   Y  \  |\___ \
 |_______ \___  >__| /____  > \____ |\____/   |__| |___|  /__/____  >
-        \/   \/          \/       \/                   \/        \/     \/
+        \/   \/          \/       \/                   \/        \/
 ###
 
-module.exports = assessBids
+module.exports = groupBySide

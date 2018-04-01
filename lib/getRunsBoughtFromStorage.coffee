@@ -12,13 +12,16 @@
 } = require 'rsvp'
 
 {
-  merge
+  mergeAll
 } = require 'ramda'
 
 mongoConnection = require './mongoConnection'
 
 moment = require 'moment'
 
+required = {
+  side: 'buy'
+}
 
 ###
 ___________                   __  .__
@@ -29,9 +32,10 @@ ___________                   __  .__
      \/             \/     \/                    \/     \/
 ###
 
+
 #
 #
-getRunsFromStorage = ( search )->
+getRunsBoughtFromStorage = ( search )->
 
   defaults =
     d_price:
@@ -42,7 +46,7 @@ getRunsFromStorage = ( search )->
       $ne: 0
 
     end:
-      $gt: moment().subtract( 1, 'days' ).valueOf()
+      $gt: moment().subtract( 7, 'days' ).valueOf()
 
   #
   #
@@ -59,7 +63,9 @@ getRunsFromStorage = ( search )->
     #
     mongoConnection().then ( db )->
       db.collection( 'runs' )
-        .find( merge defaults, search )
+        .find( mergeAll [ defaults, search, required ] )
+        .limit( 100 )
+        .sort( d_price: 1 )
         .toArray()
         .then(callback)
         .catch(onError)
@@ -74,4 +80,4 @@ ___________                             __
         \/      \/|__|                           \/
 ###
 
-module.exports = getRunsFromStorage
+module.exports = getRunsBoughtFromStorage

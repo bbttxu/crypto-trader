@@ -41,5 +41,6 @@ jspm_packages
 
 asdf.coffee
 
+# MongoDB dumps
 *.bson
-*.json
+*.metadata.json

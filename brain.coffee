@@ -42,17 +42,18 @@ store = createStore brainReducer, applyMiddleware(thunk.default)
 
 adviceChannel = new Redis()
 
-publishAdvice = forEachObjIndexed ( advice, currency )->
-  adviceChannel.publish "advice:#{currency}", JSON.stringify [ advice ]
+publishAdvice = ( advice )->
+  adviceChannel.publish "advice", JSON.stringify advice
 
-_directions = {}
+
+_directions_hash = 'undefined_directions_hash'
 store.subscribe ->
-  directions = store.getState().directions
+  directions_hash = store.getState()._hash
+  unless equals _directions_hash, directions_hash
+    publishAdvice store.getState().directions
+    console.log 'directions', directions_hash
 
-  if not equals _directions, directions
-    publishAdvice directions
-
-    _directions = directions
+    _directions_hash = directions_hash
 
 pushMinuteUpdates = ->
   if store.getState().directions

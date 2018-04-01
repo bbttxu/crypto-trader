@@ -13,7 +13,9 @@
   last
 } = require 'ramda'
 
-arrayStats = require './arrayStats'
+statistics = require 'summary-statistics'
+
+# arrayStats = require './arrayStats'
 
 log = require './log'
 
@@ -36,7 +38,7 @@ coveredPrice = ( bids )->
   prices = pluck 'price', bids
 
   latest = last bids
-  stats = arrayStats prices
+  stats = statistics prices
 
   if equals sides[0], 'sell'
 

@@ -17,7 +17,11 @@
   mergeAll
   uniq
   pluck
+  lensProp
+  set
 } = require 'ramda'
+
+md5 = require 'blueimp-md5'
 
 getDirection = require '../lib/getDirection'
 
@@ -77,6 +81,11 @@ brainReducer = ( state, action )->
     bases = separateBases flatten values asdf state.stats
 
     state.directions = mergeAll flatten values foobar bases
+
+
+    hashLens = lensProp '_hash'
+    state = set hashLens, md5( JSON.stringify state.directions ), state
+
 
   state
 
