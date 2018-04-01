@@ -252,6 +252,7 @@ accountsChannel.on 'message', ( channel, message )->
 
 #         throttleShowStake state.accounts.accounts, state.pricing.prices
 
+normalizeStats = require './lib/normalizeStats'
 
 
 addPriceKey = map ( thing )->
@@ -324,6 +325,11 @@ store.subscribe ->
       _runs_stats_hash = runs_stats_hash
 
       unless equals _pricing_hash, pricing_hash
+
+        # console.log state.stats
+        console.log mapObjIndexed normalizeStats, state.stats
+
+
 
         frontline = determineNewTrades state.runs.stats, state.pricing.prices
 
@@ -467,3 +473,13 @@ adviceChannel.on 'message', ( channel, jsonString )->
     advice: JSON.parse jsonString
 
 
+
+
+currencyStatsChannel = new Redis()
+
+currencyStatsChannel.subscribe "currency:stats"
+
+currencyStatsChannel.on 'message', ( channel, jsonString )->
+  store.dispatch
+    type: 'CURRENCY:STATS'
+    stats: JSON.parse jsonString

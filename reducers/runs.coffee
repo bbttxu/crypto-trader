@@ -2,6 +2,8 @@ initialState =
   stats: {}
   runs: []
   run: []
+  currencyStats: {}
+  candles: {}
 
 
 ###
@@ -31,6 +33,7 @@ moment = require 'moment'
   pick
   isEmpty
   all
+  mergeDeepRight
 } = require 'ramda'
 
 statistics = require 'summary-statistics'
@@ -38,8 +41,6 @@ statistics = require 'summary-statistics'
 md5 = require 'blueimp-md5'
 
 groupBySide = require '../lib/groupBySide'
-
-# arrayStats = require '../lib/arrayStats'
 
 consolidate = require '../lib/consolidateRun'
 
@@ -70,6 +71,8 @@ skinny = ( data )->
 
 findStats = ( runs )->
   statistics pluck 'd_price', runs
+
+normalizeStats = require '../lib/normalizeStats'
 
 # sortByCreatedAt = sortBy prop( 'start' )
 
@@ -106,7 +109,7 @@ runsReducer = ( state, action )->
     state = set runsPath, mergedRuns, state
 
     currencyStats = {}
-    currencyStats[ action.product ] = map( findStats, groupBySide( mergedRuns ) )
+    # currencyStats[ action.product ] = map( findStats, groupBySide( mergedRuns ) )
 
     state = set statsPath, merge( state.stats, currencyStats ), state
 
@@ -148,6 +151,8 @@ runsReducer = ( state, action )->
         if newRun.n > 1
           addRunToQueue newRun
 
+          # console.log newRun, 'newRun', state.stats
+
           runsPath = lensPath [ action.match.product_id, 'runs' ]
           statsPath = lensProp 'stats'
           statsHashPath = lensProp 'stats_hash'
@@ -165,6 +170,18 @@ runsReducer = ( state, action )->
 
           state = set statsHashPath, md5( JSON.stringify state.stats ), state
 
+
+  if 'CURRENCY:STATS' is action.type
+    # console.log action.currencyStats
+    lens = lensProp 'currencyStats'
+    state = set lens, mergeDeepRight( state.currencyStats, action.stats ), state
+
+    candleLens = lensProp 'candles'
+
+
+
+
+    console.log 'CURRENCY:STATS', map normalizeStats, state.currencyStats
 
   state
 

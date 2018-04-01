@@ -51,7 +51,7 @@ store.subscribe ->
   directions_hash = store.getState()._hash
   unless equals _directions_hash, directions_hash
     publishAdvice store.getState().directions
-    console.log 'directions', directions_hash
+    # console.log 'directions', directions_hash
 
     _directions_hash = directions_hash
 

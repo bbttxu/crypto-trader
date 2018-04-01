@@ -154,6 +154,10 @@ use candles to gauge where things are trending
 
 
 
+currencyStatsChannel = new Redis()
+
+
+
 
 
 statsChannel = new Redis()
@@ -171,6 +175,10 @@ updateStat = ( product_id, index = 1 )->
       product_id
     ).then(
       ( stats )->
+        # console.log stats, 'asdf'
+
+        currencyStatsChannel.publish "currency:stats", JSON.stringify stats
+
         store.dispatch
           type: 'UPDATE'
           stats: stats
@@ -192,9 +200,11 @@ updateStats()
 
 
 updateStatsFeed = ( stats, product_id )->
+  # console.log JSON.stringify stats
   statsChannel.publish "stats:#{product_id}", JSON.stringify stats
 
 store.subscribe ->
   state = store.getState()
+
   forEachObjIndexed updateStatsFeed, store.getState()
 

@@ -78,10 +78,11 @@ brainReducer = ( state, action )->
   if 'UPDATE' is action.type
     state.stats = merge state.stats, action.stats
 
+    # console.log state.stats
+
     bases = separateBases flatten values asdf state.stats
 
     state.directions = mergeAll flatten values foobar bases
-
 
     hashLens = lensProp '_hash'
     state = set hashLens, md5( JSON.stringify state.directions ), state
