@@ -129,14 +129,10 @@ runsReducer = ( state, action )->
       state = set( runPath, [ skinny action.match ], state )
 
     else
-
       sameSide = ( runners )->
         runners.side is action.match.side
 
-
       allInTheSameGang = all sameSide, run
-
-      # console.log action.match.product_id, run.length, 'allInTheSameGang', allInTheSameGang
 
       if allInTheSameGang is true
         state = set( runPath, run.concat( skinny action.match ), state )
@@ -150,7 +146,6 @@ runsReducer = ( state, action )->
         newRun = consolidate currentRun, action.match.product_id
 
         if newRun.n > 1
-
           addRunToQueue newRun
 
           runsPath = lensPath [ action.match.product_id, 'runs' ]
@@ -158,7 +153,6 @@ runsReducer = ( state, action )->
           statsHashPath = lensProp 'stats_hash'
 
           currentruns = view( runsPath, state ) || []
-
 
           mergedRuns = currentruns.concat( newRun )
 

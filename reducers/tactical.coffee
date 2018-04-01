@@ -81,7 +81,7 @@ tacticalReducer = ( state, action )->
   # log proposals
   # log map ensureSellIsMoreThanBuy, proposals
 
-  console.log newProposals
+  # console.log newProposals
 
   proposalLens = lensProp 'proposals'
   state = set proposalLens, newProposals, state

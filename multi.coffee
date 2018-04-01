@@ -192,65 +192,65 @@ accountsChannel.on 'message', ( channel, message )->
 
 
 
-_tactical_hash = undefined
+# _tactical_hash = undefined
 
-store.subscribe ->
-  state = store.getState()
+# store.subscribe ->
+#   state = store.getState()
 
-  tactical_hash = state.tactical._hash or 'undefinedtacticalhash'
+#   tactical_hash = state.tactical._hash or 'undefinedtacticalhash'
 
-  # console.log _tactical_hash, tactical_hash, equals( tactical_hash, _tactical_hash )
+#   # console.log _tactical_hash, tactical_hash, equals( tactical_hash, _tactical_hash )
 
-  unless equals tactical_hash, _tactical_hash
-    _tactical_hash = tactical_hash
+#   unless equals tactical_hash, _tactical_hash
+#     _tactical_hash = tactical_hash
 
-    console.log 'tactical', tactical_hash, state.tactical.proposals
-
-
-
-
-_strategic_hash = undefined
-
-store.subscribe ->
-  state = store.getState()
-
-  strategic_hash = state.strategic._hash or 'undefinedstrategichash'
-
-  # console.log _strategic_hash, strategic_hash, equals( strategic_hash, _strategic_hash )
-
-  unless equals strategic_hash, _strategic_hash
-    _strategic_hash = strategic_hash
-
-    # console.log 'STRATEGIC_UPDATE', strategic_hash, state.strategic.bids
-    store.dispatch
-      type: 'STRATEGIC_UPDATE'
-      strategic: state.strategic.bids
+#     console.log 'tactical', tactical_hash, state.tactical.proposals
 
 
 
 
-_pricing_hash = undefined
-_accounts_hash = undefined
+# _strategic_hash = undefined
 
-store.subscribe ->
-  state = store.getState()
+# store.subscribe ->
+#   state = store.getState()
 
-  pricing_hash = state.pricing._hash or undefined
-  accounts_hash = state.accounts._hash or undefined
+#   strategic_hash = state.strategic._hash or 'undefinedstrategichash'
 
-  # log accounts_hash, pricing_hash
+#   # console.log _strategic_hash, strategic_hash, equals( strategic_hash, _strategic_hash )
 
-  if pricing_hash and accounts_hash
-    unless equals _accounts_hash, accounts_hash
-      _accounts_hash = accounts_hash
+#   unless equals strategic_hash, _strategic_hash
+#     _strategic_hash = strategic_hash
 
-      unless equals _pricing_hash, pricing_hash
-        log 'account and pricing changes', accounts_hash, pricing_hash
+#     # console.log 'STRATEGIC_UPDATE', strategic_hash, state.strategic.bids
+#     store.dispatch
+#       type: 'STRATEGIC_UPDATE'
+#       strategic: state.strategic.bids
 
-        _pricing_hash = pricing_hash
-        # _accounts_hash = accounts_hash
 
-        throttleShowStake state.accounts.accounts, state.pricing.prices
+
+
+# _pricing_hash = undefined
+# _accounts_hash = undefined
+
+# store.subscribe ->
+#   state = store.getState()
+
+#   pricing_hash = state.pricing._hash or undefined
+#   accounts_hash = state.accounts._hash or undefined
+
+#   # log accounts_hash, pricing_hash
+
+#   if pricing_hash and accounts_hash
+#     unless equals _accounts_hash, accounts_hash
+#       _accounts_hash = accounts_hash
+
+#       unless equals _pricing_hash, pricing_hash
+#         log 'account and pricing changes', accounts_hash, pricing_hash
+
+#         _pricing_hash = pricing_hash
+#         # _accounts_hash = accounts_hash
+
+#         throttleShowStake state.accounts.accounts, state.pricing.prices
 
 
 
@@ -336,8 +336,8 @@ store.subscribe ->
 
 
 
-basicBids = map ( foo )->
-  pick [ 'price', 'side', 'size', 'reason' ], foo
+# basicBids = map ( foo )->
+#   pick [ 'price', 'side', 'size', 'reason' ], foo
 
 start = ( product )->
   _bids_hash = undefined
@@ -370,20 +370,20 @@ start = ( product )->
   log product
 
   hash(
-    getBidsBuys: getBidsBuys product
-    getBidsSells: getBidsSells product
+    # getBidsBuys: getBidsBuys product
+    # getBidsSells: getBidsSells product
     runsSold: getRunsSoldFromStorage( product_id: product )
     runsBought: getRunsBoughtFromStorage( product_id: product )
-  ).then(
-    ( results )->
-      new Promise ( resolve, rejectPromise )->
-        dispatchBidsFromStorage( results.getBidsBuys )
-        dispatchBidsFromStorage( results.getBidsSells )
-        doIt = ->
-          resolve results
+  # ).then(
+  #   ( results )->
+  #     new Promise ( resolve, rejectPromise )->
+  #       dispatchBidsFromStorage( results.getBidsBuys )
+  #       dispatchBidsFromStorage( results.getBidsSells )
+  #       doIt = ->
+  #         resolve results
 
-        setTimeout doIt, 1000
-        resolve results
+  #       setTimeout doIt, 1000
+  #       resolve results
 
   ).then(
     ( results )->
@@ -394,9 +394,6 @@ start = ( product )->
 
   ).then(
     ( results )->
-
-
-      console.log 'afjdlkajflasjdlfjasllkjlkajlj aldfjl kajdflkajsdlkfa'
 
       feedChannel = new Redis()
 

@@ -118,8 +118,8 @@ showStake = ( accounts, pricing )->
     "#{account.currency} #{showApproximateTable( account.balance * usdAmount )} #{tableify( account.balance )} #{tableify( account.hold )} #{tableify( account.available )}"
 
 
-  log
-  console.log ( map showBalance, balances ).join "\n"
+  # log
+  # console.log ( map showBalance, balances ).join "\n"
 
   #   # "#{accounts.currency} #{showApproximateTable( accounts.balance )} #{showApproximateTable( accounts.hold )} #{showApproximateTable( accounts.available )}"
 
