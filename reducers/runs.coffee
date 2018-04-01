@@ -3,7 +3,6 @@ initialState =
   runs: []
   run: []
   currencyStats: {}
-  candles: {}
 
 
 ###
@@ -116,8 +115,6 @@ runsReducer = ( state, action )->
     state = set statsHashPath, md5( JSON.stringify state.stats ), state
 
 
-    # console.log Date.now() - start, 'ms'
-
 
   if 'ADD_MATCH' is action.type
     # console.log action.match, action.match.product_id
@@ -126,9 +123,7 @@ runsReducer = ( state, action )->
 
     run = view( runPath, state ) or []
 
-
     if isEmpty run
-      # console.log 'EMPTY!'
       state = set( runPath, [ skinny action.match ], state )
 
     else
@@ -147,11 +142,11 @@ runsReducer = ( state, action )->
         state = set( runPath, [ skinny action.match ], state )
 
         newRun = consolidate currentRun, action.match.product_id
+        newRun.stats = state.currencyStats
+
 
         if newRun.n > 1
           addRunToQueue newRun
-
-          # console.log newRun, 'newRun', state.stats
 
           runsPath = lensPath [ action.match.product_id, 'runs' ]
           statsPath = lensProp 'stats'
@@ -172,16 +167,8 @@ runsReducer = ( state, action )->
 
 
   if 'CURRENCY:STATS' is action.type
-    # console.log action.currencyStats
     lens = lensProp 'currencyStats'
     state = set lens, mergeDeepRight( state.currencyStats, action.stats ), state
-
-    candleLens = lensProp 'candles'
-
-
-
-
-    console.log 'CURRENCY:STATS', map normalizeStats, state.currencyStats
 
   state
 

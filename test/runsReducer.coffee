@@ -9,6 +9,7 @@ describe 'runs channel reducer', ->
       run: []
       runs: []
       stats: {}
+      currencyStats: {}
     }
 
     decision = runsReducer undefined
