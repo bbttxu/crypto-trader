@@ -7,7 +7,7 @@
         \/       \/           \/              \/     \/
 ###
 
-getBids = require './lib/getBids'
+getRuns = require './lib/getRunsFromStorage'
 
 catchError = require './lib/catchError'
 
@@ -15,7 +15,11 @@ otherSide = require './lib/otherSide'
 
 assessBids = require './lib/assessBids'
 
+normalizeStatInputs = require './lib/normalizeStatInputs'
+
 normalizeStatsInputs = require './lib/normalizeStatsInputs'
+
+statistics = require 'summary-statistics'
 
 {
   pick
@@ -25,6 +29,7 @@ normalizeStatsInputs = require './lib/normalizeStatsInputs'
   isNil
   isEmpty
   reject
+  pluck
 } = require 'ramda'
 
 moment = require 'moment'
@@ -50,18 +55,24 @@ consoleReturn = ( value )->
 
 findEfficacy = ( list )->
 
-  individualPrice = ( bid )->
-    # console.log bid.time
+  individualPrice = ( run )->
+    return undefined unless run.stats
 
-    sideFlag = if bid.side is 'sell' then 1 else 0
+    return undefined unless run.stats[ run.product_id ]
 
-    now = moment( bid.time )
-    aDayLater = moment( bid.time ).add( 24, 'hours' )
+
+
+    # console.log run.stats[ product_id ]
+
+    sideFlag = if run.side is 'sell' then 1 else 0
+    # console.log sideFlag
+
+    now = moment( run.end )
+    aDayLater = moment( run.end ).add( 24, 'hours' )
+    # console.log now.format(), aDayLater.format()
 
     last24Hours = ( otherBid )->
-      otherBidTime = moment( otherBid.time )
-
-      return false if otherBid.side is bid.side
+      otherBidTime = moment( otherBid.end )
 
       return true if otherBidTime.isAfter( now ) and otherBidTime.isBefore( aDayLater )
 
@@ -70,32 +81,54 @@ findEfficacy = ( list )->
 
     relevant = filter last24Hours, list
 
-    assessment = assessBids relevant
+    return undefined if relevant.length < 5
 
-    output = -1
 
-    if assessment[ otherSide bid.side ]
-      average = assessment[ otherSide bid.side ].price.avg
+    if 'sell' is run.side
 
-      if 'sell' is bid.side
+      stats = statistics pluck 'q3', pluck 'prices', relevant
 
-        if bid.price > average
-          output = 1
-        else
-          output = 0
+      output = if ( run.prices.q3 > stats.q3 ) then 1 else 0
+      # console.log 'output', output, run.prices.q3, stats.q3
+      # console.log run
+      # console.log run.stats
 
-      if 'buy' is bid.side
-
-        if bid.price < average
-          output = 1
-        else
-          output = 0
-
+      # console.log run.stats[ run.product_id ]
 
       return
-        bid: bid
+        # run: run
         output: [ output ]
-        input: [ sideFlag ].concat normalizeStatsInputs bid.stats
+        input: normalizeStatInputs run.stats[ run.product_id ]
+        # input: normalizeStatsInputs run.stats
+      # console.log 'this run', run.prices.q3
+
+
+    # assessment = assessBids relevant
+
+    # output = -1
+
+    # if assessment[ otherSide run.side ]
+    #   average = assessment[ otherSide run.side ].price.avg
+
+    #   if 'sell' is run.side
+
+    #     if run.price > average
+    #       output = 1
+    #     else
+    #       output = 0
+
+    #   if 'buy' is run.side
+
+    #     if run.price < average
+    #       output = 1
+    #     else
+    #       output = 0
+
+
+    #   return
+    #     run: run
+    #     output: [ output ]
+    #     input: [ sideFlag ].concat normalizeStatsInputs run.stats
 
     undefined
 
@@ -103,13 +136,16 @@ findEfficacy = ( list )->
   map individualPrice, list
 
 
-noStats = ( bid )->
-  isEmpty( bid.stats ) or isNil( bid.stats )
+# noStats = ( bid )->
+#   isEmpty( bid.stats ) or isNil( bid.stats )
 
 
 cutOffDate = moment( '2018-02-01T00:00:00-00:00' )
+
 removeEarlierVersions = filter ( bid )->
-  moment( bid.time ).isAfter cutOffDate
+  not isEmpty bid.stats
+
+  # moment( bid.time ).isAfter cutOffDate
 
 
 ###
@@ -121,17 +157,27 @@ removeEarlierVersions = filter ( bid )->
         \/   \/          \/       \/                   \/        \/     \/
 ###
 
-getBids(
-  'LTC-USD',
-  reason: 'filled'
+getRuns(
+  {
+    product_id: 'BCH-USD'
+    side: 'sell'
+  }
 ).then(
   removeEarlierVersions
-).then(
-  reject noStats
-).then(
-  pickImportant
+# ).then(
+#   reject noStats
+# ).then(
+#   ( results )->
+#     console.log results
+#     results
+# ).then(
+#   pickImportant
 ).then(
   findEfficacy
+).then(
+  ( results )->
+    console.log results
+    results
 ).then(
   reject isNil
 ).then(

@@ -37,12 +37,12 @@ getRunsFromStorage = ( search )->
     d_price:
       $ne: 0
     n:
-      $ne: 0
+      $gte: 3
     d_time:
       $ne: 0
 
     end:
-      $gt: moment().subtract( 1, 'days' ).valueOf()
+      $gt: moment().subtract( 14, 'days' ).valueOf()
 
   #
   #
@@ -54,6 +54,7 @@ getRunsFromStorage = ( search )->
       console.log error
       reject error
 
+    console.log merge defaults, search
 
     #
     #

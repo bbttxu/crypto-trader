@@ -33,19 +33,22 @@ ___________                   __  .__
      \/             \/     \/                    \/     \/
 ###
 
-makeTrainingSet = shuffle map pick [ 'input', 'output' ]
+makeTrainingSet = map pick [ 'input', 'output' ]
 
 
 minimums =
-  log: 10000
-  shuffle: false
-  error: .001
+  log: 100
+  # shuffle: false
+  error: .005 # default
 
 ml = ( ios )->
 
   percentageValue = Math.round ios.length * .1
 
-  myNetwork = new Architect.Perceptron 5, 6, 1
+  # myNetwork = new Architect.LSTM 4, 9, 5, 1
+  myNetwork = new Architect.LSTM 4, 5, 1
+  # myNetwork = new Architect.Perceptron 4, 5, 1
+  # myNetwork = new Architect.Perceptron 28, 29, 1
   trainer = new Trainer myNetwork
 
   data = makeTrainingSet( ios )
