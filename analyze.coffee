@@ -30,6 +30,9 @@ statistics = require 'summary-statistics'
   isEmpty
   reject
   pluck
+  uniq
+  countBy
+  prop
 } = require 'ramda'
 
 moment = require 'moment'
@@ -52,6 +55,10 @@ consoleReturn = ( value )->
   value
 
 
+
+quantize = ( value )->
+  # console.log ( value || 0 ).toFixed( 2 )
+  ( value || 0 ).toFixed( 2 )
 
 findEfficacy = ( list )->
 
@@ -98,7 +105,7 @@ findEfficacy = ( list )->
       return
         # run: run
         output: [ output ]
-        input: normalizeStatInputs run.stats[ run.product_id ]
+        input: map quantize, normalizeStatInputs run.stats[ run.product_id ]
         # input: normalizeStatsInputs run.stats
       # console.log 'this run', run.prices.q3
 
@@ -159,7 +166,7 @@ removeEarlierVersions = filter ( bid )->
 
 getRuns(
   {
-    product_id: 'BCH-USD'
+    product_id: 'LTC-USD'
     side: 'sell'
   }
 ).then(
@@ -175,11 +182,14 @@ getRuns(
 ).then(
   findEfficacy
 ).then(
-  ( results )->
-    console.log results
-    results
+  uniq
 ).then(
   reject isNil
+).then(
+  ( results )->
+    # console.log results
+    console.log countBy prop( 'output' ), results
+    results
 ).then(
   ml
 ).catch(
