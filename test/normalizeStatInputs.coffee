@@ -3,7 +3,11 @@ should = require 'should'
 normalizeStatInputs = require '../lib/normalizeStatInputs'
 
 describe 'normalizeStatInputs', ->
-  it '', ->
+  it 'handles invalid input', ->
+    should.not.exist normalizeStatInputs()
+
+
+  it 'handles valid input', ->
     input =
       'open': '130.09000000'
       'high': '166.60000000'

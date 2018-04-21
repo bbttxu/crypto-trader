@@ -29,6 +29,8 @@ asFloat = map parseFloat
 
 normalizeStatInputs = ( stats )->
 
+  return undefined unless stats
+
   pricing = take 2, normalize asFloat [
     stats.open
     stats.last
