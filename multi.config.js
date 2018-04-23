@@ -14,7 +14,18 @@ module.exports = {
       name: "worker",
       script: "worker.coffee",
       interpreter: './node_modules/coffeescript/bin/coffee'
+    },
+    {
+      name: "kue",
+      script: "kue.coffee",
+      interpreter: './node_modules/coffeescript/bin/coffee'
+    },
+    {
+      name: "ml",
+      script: "ml.coffee",
+      interpreter: './node_modules/coffeescript/bin/coffee'
     }
+
   ],
   deploy : {}
 }

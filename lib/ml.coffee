@@ -42,25 +42,17 @@ minimums =
   error: .005 # default
 
 ml = ( ios )->
-
-  percentageValue = Math.round ios.length * .1
-
-  myNetwork = new Architect.LSTM 4, 9, 5, 1
-  # myNetwork = new Architect.LSTM 4, 5, 1
-  # myNetwork = new Architect.Perceptron 4, 5, 1
-  # myNetwork = new Architect.Perceptron 28, 29, 1
+  myNetwork = new Architect.LSTM 4, 5, 1
+  # myNetwork = new Architect.LSTM 4, 9, 5, 1
   trainer = new Trainer myNetwork
 
-  data = makeTrainingSet( ios )
+  data = makeTrainingSet ios.data
+  trainingSet = makeTrainingSet ios.training
 
-  trainingSet = dropLast percentageValue, data
+  console.log 'start', data.length, trainingSet.length
 
-  testSet = takeLast percentageValue, data
-
-  console.log 'start', ios.length, percentageValue
-
-  trainingResults = trainer.train trainingSet, { log: 10000, shuffle: false }
-  testResults = trainer.test testSet
+  trainingResults = trainer.train data, { log: 10000, shuffle: false }
+  testResults = trainer.test trainingSet
 
   console.log trainingResults, testResults
 

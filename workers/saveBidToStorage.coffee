@@ -36,7 +36,7 @@ addBidToQueue = ( bid )->
     5
   ).backoff(
     { type: 'exponential' }
-  ).save()
+  ).removeOnComplete( true ).save()
 
 
 saveBidToStorage = ( bid, callback )->

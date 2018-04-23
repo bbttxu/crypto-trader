@@ -36,7 +36,7 @@ addRunToQueue = ( run )->
     5
   ).backoff(
     { type: 'exponential' }
-  ).save()
+  ).removeOnComplete( true ).save()
 
 
 saveRunToStorage = ( run, callback )->
