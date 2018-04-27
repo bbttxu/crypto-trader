@@ -42,6 +42,8 @@ statistics = require 'summary-statistics'
   prop
   groupBy
   omit
+  last
+  sortBy
 } = require 'ramda'
 
 moment = require 'moment'
@@ -86,11 +88,11 @@ quantize = ( value )->
 
 splitIntoDataAndTrainingSet = ( data )->
   twentyFourHoursAgo = moment().subtract 24, 'hours'
-  fourtyEightHoursAgo = moment().subtract 48, 'hours'
+  seventyTwoHoursAgo = moment().subtract 72, 'hours'
 
-  start = moment( data.start )
+  start = moment( data.run.start )
   return 'discard' if start.isAfter twentyFourHoursAgo
-  return 'training' if start.isAfter fourtyEightHoursAgo
+  return 'training' if start.isAfter seventyTwoHoursAgo
   'data'
 
 
@@ -106,10 +108,14 @@ findEfficacy = ( list )->
 
     return undefined unless run.stats[ run_product_id ]
 
+    # console.log run.stats[ product_id ]
+
     sideFlag = if run.side is 'sell' then 1 else 0
+    # console.log sideFlag
 
     now = moment( run.end )
     aDayLater = moment( run.end ).add( 24, 'hours' )
+    # console.log now.format(), aDayLater.format()
 
     last24Hours = ( otherBid )->
       otherBidTime = moment( otherBid.end )
@@ -119,48 +125,40 @@ findEfficacy = ( list )->
       false
 
 
-    relevant = filter last24Hours, list
+    relevant = sortBy prop( 'start' ), filter last24Hours, list
+
+    # console.log relevant.length
+
 
     return undefined if relevant.length < 5
 
+    target = last relevant
+
+    # console.log target
 
     if 'sell' is run.side
-      stats = statistics pluck 'q3', pluck 'prices', relevant
 
-      output = if ( run.prices.q3 > stats.q3 ) then 1 else 0
+      # stats = statistics pluck 'q3', pluck 'prices', relevant
+
+      # console.log run.prices.q3, target.prices.q3, run.prices.q3 > target.q3
+      output = if ( run.prices.q3 > target.prices.q3 ) then 1 else 0
 
       return
         run: run
         output: [ output ]
-        input: map quantize, normalizeStatInputs run.stats[ run_product_id ]
+        input: map quantize, normalizeStatInputs run.stats[ run.product_id ]
 
+    if 'buy' is run.side
 
-    # assessment = assessBids relevant
+      # stats = statistics pluck 'q1', pluck 'prices', relevant
 
-    # output = -1
+      output = if ( run.prices.q1 > relevant.q1 ) then 1 else 0
 
-    # if assessment[ otherSide run.side ]
-    #   average = assessment[ otherSide run.side ].price.avg
+      return
+        # run: run
+        output: [ output ]
+        input: map quantize, normalizeStatInputs run.stats[ run.product_id ]
 
-    #   if 'sell' is run.side
-
-    #     if run.price > average
-    #       output = 1
-    #     else
-    #       output = 0
-
-    #   if 'buy' is run.side
-
-    #     if run.price < average
-    #       output = 1
-    #     else
-    #       output = 0
-
-
-    #   return
-    #     run: run
-    #     output: [ output ]
-    #     input: [ sideFlag ].concat normalizeStatsInputs run.stats
 
     undefined
 
@@ -180,7 +178,7 @@ removeEarlierVersions = filter ( bid )->
   # moment( bid.time ).isAfter cutOffDate
 
 saveMLToStorage = ( bid, callback )->
-  console.log 'start saveMLToStorage', bid.data
+  # console.log 'start saveMLToStorage', bid.data
   getRuns(
     {
       product_id: bid.data.product_id
@@ -189,19 +187,23 @@ saveMLToStorage = ( bid, callback )->
   ).then(
     removeEarlierVersions
   ).then(
+    findEfficacy
+  ).then(
+    reject isNil
+  ).then(
     groupBy splitIntoDataAndTrainingSet
+  ).then(
+    omit [ 'discard' ]
   # ).then(
   #   ( results )->
   #     console.log results
   #     results
-  ).then(
-    omit [ 'discard' ]
-  ).then(
-    map findEfficacy
+  # ).then(
+  #   map findEfficacy
   ).then(
     map uniq
-  ).then(
-    map reject isNil
+  # ).then(
+  #   map reject isNil
   # ).then(
   #   ( results )->
   #     console.log results
