@@ -21,7 +21,9 @@
     "monit": "pm2 monit",
     "logs": "pm2 logs",
     "chamber": "coffee chamber.coffee",
-    "train": "coffee train.coffee"
+    "train": "coffee train.coffee",
+    "worker": "pm2 start worker.config.js",
+    "shift": "pm2 stop worker.config.js"
   },
   "author": "adam krawiec",
   "license": "ISC",
