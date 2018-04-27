@@ -20,6 +20,9 @@
   pick
   dropLast
   takeLast
+  map
+  countBy
+  prop
 } = require 'ramda'
 
 shuffle = require( 'knuth-shuffle' ).knuthShuffle
@@ -49,7 +52,12 @@ ml = ( ios )->
   data = makeTrainingSet ios.data
   trainingSet = makeTrainingSet ios.training
 
-  console.log 'start', data.length, trainingSet.length
+  console.log 'data', data.length
+  console.log countBy prop( 'output' ), data
+  console.log 'trainingSet', trainingSet.length
+  console.log countBy prop( 'output' ), trainingSet
+
+  trainingSet.length
 
   trainingResults = trainer.train data, { log: 10000, shuffle: false }
   testResults = trainer.test trainingSet
