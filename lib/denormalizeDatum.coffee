@@ -1,0 +1,63 @@
+###
+.____    ._____.                      .__
+|    |   |__\_ |______________ _______|__| ____   ______
+|    |   |  || __ \_  __ \__  \\_  __ \  |/ __ \ /  ___/
+|    |___|  || \_\ \  | \// __ \|  | \/  \  ___/ \___ \
+|_______ \__||___  /__|  (____  /__|  |__|\___  >____  >
+        \/       \/           \/              \/     \/
+###
+
+{
+  map
+} = require 'sanctuary'
+
+{
+  addIndex
+} = require 'ramda'
+
+###
+___________                   __  .__
+\_   _____/_ __  ____   _____/  |_|__| ____   ____   ______
+ |    __)|  |  \/    \_/ ___\   __\  |/  _ \ /    \ /  ___/
+ |     \ |  |  /   |  \  \___|  | |  (  <_> )   |  \\___ \
+ \___  / |____/|___|  /\___  >__| |__|\____/|___|  /____  >
+     \/             \/     \/                    \/     \/
+###
+
+
+denormalizeFn = ( limits )->
+  ( numbers )->
+    applyRatio = ( number )->
+      number * ( limits.max - limits.min ) + limits.min
+
+
+    map applyRatio, numbers
+
+
+fMap = ( functions, values )->
+  mapIndexed = addIndex map
+
+  applyStuff = ( value, index )->
+    functions[index].call this, value
+
+  mapIndexed applyStuff, values
+
+
+
+denormalizeDatum = ( input )->
+  limitFns = map denormalizeFn, input.limits
+
+  fMap limitFns, input.normalized
+
+
+
+###
+.____           __               .___         __  .__    .__
+|    |    _____/  |_  ______   __| _/____   _/  |_|  |__ |__| ______
+|    |  _/ __ \   __\/  ___/  / __ |/  _ \  \   __\  |  \|  |/  ___/
+|    |__\  ___/|  |  \___ \  / /_/ (  <_> )  |  | |   Y  \  |\___ \
+|_______ \___  >__| /____  > \____ |\____/   |__| |___|  /__/____  >
+        \/   \/          \/       \/                   \/        \/     \/
+###
+
+module.exports = denormalizeDatum
