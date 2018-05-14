@@ -17,7 +17,6 @@
 } =require 'lodash'
 
 {
-  unnest
   addIndex
 } = require 'ramda'
 
@@ -52,21 +51,15 @@ fMap = ( functions, values )->
 
   mapIndexed applyStuff, values
 
-# denormaliz
-
 
 normalizeDatum = ( numbers )->
-  transposed = unnest zip numbers
-
-  # console.log transposed
-
+  transposed = zip.apply this, numbers
   limits = map minMax, transposed
   limitFns = map normalizeFn, limits
 
   return
     limits: limits
     normalized: fMap limitFns, transposed
-    # denormalize:
 
 
 
