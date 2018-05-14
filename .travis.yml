@@ -9,3 +9,7 @@ after_success:
 
 services:
   - redis-server
+
+addons:
+  apt:
+    update: true
