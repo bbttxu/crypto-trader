@@ -30,7 +30,6 @@ denormalizeFn = ( limits )->
     applyRatio = ( number )->
       number * ( limits.max - limits.min ) + limits.min
 
-
     map applyRatio, numbers
 
 
@@ -41,7 +40,6 @@ fMap = ( functions, values )->
     functions[index].call this, value
 
   mapIndexed applyStuff, values
-
 
 
 denormalizeDatum = ( input )->

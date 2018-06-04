@@ -11,6 +11,7 @@ saveRunToStorage = require './workers/saveRunToStorage'
 
 saveBidToStorage = require './workers/saveBidToStorage'
 
+saveCandleToStorage = require './workers/saveCandleToStorage'
 
 ###
 .____           __               .___         __  .__    .__
@@ -24,3 +25,5 @@ saveBidToStorage = require './workers/saveBidToStorage'
 saveRunToStorage.process()
 
 saveBidToStorage.process()
+
+saveCandleToStorage.process()

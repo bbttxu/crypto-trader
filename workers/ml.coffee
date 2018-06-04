@@ -48,7 +48,10 @@ statistics = require 'summary-statistics'
 
 moment = require 'moment'
 
-ml = require '../lib/ml'
+# ml = require '../lib/ml'
+
+ltsm = require '../lib/ltsm'
+
 
 ###
 ___________                   __  .__
@@ -70,10 +73,7 @@ consoleReturn = ( value )->
 addMLToQueue = ( bid )->
   queue.create(
     JOB,
-    {
-      product_id: bid
-      title: bid
-    }
+    bid
   ).attempts(
     5
   ).backoff(
@@ -178,45 +178,19 @@ removeEarlierVersions = filter ( bid )->
   # moment( bid.time ).isAfter cutOffDate
 
 saveMLToStorage = ( bid, callback )->
-  # console.log 'start saveMLToStorage', bid.data
-  getRuns(
-    {
-      product_id: bid.data.product_id
-      side: 'sell'
-    }
+  console.log 'start saveMLToStorage', bid.data
+
+  ltsm(
+    bid.data
   ).then(
-    removeEarlierVersions
-  ).then(
-    findEfficacy
-  ).then(
-    reject isNil
-  ).then(
-    groupBy splitIntoDataAndTrainingSet
-  ).then(
-    omit [ 'discard' ]
-  # ).then(
-  #   ( results )->
-  #     console.log results
-  #     results
-  # ).then(
-  #   map findEfficacy
-  ).then(
-    map uniq
-  # ).then(
-  #   map reject isNil
-  # ).then(
-  #   ( results )->
-  #     console.log results
-  #     console.log map countBy prop( 'output' ), results
-  #     results
-  ).then(
-    ml
+    ( results )->
+      console.log results
+      callback results
   ).catch(
-    catchError( 'db' )
-  ).finally(
     ->
       console.log 'done'
-      setTimeout callback, 60 * 1000
+      setTimeout callback, 30 * 1000
+      # callback()
   )
 
 

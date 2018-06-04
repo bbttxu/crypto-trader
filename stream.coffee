@@ -188,7 +188,7 @@ updateStat = ( product_id, index = 1 )->
       catchError( "stats #{product_id}" )
     )
 
-  setTimeout doIt, index * 3000
+  setTimeout doIt, index * 6000
 
 updateStats = ->
   addIndex( forEach ) updateStat, shuffle currencies
@@ -208,3 +208,5 @@ store.subscribe ->
 
   forEachObjIndexed updateStatsFeed, store.getState()
 
+
+console.log 'stream!@', keys config.currencies

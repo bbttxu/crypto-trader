@@ -88,6 +88,8 @@ findEfficacy = ( list )->
 
     relevant = filter last24Hours, list
 
+    console.log relevant
+
     return undefined if relevant.length < 5
 
 
@@ -96,55 +98,28 @@ findEfficacy = ( list )->
       stats = statistics pluck 'q3', pluck 'prices', relevant
 
       output = if ( run.prices.q3 > stats.q3 ) then 1 else 0
-      # console.log 'output', output, run.prices.q3, stats.q3
-      # console.log run
-      # console.log run.stats
-
-      # console.log run.stats[ run.product_id ]
 
       return
         # run: run
         output: [ output ]
         input: map quantize, normalizeStatInputs run.stats[ run.product_id ]
-        # input: normalizeStatsInputs run.stats
-      # console.log 'this run', run.prices.q3
 
+    if 'buy' is run.side
 
-    # assessment = assessBids relevant
+      stats = statistics pluck 'q1', pluck 'prices', relevant
 
-    # output = -1
+      output = if ( run.prices.q1 > stats.q1 ) then 1 else 0
 
-    # if assessment[ otherSide run.side ]
-    #   average = assessment[ otherSide run.side ].price.avg
+      return
+        # run: run
+        output: [ output ]
+        input: map quantize, normalizeStatInputs run.stats[ run.product_id ]
 
-    #   if 'sell' is run.side
-
-    #     if run.price > average
-    #       output = 1
-    #     else
-    #       output = 0
-
-    #   if 'buy' is run.side
-
-    #     if run.price < average
-    #       output = 1
-    #     else
-    #       output = 0
-
-
-    #   return
-    #     run: run
-    #     output: [ output ]
-    #     input: [ sideFlag ].concat normalizeStatsInputs run.stats
 
     undefined
 
 
   map individualPrice, list
-
-
-# noStats = ( bid )->
-#   isEmpty( bid.stats ) or isNil( bid.stats )
 
 
 cutOffDate = moment( '2018-02-01T00:00:00-00:00' )

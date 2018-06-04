@@ -9,13 +9,13 @@ module.exports =
 
 
   currencies:
-    'BTC-USD':
-      # sell: {}
-      buy: {}
+    # 'BTC-USD':
+    #   # sell: {}
+    #   buy: {}
 
-    'BCH-USD':
-      sell: {}
-      buy: {}
+    # 'BCH-USD':
+    #   sell: {}
+    #   buy: {}
 
     'LTC-USD':
       sell: {}
@@ -25,17 +25,17 @@ module.exports =
       # sell: {}
       buy: {}
 
-    'BCH-BTC':
-      sell: {}
-      buy: {}
+    # 'BCH-BTC':
+    #   sell: {}
+    #   buy: {}
 
-    'ETH-BTC':
-      sell: {}
-      buy: {}
+    # 'ETH-BTC':
+    #   sell: {}
+    #   buy: {}
 
-    'LTC-BTC':
-      sell: {}
-      buy: {}
+    # 'LTC-BTC':
+    #   sell: {}
+    #   buy: {}
 
 
 
@@ -47,6 +47,14 @@ module.exports =
     # 864000
   ]
 
+  granularities: [
+    60
+    300
+    900
+    3600
+    21600
+    86400
+  ]
   # for reporting purposes
   reporting:
     frequency: '23 hours'

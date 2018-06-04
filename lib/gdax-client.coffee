@@ -93,13 +93,19 @@ getProduct24HrStats = ( product )->
       if err
         rejectPromise err
 
-      body = JSON.parse json.body
+      unless json
+        rejectPromise
+          func: 'getProduct24HrStats'
+          message: 'no JSON response'
+          json: json
 
-      unless body
+      unless json.body
         rejectPromise
           func: 'getProduct24HrStats'
           message: 'no JSON response body'
           json: json
+
+      body = JSON.parse json.body
 
       if isNil body.message
 
