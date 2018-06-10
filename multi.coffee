@@ -69,6 +69,7 @@ runsReducer = require './reducers/runs'
 strategicReducer = require './reducers/strategic'
 tacticatlReducer = require './reducers/tactical'
 adviceReducer = require './reducers/advice'
+candlesReducer = require './reducers/candles'
 
 getRunsSoldFromStorage = require './lib/getRunsSoldFromStorage'
 getRunsBoughtFromStorage = require './lib/getRunsBoughtFromStorage'
@@ -146,6 +147,7 @@ reducers.runs = runsReducer
 reducers.strategic = strategicReducer
 reducers.tactical = tacticatlReducer
 reducers.advice = adviceReducer
+reducers.candles = candlesReducer
 
 rootReducer = combineReducers reducers
 store = createStore rootReducer, applyMiddleware(thunk.default)
@@ -413,7 +415,7 @@ start = ( product )->
             type: 'ADD_MATCH'
             match: message
 
-        # console.log message
+          # console.log 'a', message
 
         # if 'done' is message.type and 'canceled' is message.reason
         #   store.dispatch
@@ -483,3 +485,20 @@ currencyStatsChannel.on 'message', ( channel, jsonString )->
   store.dispatch
     type: 'CURRENCY:STATS'
     stats: JSON.parse jsonString
+
+
+
+
+l = 0
+# // candles
+_candles_hash = undefined
+store.subscribe ->
+  state = store.getState()
+
+  candles_hash = state.candles._hash or undefined
+  unless equals _candles_hash, candles_hash
+    _candles_hash = candles_hash
+
+    console.log ++l, _candles_hash
+  else
+    ++l
