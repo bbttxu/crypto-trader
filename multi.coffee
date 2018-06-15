@@ -142,11 +142,11 @@ currencies = [
 
 reducers = mergeAll map makeProductReducer, currencies
 reducers.pricing = pricingReducer
-reducers.accounts = accountsReducer
+# reducers.accounts = accountsReducer
 reducers.runs = runsReducer
-reducers.strategic = strategicReducer
-reducers.tactical = tacticatlReducer
-reducers.advice = adviceReducer
+# reducers.strategic = strategicReducer
+# reducers.tactical = tacticatlReducer
+# reducers.advice = adviceReducer
 reducers.candles = candlesReducer
 
 rootReducer = combineReducers reducers
