@@ -6,7 +6,7 @@ node_js:
 cache: yarn
 
 script:
-  - mocha --require coffeescript/register test/*.coffee --exit
+  - mocha test/*.coffee
   - istanbul report text-summary lcov
 
 after_success:
