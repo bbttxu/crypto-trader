@@ -9,13 +9,13 @@ module.exports =
 
 
   currencies:
-    # 'BTC-USD':
-    #   # sell: {}
-    #   buy: {}
+    'BTC-USD':
+      # sell: {}
+      buy: {}
 
-    # 'BCH-USD':
-    #   sell: {}
-    #   buy: {}
+    'BCH-USD':
+      sell: {}
+      buy: {}
 
     'LTC-USD':
       sell: {}
@@ -25,17 +25,17 @@ module.exports =
       # sell: {}
       buy: {}
 
-    # 'BCH-BTC':
-    #   sell: {}
-    #   buy: {}
+    'BCH-BTC':
+      sell: {}
+      buy: {}
 
-    # 'ETH-BTC':
-    #   sell: {}
-    #   buy: {}
+    'ETH-BTC':
+      sell: {}
+      buy: {}
 
-    # 'LTC-BTC':
-    #   sell: {}
-    #   buy: {}
+    'LTC-BTC':
+      sell: {}
+      buy: {}
 
 
 

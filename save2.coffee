@@ -69,6 +69,8 @@ promiseToUpdateCurrency = ( product_id )->
 save = ( config ) ->
   currencies = keys config.currencies
 
+  console.log currencies
+
   ->
     promises = map promiseToUpdateCurrency, currencies
 
@@ -119,7 +121,7 @@ save = ( config ) ->
       # console.log uniq flatten matches
 
 
-    # console.log currencies
+
 
 
 module.exports = save

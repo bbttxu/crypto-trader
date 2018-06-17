@@ -10,7 +10,7 @@
   "scripts": {
     "setup": "yarn install --pure-lockfile",
     "start": "coffee index.coffee",
-    "test": "mocha && istanbul report text-summary lcov",
+    "test": "mocha test/*.coffee && istanbul report text-summary lcov",
     "dev": "mocha -b -w",
     "single": "coffee single.coffee",
     "trade": "pm2 start multi.config.js",

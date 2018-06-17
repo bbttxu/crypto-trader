@@ -2,4 +2,5 @@ config = require './config'
 
 saveFills = require('./save2')(config)
 
-setInterval saveFills, (1000 * 60 * 10)
+saveFills()
+# setInterval saveFills, (1000 * 60 * 10)
