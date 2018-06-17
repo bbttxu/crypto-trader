@@ -59,7 +59,7 @@ normalizeDatum = ( numbers )->
 
   return
     limits: limits
-    normalized: zip.apply this, fMap limitFns, transposed
+    normalized: fMap limitFns, transposed
 
 
 
