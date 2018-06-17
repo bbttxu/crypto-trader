@@ -6,8 +6,8 @@ node_js:
 cache: yarn
 
 script:
-  - yarn test
-
+  - mocha --require coffeescript/register test/*.coffee
+  - istanbul report text-summary lcov
 
 after_success:
   - 'cat ./coverage/lcov.info | ./node_modules/.bin/coveralls'
