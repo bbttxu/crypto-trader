@@ -29,8 +29,6 @@ arrayStats = ( stats )->
     max: Math.max.apply this, stats
     n: stats.length
 
-  stats
-
 
 ###
 ___________                             __
