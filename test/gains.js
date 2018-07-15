@@ -76,6 +76,7 @@ describe("gains", () =>
       },
       value: {
         base: "0.00013700",
+        size: "0.10000000",
         buy_order_id: "ac4b9ca4-b0b3-4ddd-bc10-d56fe3b7dab4",
         sell_order_id: "c52afa37-39f8-4164-be25-4e4ae4f3c26d"
       }
