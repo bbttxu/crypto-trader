@@ -6,33 +6,29 @@ moment = require 'moment'
 
 mongoConnection = require('../lib/mongoConnection')
 
+COLLECTION_NAME = 'fills'
+
+
 saveFill = (fill)->
-  new RSVP.Promise (resolve, reject)->
+  new RSVP.Promise (resolve, rejectPromise )->
     mongoConnection().then (db)->
-      # reject err if err
 
-      collection = db.collection 'fill'
-
+      collection = db.collection COLLECTION_NAME
 
       collection.findOne {trade_id: fill.trade_id}, (err, gee)->
-        reject err if err
+        rejectPromise err if err
 
         # TODO This should probably be a new function/RSVP.Promise
         if gee is null
-          console.log fill
-          # Convert date from API to something we'll match against
-          # fill.time = moment( fill.time ).toDate()
-          # console.log fill
-
-
           collection.insertOne fill, (err, whiz)->
-            reject err if err
+            rejectPromise err if err
             # db.close()
+
             resolve fill
 
         else
           # db.close()
-          resolve true
+          resolve gee
 
 
 module.exports = saveFill

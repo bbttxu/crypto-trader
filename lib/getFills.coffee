@@ -7,12 +7,12 @@ moment = require 'moment'
 
 mongoConnection = require('../lib/mongoConnection')
 
-RESET_DATE = "2017-11-23T00:00:00.000Z"
+RESET_DATE = "2018-01-01T00:00:00.000Z"
 
 getFills = (product)->
   new RSVP.Promise (resolve, reject)->
     mongoConnection().then (db)->
-      collection = db.collection 'fill'
+      collection = db.collection 'fills'
 
       onError = (err)->
         console.log 'getFills.err', err
@@ -28,9 +28,10 @@ getFills = (product)->
 
       collection.find(
         search
-      ).sort(
-        trade_id: 1
-      ).toArray().then(
+      )
+      .sort( trade_id: 1 )
+      .limit(100)
+      .toArray().then(
         resolve
       ).catch(
         onError

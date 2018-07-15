@@ -7,6 +7,7 @@ RSVP = require 'rsvp'
   map
   keys
   isNil
+  merge
 } = require 'ramda'
 
 moment = require 'moment'
@@ -196,9 +197,12 @@ sell = ( order )->
 
 
 
-getFills = (product = product_id)->
+getFills = ( product , args = {} )->
+
+  payload = merge args, product_id: product
+
   new RSVP.Promise (resolve, reject)->
-    authedClient().getFills {product_id: product}, (err, data)->
+    authedClient().getFills payload, (err, data)->
       if err
         data = JSON.parse err.body
         console.log 'err getFills', data, order
