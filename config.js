@@ -21,15 +21,15 @@ module.exports = {
     //   buy: {}
     // },
 
-    // "LTC-USD": {
-    //   sell: {},
-    //   buy: {}
-    // },
+    "LTC-USD": {
+      sell: {},
+      buy: {}
+    }
 
     // "ETH-USD": {
     //   sell: {},
     //   buy: {}
-    // },
+    // }
 
     // "BCH-BTC": {
     //   sell: {},
@@ -41,10 +41,10 @@ module.exports = {
     //   buy: {}
     // },
 
-    "LTC-BTC": {
-      sell: {},
-      buy: {}
-    }
+    // "LTC-BTC": {
+    //   sell: {},
+    //   buy: {}
+    // }
   },
 
   intervals: [
