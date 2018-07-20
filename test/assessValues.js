@@ -6,13 +6,9 @@ describe("assessValue of payload", () => {
   it("basic", () => {
     const input = [
       {
-        _id: "5b4a9a70abcd0955ad45316a",
         created_at: "2018-06-10T21:22:31.418Z",
         trade_id: 35729580,
         product_id: "ETH-USD",
-        order_id: "1971d9a0-65a1-4dbe-8bc2-78ed74c9434e",
-        user_id: "5581e98c626232006b0000fd",
-        profile_id: "82895f2c-fa3e-4664-a338-eb4440aa3db8",
         liquidity: "M",
         price: "520.00000000",
         size: "0.00000000",
@@ -23,13 +19,9 @@ describe("assessValue of payload", () => {
         title: "35729580 ETH-USD"
       },
       {
-        _id: "5b4a9a6fabcd0955ad453169",
         created_at: "2018-06-12T16:49:27.299Z",
         trade_id: 35831799,
         product_id: "ETH-USD",
-        order_id: "9301de03-5b97-435a-a523-0cb43463625b",
-        user_id: "5581e98c626232006b0000fd",
-        profile_id: "82895f2c-fa3e-4664-a338-eb4440aa3db8",
         liquidity: "M",
         price: "520.00000000",
         size: "1.00000000",
@@ -40,13 +32,9 @@ describe("assessValue of payload", () => {
         title: "35831799 ETH-USD"
       },
       {
-        _id: "5b4a9a6fabcd0955ad453168",
         created_at: "2018-06-12T19:07:26.378Z",
         trade_id: 35840495,
         product_id: "ETH-USD",
-        order_id: "62981565-66b5-4fa5-bce8-92320feace9b",
-        user_id: "5581e98c626232006b0000fd",
-        profile_id: "82895f2c-fa3e-4664-a338-eb4440aa3db8",
         liquidity: "M",
         price: "500.00000000",
         size: "0.00000000",
@@ -57,13 +45,9 @@ describe("assessValue of payload", () => {
         title: "35840495 ETH-USD"
       },
       {
-        _id: "5b4a9a6fabcd0955ad453167",
         created_at: "2018-06-13T09:21:56.775Z",
         trade_id: 35879645,
         product_id: "ETH-USD",
-        order_id: "a9db095c-ebb2-48f7-9bb2-e4ebae2fd4f9",
-        user_id: "5581e98c626232006b0000fd",
-        profile_id: "82895f2c-fa3e-4664-a338-eb4440aa3db8",
         liquidity: "M",
         price: "475.00000000",
         size: "0.00000000",
@@ -74,13 +58,9 @@ describe("assessValue of payload", () => {
         title: "35879645 ETH-USD"
       },
       {
-        _id: "5b4a9a6fabcd0955ad453165",
         created_at: "2018-06-22T13:05:44.455Z",
         trade_id: 36349215,
         product_id: "ETH-USD",
-        order_id: "c9f38fde-a747-46d0-8b23-cd3e0435e33e",
-        user_id: "5581e98c626232006b0000fd",
-        profile_id: "82895f2c-fa3e-4664-a338-eb4440aa3db8",
         liquidity: "M",
         price: "475.00000000",
         size: "0.00000000",
@@ -91,13 +71,9 @@ describe("assessValue of payload", () => {
         title: "36349215 ETH-USD"
       },
       {
-        _id: "5b4a9a6fabcd0955ad453164",
         created_at: "2018-06-24T06:10:29.607Z",
         trade_id: 36446059,
         product_id: "ETH-USD",
-        order_id: "290f7c54-c232-4854-9e0a-d87d3fabad8d",
-        user_id: "5581e98c626232006b0000fd",
-        profile_id: "82895f2c-fa3e-4664-a338-eb4440aa3db8",
         liquidity: "M",
         price: "445.00000000",
         size: "0.00000000",
@@ -108,13 +84,9 @@ describe("assessValue of payload", () => {
         title: "36446059 ETH-USD"
       },
       {
-        _id: "5b4a9a6fabcd0955ad453163",
         created_at: "2018-06-24T15:46:48.894Z",
         trade_id: 36468852,
         product_id: "ETH-USD",
-        order_id: "0623c8b3-c129-4a3c-94da-f448746aed8a",
-        user_id: "5581e98c626232006b0000fd",
-        profile_id: "82895f2c-fa3e-4664-a338-eb4440aa3db8",
         liquidity: "M",
         price: "425.00000000",
         size: "0.00000000",
@@ -125,13 +97,9 @@ describe("assessValue of payload", () => {
         title: "36468852 ETH-USD"
       },
       {
-        _id: "5b4a9a6fabcd0955ad453160",
         created_at: "2018-07-10T11:32:39.896Z",
         trade_id: 37139139,
         product_id: "ETH-USD",
-        order_id: "ce855ed1-4638-4e50-864a-4d6d802d8735",
-        user_id: "5581e98c626232006b0000fd",
-        profile_id: "82895f2c-fa3e-4664-a338-eb4440aa3db8",
         liquidity: "M",
         price: "445.00000000",
         size: "0.00000000",
@@ -142,13 +110,9 @@ describe("assessValue of payload", () => {
         title: "37139139 ETH-USD"
       },
       {
-        _id: "5b4a9a6eabcd0955ad45315e",
         created_at: "2018-07-12T21:39:06.502Z",
         trade_id: 37250309,
         product_id: "ETH-USD",
-        order_id: "b2c95f6c-fb1d-4e48-8a5d-f7f0d068fa54",
-        user_id: "5581e98c626232006b0000fd",
-        profile_id: "82895f2c-fa3e-4664-a338-eb4440aa3db8",
         liquidity: "M",
         price: "425.00000000",
         size: "0.26598527",
@@ -159,13 +123,9 @@ describe("assessValue of payload", () => {
         title: "37250309 ETH-USD"
       },
       {
-        _id: "5b4a9a6eabcd0955ad45315f",
         created_at: "2018-07-12T21:39:06.502Z",
         trade_id: 37250308,
         product_id: "ETH-USD",
-        order_id: "b2c95f6c-fb1d-4e48-8a5d-f7f0d068fa54",
-        user_id: "5581e98c626232006b0000fd",
-        profile_id: "82895f2c-fa3e-4664-a338-eb4440aa3db8",
         liquidity: "M",
         price: "425.00000000",
         size: "2.73401473",
