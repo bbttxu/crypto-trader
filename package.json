@@ -5,7 +5,7 @@
   "description": "automated crypto currency trading bot",
   "main": "index.coffee",
   "engines": {
-    "node": "8.9.x"
+    "node": "8.11.x"
   },
   "scripts": {
     "setup": "yarn install --pure-lockfile",
