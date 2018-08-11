@@ -14,22 +14,22 @@ module.exports = {
     // "BTC-USD": {
     //   sell: {},
     //   buy: {}
-    // },
+    // }
 
     // "BCH-USD": {
     //   sell: {},
     //   buy: {}
     // },
 
-    "LTC-USD": {
-      sell: {},
-      buy: {}
-    }
-
-    // "ETH-USD": {
+    // "LTC-USD": {
     //   sell: {},
     //   buy: {}
     // }
+
+    "ETH-USD": {
+      sell: {},
+      buy: {}
+    }
 
     // "BCH-BTC": {
     //   sell: {},

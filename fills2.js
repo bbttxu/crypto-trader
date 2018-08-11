@@ -8,9 +8,9 @@ const SIZE_ZERO = "0.00000000";
 
 const config = require("./config");
 
-const RSVP = require("rsvp");
+const { hash, all } = require("rsvp");
 
-import {
+const {
   keys,
   take,
   map,
@@ -29,11 +29,15 @@ import {
   sum,
   reject,
   uniq,
-  all,
-  equals
-} from "ramda";
+  // all,
+  equals,
+  zip,
+  flatten,
+  forEach
+} = require("ramda");
 
 // const reconcile = require("./lib/reconciler");
+const Redis = require("ioredis");
 
 const moment = require("moment");
 
@@ -63,6 +67,8 @@ const areWeInTheYearWeCareAbout = equals(whatYearWasItADayAgo);
 console.log(whatYearWasItADayAgo);
 
 const mapIndex = addIndex(map);
+
+const tradeChannel = new Redis();
 
 // const reconcileBuysWithSells = (incomingBuys, incomingSells) => {
 //   const split = groupBy(prop("side"), trades);
@@ -124,21 +130,36 @@ const getYearFromDate = date => moment(date).year();
 
 // getAccounts().then( console.log );
 
-const getFillsFromStorage = require("./lib/getFills");
+// const getFillsFromStorage = require("./lib/getFills");
+const getBuyFillsFromStorage = require("./lib/getBuyFills");
+const getSellFillsFromStorage = require("./lib/getSellFills");
 
 const handleCurrency = (currency, params = {}) => {
-  getFillsFromStorage(currency)
-    .then(results => {
-      console.log(results);
-      return results;
+  const addTrade = trade => {
+    tradeChannel.publish("trade:" + currency, JSON.stringify(trade));
+  };
+
+  hash({
+    buys: getBuyFillsFromStorage(currency),
+    sells: getSellFillsFromStorage(currency)
+  })
+    .then(({ sells, buys }) => {
+      return zip(sells, buys);
+    })
+    .then(flatten)
+    .then(uniq)
+    // FEED trades into the reducer to
+    .then(trades => {
+      forEach(addTrade, trades);
+      return trades;
     })
     .then(pluck("trade_id"))
-    .then(uniq)
     .then(results => {
-      console.log(uniq(results).length);
+      console.log(results.length);
       return results;
-    })
-    .then(console.log);
+    });
+
+  // FEED trades into the reducer to
 };
 // getFills(currency, params)
 //   // .then( sortBy prop( 'price' ) )

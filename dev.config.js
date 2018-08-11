@@ -6,14 +6,18 @@ module.exports = {
   apps: [
     // First application,
     {
-      name: "ANNUM",
-      script: "annum.js"
+      name: "stream",
+      script: "stream.coffee",
+      interpreter: "./node_modules/coffeescript/bin/coffee"
+    },
+    {
+      name: "SINGLE",
+      script: "single.js"
     },
     {
       name: "Fills2s",
-      script: "fills2.coffee",
-      interpreter: "./node_modules/coffeescript/bin/coffee"
-    },
+      script: "fills2.js"
+    }
     // {
     //   name: "MULTI",
     //   script: "multi.coffee",
@@ -31,11 +35,7 @@ module.exports = {
     //     PRODUCT_ID: 'LTC-USD'
     //   }
     // },
-    // {
-    //   name: "stream",
-    //   script: "stream.coffee",
-    //   interpreter: './node_modules/coffeescript/bin/coffee'
-    // },
+
     // {
     //   name: "brain",
     //   script: "brain.coffee",
@@ -46,11 +46,11 @@ module.exports = {
     //   script: "voice.coffee",
     //   interpreter: './node_modules/coffeescript/bin/coffee'
     // },
-    {
-      name: "worker",
-      script: "worker.coffee",
-      interpreter: "./node_modules/coffeescript/bin/coffee"
-    }
+    // {
+    //   name: "worker",
+    //   script: "worker.coffee",
+    //   interpreter: "./node_modules/coffeescript/bin/coffee"
+    // }
     // {
     //   name: "kue",
     //   script: "kue.coffee",

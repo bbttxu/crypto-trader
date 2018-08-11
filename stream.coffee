@@ -49,13 +49,14 @@ websocket.on 'close', ->
   exit( -1 )
 
 websocket.on 'message', (message)->
+  # console.log "stream feed:#{message.product_id}", JSON.stringify message.price
   pub.publish "feed:#{message.product_id}", JSON.stringify message
 
 
 
 catchError = ( name )->
   ( error )->
-    log name, error.response.data.message
+    log name, error.response.data.messages
 
 
 
