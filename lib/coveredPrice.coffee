@@ -15,8 +15,6 @@
 
 statistics = require 'summary-statistics'
 
-# arrayStats = require './arrayStats'
-
 log = require './log'
 
 #   _____                    __  .__
