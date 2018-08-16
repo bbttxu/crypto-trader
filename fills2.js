@@ -8,7 +8,7 @@ const SIZE_ZERO = "0.00000000";
 
 const config = require("./config");
 
-const { hash, all } = require("rsvp");
+const { hash, all, Promise } = require("rsvp");
 
 const {
   keys,
@@ -33,7 +33,8 @@ const {
   equals,
   zip,
   flatten,
-  forEach
+  forEach,
+  contains
 } = require("ramda");
 
 // const reconcile = require("./lib/reconciler");
@@ -119,7 +120,7 @@ const { addFillToQueue } = require("./workers/saveFillToStorage");
 
 const addFill = fill => {
   store.dispatch({
-    type: "FILLS_AD",
+    type: "FILLS_ADDS",
     fill
   });
   // console.log fill
@@ -134,20 +135,30 @@ const getYearFromDate = date => moment(date).year();
 const getBuyFillsFromStorage = require("./lib/getBuyFills");
 const getSellFillsFromStorage = require("./lib/getSellFills");
 
+const getAllCurrentYearFillsFor = currency => {
+  return new Promise((resolve, rejectPromise) => {
+    hash({
+      buys: getBuyFillsFromStorage(currency),
+      sells: getSellFillsFromStorage(currency)
+    })
+      .then(({ sells, buys }) => {
+        return zip(sells, buys);
+      })
+      .then(flatten)
+      .then(uniq)
+      .then(resolve)
+      .catch(rejectPromise);
+  });
+};
+
 const handleCurrency = (currency, params = {}) => {
   const addTrade = trade => {
     tradeChannel.publish("trade:" + currency, JSON.stringify(trade));
   };
 
-  hash({
-    buys: getBuyFillsFromStorage(currency),
-    sells: getSellFillsFromStorage(currency)
-  })
-    .then(({ sells, buys }) => {
-      return zip(sells, buys);
-    })
-    .then(flatten)
-    .then(uniq)
+  const getAllCurrentYearFillsForCurrency = getAllCurrentYearFillsFor(currency);
+
+  getAllCurrentYearFillsForCurrency
     // FEED trades into the reducer to
     .then(trades => {
       forEach(addTrade, trades);
@@ -155,41 +166,90 @@ const handleCurrency = (currency, params = {}) => {
     })
     .then(pluck("trade_id"))
     .then(results => {
-      console.log(results.length);
+      // console.log(results);
       return results;
     });
 
+  hash({
+    current: getAllCurrentYearFillsForCurrency,
+    fillsFromExchange: getFills(currency, params)
+  })
+    .then(({ current, fillsFromExchange }) => {
+      const trade_ids = pluck("trade_id", current);
+
+      return reject(({ trade_id }) => {
+        return contains(trade_id, trade_ids);
+      }, fillsFromExchange);
+    })
+    .then(shuffle)
+    // .then(take(2))
+    .then(map(addFillToQueue))
+    .then(length)
+    .then(console.log)
+    .catch(console.error);
+  // ).then(
   // FEED trades into the reducer to
+  // const updateFillsFromSource = (currency, params) => {
+  //   getFills(currency, params)
+  //     // .then( sortBy prop( 'price' ) )
+  //     // .then(shuffle)
+  //     // .then(take(5))
+  //     // ).then(
+  //     //   map pick( ['price', 'size', 'side', 'created_at', 'trade_id'])
+  //     .then(map(addFillToQueue))
+  //     // .then( RSVP.all )
+  //     .then(fills => {
+  //       const dates = pluck("created_at", fills).sort();
+
+  //       const years = uniq(map(getYear  //   getFills(currency, params)
+  //     // .then( sortBy prop( 'price' ) )
+  //     // .then(shuffle)
+  //     // .then(take(5))
+  //     // ).then(
+  //     //   map pick( ['price', 'size', 'side', 'created_at', 'trade_id'])
+  //     .then(map(addFillToQueue))
+  //     // .then( RSVP.all )
+  //     .then(fills => {
+  //       const dates = pluck("created_at", fills).sort();
+
+  //       const years = uniq(map(getYearFromDate, dates));
+  //       console.log(years, dates[0]);
+
+  //       if (all(areWeInTheYearWeCareAbout, years)) {
+  //         const foo = () =>
+  //           updateFillsFromSource(currency, {
+  //             after: pluck("trade_id", fills).sort()[0]
+  //           });
+
+  //         setTimeout(foo, 1000 * currencies.length);
+  //       }
+
+  //       // console.log fills.length
+  //       return fills;
+  //     })
+  //     .catch(console.log)
+  //     .finally(() => console.log("finally", currency, params));
+  // };
+  // updateFillsFromSource(currency);FromDate, dates));
+  //       console.log(years, dates[0]);
+
+  //       if (all(areWeInTheYearWeCareAbout, years)) {
+  //         const foo = () =>
+  //           updateFillsFromSource(currency, {
+  //             after: pluck("trade_id", fills).sort()[0]
+  //           });
+
+  //         setTimeout(foo, 1000 * currencies.length);
+  //       }
+
+  //       // console.log fills.length
+  //       return fills;
+  //     })
+  //     .catch(console.log)
+  //     .finally(() => console.log("finally", currency, params));
+  // };
+  // updateFillsFromSource(currency);
 };
-// getFills(currency, params)
-//   // .then( sortBy prop( 'price' ) )
-//   // .then( shuffle )
-//   .then(take(1))
-//   // ).then(
-//   //   map pick( ['price', 'size', 'side', 'created_at', 'trade_id'])
-//   .then(map(addFillToQueue))
-//   // .then( RSVP.all )
-//   .then(fills => {
-//     const dates = pluck("created_at", fills).sort();
-
-//     const years = uniq(map(getYearFromDate, dates));
-//     // console.log years, dates[0]
-
-//     if (all(areWeInTheYearWeCareAbout, years)) {
-//       const foo = () =>
-//         // handleCurrency(currency, {
-//         //   after: pluck("trade_id", fills).sort()[0]
-//         // });
-
-//         setTimeout(foo, 1000 * currencies.length);
-//     }
-
-//     // console.log fills.length
-//     return fills;
-//   })
-//   .catch(console.log)
-//   .finally(() => console.log("finally", currency, params));
-
 map(handleCurrency, currencies);
 
 // saveFills = require('./save2')(config)

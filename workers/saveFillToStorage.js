@@ -3,10 +3,10 @@
  * DS102: Remove unnecessary code created because of implicit returns
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
-const JOB = 'SAVE_FILL_TO_STORAGE'
-const COLLECTION = 'fills'
+const JOB = "SAVE_FILL_TO_STORAGE";
+const COLLECTION = "fills";
 
-let counter = 0
+let counter = 0;
 
 /*
 .____    ._____.                      .__
@@ -17,13 +17,13 @@ let counter = 0
         \/       \/           \/              \/     \/
 */
 
-const kue = require('kue')
+const kue = require("kue");
 
-const mongoDb = require('../lib/mongoDb')
+const mongoDb = require("../lib/mongoDb");
 
-const queue = kue.createQueue()
+const queue = kue.createQueue();
 
-const { pick } = require('ramda')
+const { pick } = require("ramda");
 /*
 ___________                   __  .__
 \_   _____/_ __  ____   _____/  |_|__| ____   ____   ______
@@ -34,62 +34,66 @@ ___________                   __  .__
 */
 
 const addFillToQueue = fill => {
-  const title = `${fill.trade_id} ${fill.product_id}`
-  fill.title = title
-  // console.log fill.trade_id, fill.product_id
-
-  queue.create(JOB, fill).attempts(5).backoff({ type: 'exponential' }).removeOnComplete(true).save()
-  return fill
-}
+  const title = `${fill.trade_id} ${fill.product_id}`;
+  fill.title = title;
+  console.log(fill);
+  queue
+    .create(JOB, fill)
+    .attempts(5)
+    .backoff({ type: "exponential" })
+    .removeOnComplete(true)
+    .save();
+  return fill;
+};
 
 const onErr = error => {
-  console.log('we got a muthafuckin err')
-  console.log(error)
-  return error
-}
+  console.log("we got a muthafuckin err");
+  console.log(error);
+  return error;
+};
 
-const minimumProperties = [
-  'trade_id',
-  'product_id',
-  // 'order_id'
-]
+const minimumProperties = ["trade_id", "product_id", "order_id"];
 
-const saveFillToStorage = (
-  { data },
-  callback // console.log '', fill.data
-) =>
-  mongoDb(COLLECTION).then(db =>
-    // console.log 'about to insert', pick( minimumProperties, fill.data )
-
+const saveFillToStorage = ({ data }, callback) => {
+  // console.log("do", data);
+  mongoDb(COLLECTION).then(db => {
+    // console.log("about to insert", pick(minimumProperties, data));
     db.findOne(pick(minimumProperties, data), (err, results) => {
       if (err) {
-        onErr(err)
+        onErr(err);
       }
       if (results === null) {
-        // console.log 'know now to insert', pick( minimumProperties, fill.data )
+        // console.log("know now to insert", pick(minimumProperties, data));
         // console.log results, fill.data
         // console.log pick minimumProperties, fill.data
 
         db.insert(data, (err, { ops }) => {
           if (err) {
-            onErr(err)
+            onErr(err);
           }
 
-          console.log(JOB, 'saved', ops[0].product_id, ops[0].trade_id, ++counter)
-          return setTimeout(callback, 100)
-        })
+          console.log(
+            JOB,
+            "saved",
+            ops[0].product_id,
+            ops[0].trade_id,
+            ++counter
+          );
+          setTimeout(callback, 100);
+        });
       }
 
       if (results !== null) {
-        // console.log 'already saved!', pick( minimumProperties, fill.data )
-        return callback()
+        // console.log("already saved!", pick(minimumProperties, data));
+        callback();
       }
-    })
-  )
+    });
+  });
+};
 
-const process = () => queue.process(JOB, saveFillToStorage)
+const process = () => queue.process(JOB, saveFillToStorage);
 
-queue.on('error', error => console.log(JOB, 'ERROR', error))
+queue.on("error", error => console.log(JOB, "ERROR", error));
 
 /*
 .____           __               .___         __  .__    .__
@@ -102,5 +106,5 @@ queue.on('error', error => console.log(JOB, 'ERROR', error))
 
 module.exports = {
   addFillToQueue,
-  process,
-}
+  process
+};
