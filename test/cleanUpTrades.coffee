@@ -69,3 +69,17 @@ describe 'cleanUpTrades', ->
 
     result = R.pick ['size', 'side', 'price', 'product_id'], cleanUpTrade input
     result.should.be.eql output
+
+  it 'keeps uuid when present', ->
+    input =
+      product_id: 'ETH-BTC'
+      client_oid: 'foo'
+
+    cleanUpTrade( input ).should.be.eql input
+
+
+  it 'applies uuid when not present', ->
+    input =
+      product_id: 'ETH-BTC'
+
+    cleanUpTrade( input ).client_oid.should.exist

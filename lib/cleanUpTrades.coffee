@@ -1,5 +1,4 @@
 uuid = require 'uuid'
-# moment = require 'moment'
 
 pricing = require './pricing'
 
@@ -16,7 +15,7 @@ cleanUpTrades = ( trade )->
     trade.client_oid = uuid.v4()
 
   trade.size = pricing.size trade.size
-  # trade.created = moment().format()
+
   trade
 
 module.exports = cleanUpTrades

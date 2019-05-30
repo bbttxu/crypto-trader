@@ -176,7 +176,7 @@ thunk = require 'redux-thunk'
 
 moment = require 'moment'
 
-consolidateRun = require './consolidateRun'
+consolidateRun = require './lib/consolidateRun'
 
 averageOf = require './lib/averageOf'
 
